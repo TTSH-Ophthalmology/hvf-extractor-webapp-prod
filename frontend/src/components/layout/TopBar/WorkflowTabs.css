@@ -1,0 +1,52 @@
+.workflow-tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: stretch;
+  min-height: 36px;
+  background: #00336a;
+  overflow: hidden;
+}
+
+.workflow-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  margin: 0;
+  padding: 0 30px;
+  border: 0;
+  color: #ffffff;
+  background: #2f9bd1;
+  clip-path: polygon(30px 0, 100% 0, calc(100% - 30px) 100%, 0 100%);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  line-height: 36px;
+  text-align: center;
+  text-shadow: 1px 1px 1px rgb(0 0 0 / 20%);
+}
+
+.workflow-tab-active {
+  justify-content: flex-start;
+  padding-left: 50px;
+  background: #82d2d8;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 30px) 100%, 0 100%);
+}
+
+.workflow-tab:nth-child(2) {
+  min-width: 220px;
+}
+
+.workflow-tab + .workflow-tab {
+  margin-left: -30px;
+  padding: 0 30px;
+}
+
+@media (max-width: 860px) {
+  .workflow-tabs {
+    overflow-x: auto;
+  }
+}

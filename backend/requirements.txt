@@ -1,0 +1,22 @@
+# Web framework
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+
+# Data validation
+pydantic==2.7.1
+pydantic-settings==2.2.1
+
+# PDF parsing (PyMuPDF — fast text-block extraction used by HVF pipeline)
+pymupdf==1.27.2.3
+
+# CSV / data
+pandas==2.2.2
+
+# File upload support (required by FastAPI for multipart/form-data)
+python-multipart==0.0.9
+
+# Compression middleware
+# (included in fastapi/starlette — no extra install needed)
+
+# Environment
+python-dotenv==1.0.1

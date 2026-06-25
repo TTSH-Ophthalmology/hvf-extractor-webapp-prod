@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-python.python",          // Python language support + debugpy
+    "ms-python.debugpy",         // Python debugger
+    "ms-python.black-formatter", // Black formatter
+    "charliermarsh.ruff",        // Ruff linter
+    "dbaeumer.vscode-eslint",    // ESLint for TypeScript
+    "esbenp.prettier-vscode",    // Prettier formatter
+    "bradlc.vscode-tailwindcss", // Tailwind (if added later)
+    "ms-vscode.vscode-typescript-next" // Latest TS support
+  ]
+}

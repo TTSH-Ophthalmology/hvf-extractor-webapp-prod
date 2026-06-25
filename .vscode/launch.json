@@ -1,0 +1,63 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // -----------------------------------------------------------------------
+    // Backend — FastAPI via uvicorn (Mac & Windows)
+    // -----------------------------------------------------------------------
+    {
+      "name": "Backend: FastAPI",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+      "cwd": "${workspaceFolder}/backend",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      // Mac/Linux: point to the venv python
+      // Windows:   same path works if venv is created with `python -m venv .venv`
+      "python": "${workspaceFolder}/backend/.venv/bin/python",
+      "windows": {
+        "python": "${workspaceFolder}/backend/.venv/Scripts/python.exe"
+      },
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+
+    // -----------------------------------------------------------------------
+    // Frontend — Vite dev server (Mac & Windows)
+    // Attach Chrome/Edge DevTools for JS/TS breakpoints
+    // -----------------------------------------------------------------------
+    {
+      "name": "Frontend: Vite",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "cwd": "${workspaceFolder}/frontend",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Frontend: Attach Chrome",
+      "type": "chrome",
+      "request": "attach",
+      "port": 9222,
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMapPathOverrides": {
+        "webpack:///./src/*": "${webRoot}/*"
+      }
+    },
+
+    // -----------------------------------------------------------------------
+    // Compound: start both backend and frontend together
+    // -----------------------------------------------------------------------
+  ],
+  "compounds": [
+    {
+      "name": "Full Stack",
+      "configurations": ["Backend: FastAPI", "Frontend: Vite"]
+    }
+  ]
+}

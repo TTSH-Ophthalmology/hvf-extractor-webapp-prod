@@ -1,0 +1,94 @@
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  color: #00336a;
+  background: #ffffff;
+  border-right: 1px solid #d8dde5;
+  box-shadow: 1px 0 12px rgb(0 0 0 / 5%);
+  z-index: 3;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 82px;
+  padding: 12px 0;
+  border: 0;
+  border-bottom: 1px solid #edf0f4;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.hospital-logo {
+  display: block;
+  width: 62px;
+  height: 62px;
+  margin-left: 1px;
+  object-fit: contain;
+  flex: 0 0 62px;
+}
+
+.brand-text {
+  margin-left: -3px;
+  min-width: 0;
+  overflow: hidden;
+  opacity: 1;
+  transition: opacity 160ms ease;
+}
+
+.brand-text strong {
+  display: block;
+  font-family: var(--font-hanken-grotesk);
+  color: #00336a;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.brand-text span {
+  display: block;
+  margin-top: 5px;
+  color: #717b89;
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.nav-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.sidebar-collapsed .sidebar-brand {
+  justify-content: center;
+  min-height: 82px;
+  padding: 8px 0;
+}
+
+.sidebar-collapsed .hospital-logo {
+  width: 60px;
+  height: 60px;
+  margin-left: 0;
+  flex-basis: 60px;
+}
+
+.sidebar-collapsed .brand-text,
+.sidebar-collapsed .nav-label {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .sidebar {
+    height: auto;
+    min-height: auto;
+  }
+}
