@@ -5,7 +5,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
 from app.config import settings
 
-oauth_scheme = OAuth2PasswordBearer('/token')
+oauth_scheme = OAuth2PasswordBearer('/api/token')
 ph = PasswordHasher()
 
 def get_current_user(token: str = Depends(oauth_scheme)):

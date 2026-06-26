@@ -62,7 +62,7 @@ async def log_requests(request: Request, call_next) -> Response:
     return response
 
 # JWT system
-@app.post("/token")
+@app.post("/api/token")
 def login(
     request: Request,
     response: Response,
@@ -105,6 +105,23 @@ def login(
 
     return {
         "message": "Login successfully"
+    }
+
+@app.post("/api/logout")
+def logout(
+    response: Response
+):
+
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
+    return {
+        "message": "Logout successfully"
     }
 
 
