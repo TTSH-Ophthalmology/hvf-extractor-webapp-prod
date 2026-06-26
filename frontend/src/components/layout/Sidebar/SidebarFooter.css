@@ -17,7 +17,8 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  width: min(200px, 100%);
+  width: 100%;
+  max-width: 200px;
   min-height: 40px;
   margin: 0 auto;
   padding-right: 25px;
@@ -30,6 +31,13 @@
   letter-spacing: 0.4px;
   line-height: 1;
   text-align: center;
+  transition:
+    width 180ms ease,
+    max-width 180ms ease,
+    min-height 180ms ease,
+    gap 180ms ease,
+    padding 180ms ease,
+    background 160ms ease;
 }
 
 .template-link svg {
@@ -55,6 +63,11 @@
   color: #4b5563;
   font-size: 15px;
   font-weight: 500;
+  transition:
+    gap 180ms ease,
+    padding 180ms ease,
+    background 160ms ease,
+    color 160ms ease;
 }
 
 .utility-link:hover {
@@ -71,6 +84,7 @@
 
 .sidebar-collapsed .template-link {
   width: 38px;
+  max-width: 38px;
   min-height: 38px;
   gap: 0;
   padding: 0;

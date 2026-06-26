@@ -32,6 +32,11 @@
   margin-top: -8px;
   object-fit: contain;
   flex: 0 0 62px;
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    margin 180ms ease,
+    flex-basis 180ms ease;
 }
 
 .brand-text {
@@ -39,7 +44,7 @@
   min-width: 0;
   overflow: hidden;
   opacity: 1;
-  transition: opacity 160ms ease;
+  transition: opacity 160ms ease 80ms;
 }
 
 .brand-text strong {
@@ -62,8 +67,16 @@
 }
 
 .nav-label {
+  display: inline-block;
+  max-width: 160px;
   min-width: 0;
   overflow: hidden;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    max-width 180ms ease 90ms,
+    opacity 150ms ease 100ms,
+    transform 150ms ease 100ms;
   white-space: nowrap;
 }
 
@@ -82,9 +95,12 @@
 
 .sidebar-collapsed .brand-text,
 .sidebar-collapsed .nav-label {
+  max-width: 0;
   width: 0;
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-4px);
+  transition-delay: 0ms;
 }
 
 @media (max-width: 860px) {
