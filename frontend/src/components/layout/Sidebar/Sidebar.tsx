@@ -5,7 +5,7 @@
  * Collapse/expand is controlled by the parent AppShell.
  */
 
-import ttshLogo from '../../../assets/images/TTSH-logo.png'
+import NHGLogo from '../../../assets/images/NHG-logo.png'
 import { SidebarFooter } from './SidebarFooter'
 import { SidebarNav } from './SidebarNav'
 import './Sidebar.css'
@@ -25,9 +25,9 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
         aria-expanded={!isCollapsed}
         onClick={onToggleCollapsed}
       >
-        <img className="hospital-logo" src={ttshLogo} alt="Tan Tock Seng Hospital" />
+        <img className="hospital-logo" src={NHGLogo} alt="Tan Tock Seng Hospital" />
         <div className="brand-text">
-          <strong>NHGEI HVF Extractor</strong>
+          <strong>HVF Extractor</strong>
           <span>OPHTHALMOLOGY DEPT</span>
         </div>
       </button>

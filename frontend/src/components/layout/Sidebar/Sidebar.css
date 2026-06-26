@@ -14,8 +14,8 @@
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 82px;
-  padding: 12px 0;
+  min-height: 80px;
+  padding: 12px 0 10px 10px;
   border: 0;
   border-bottom: 1px solid #edf0f4;
   color: inherit;
@@ -26,15 +26,16 @@
 
 .hospital-logo {
   display: block;
-  width: 62px;
-  height: 62px;
-  margin-left: 1px;
+  width: 68px;
+  height: 68px;
+  margin-right: 1px;
+  margin-top: -8px;
   object-fit: contain;
   flex: 0 0 62px;
 }
 
 .brand-text {
-  margin-left: -3px;
+  margin-left: 12px;
   min-width: 0;
   overflow: hidden;
   opacity: 1;
@@ -44,18 +45,18 @@
 .brand-text strong {
   display: block;
   font-family: var(--font-hanken-grotesk);
-  color: #00336a;
-  font-size: 18px;
+  color: #005eb8;
+  font-size: 19px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1;
   white-space: nowrap;
 }
 
 .brand-text span {
   display: block;
-  margin-top: 5px;
+  margin-top: 3px;
   color: #717b89;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.8px;
 }
@@ -73,10 +74,10 @@
 }
 
 .sidebar-collapsed .hospital-logo {
-  width: 60px;
-  height: 60px;
-  margin-left: 0;
-  flex-basis: 60px;
+  width: 48px;
+  height: 48px;
+  margin-left: 9px;
+  flex-basis: 48px;
 }
 
 .sidebar-collapsed .brand-text,
