@@ -65,6 +65,7 @@ async def log_requests(request: Request, call_next) -> Response:
 @app.post("/token")
 def login(
     request: Request,
+    response: Response,
     username: str = Form(...),
     password: str = Form(...)
 ):
@@ -72,18 +73,7 @@ def login(
     try:
         verify_admin(username, password)
 
-        access_token = create_access_token(
-            user_id= username,
-            role = "admin"
-        )
-
-        logger.info(
-            "%s: %s has logged in from %s.",
-            datetime.now(),
-            username,
-            ip
-        )
-    except:
+    except Exception:
         logger.exception(
             "%s: %s has failed to log in from %s.",
             datetime.now(),
@@ -92,9 +82,29 @@ def login(
         )
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    access_token = create_access_token(
+            user_id= username,
+            role = "admin"
+        )
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=False,      # True if HTTPS
+        samesite="lax",    # use "none" only if cross-site + HTTPS
+        max_age=60 * 60 * 8,
+        path="/",
+    )
+
+    logger.info(
+        "Login successful: user=%s ip=%s",
+        username,
+        ip,
+    )
+
     return {
-        "access_token": access_token,
-        "token_type": "bearer"
+        "message": "Login successfully"
     }
 
 

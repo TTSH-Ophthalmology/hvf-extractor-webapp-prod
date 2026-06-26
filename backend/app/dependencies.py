@@ -6,18 +6,23 @@ Add reusable Depends() functions here as the project grows
 """
 
 # TODO: add shared dependencies as needed
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Depends, status, HTTPException
+from fastapi import status, HTTPException, Request
 
 from app.auth.jwt import verify_token
 
-bearer = HTTPBearer(auto_error=True)
 
 def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(bearer),
+        request: Request
 ):
+    token = request.cookies.get("access_token")
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
+
     try:
-        return verify_token(credentials.credentials, expect="access")
+        return verify_token(token, expect="access")
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
