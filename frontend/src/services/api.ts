@@ -11,38 +11,25 @@ import axios, { AxiosError, type AxiosInstance } from 'axios'
 // In development, use a relative base URL so all /api/* requests go through
 // the Vite dev server proxy (vite.config.ts) → avoids CORS entirely.
 // In production, set VITE_API_URL to the deployed backend origin (e.g. https://api.example.com).
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? ''
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+  withCredentials: true,
+});
 
-// Request interceptor — inject auth token when present
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// Response interceptor — handle 401 globally
+// Global error handling
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('auth_token')
-      // TODO: redirect to login page when auth is implemented
+      // TODO: redirect to login page
+      console.warn("Authentication required.");
     }
-    return Promise.reject(error)
-  }
-)
 
-export default api
+    return Promise.reject(error);
+  }
+);
+
+export default api;

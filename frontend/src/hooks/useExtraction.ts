@@ -63,9 +63,9 @@ export function useExtraction(): UseExtractionResult {
         }
       }
 
-      if (result.status !== 'complete' && result.status !== 'error') {
+      if (result.status !== 'error') {
         setTimeout(poll, POLL_INTERVAL_MS)
-        return () => { cancelled = true }
+        return
       }
     } catch (err) {
       setStatus('error')
