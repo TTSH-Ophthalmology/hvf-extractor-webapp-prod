@@ -109,6 +109,7 @@ def login(
 
 @app.post("/api/logout")
 def logout(
+    request: Request,
     response: Response
 ):
 
@@ -118,6 +119,11 @@ def logout(
         httponly=True,
         secure=False,
         samesite="lax",
+    )
+
+    logger.info(
+        "Logout: ip=%s",
+        request.client.host,
     )
 
     return {
