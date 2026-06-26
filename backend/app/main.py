@@ -62,6 +62,8 @@ async def log_requests(request: Request, call_next) -> Response:
     return response
 
 # JWT system
+
+
 @app.post("/api/token")
 def login(
     request: Request,
@@ -83,9 +85,9 @@ def login(
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     access_token = create_access_token(
-            user_id= username,
-            role = "admin"
-        )
+        user_id=username,
+        role="admin"
+    )
 
     response.set_cookie(
         key="access_token",
@@ -106,6 +108,15 @@ def login(
     return {
         "message": "Login successfully"
     }
+
+
+@app.get("/api/me")
+def me(user=Depends(get_current_user)):
+    return {
+        "username": user["sub"],
+        "role": user["role"],
+    }
+
 
 @app.post("/api/logout")
 def logout(
@@ -136,8 +147,10 @@ def logout(
 # ---------------------------------------------------------------------------
 api_dependencies = [Depends(get_current_user)]
 
-app.include_router(pdf.router,        prefix="/api", dependencies=api_dependencies)
-app.include_router(extraction.router, prefix="/api", dependencies=api_dependencies)
+app.include_router(pdf.router,        prefix="/api",
+                   dependencies=api_dependencies)
+app.include_router(extraction.router, prefix="/api",
+                   dependencies=api_dependencies)
 
 
 if __name__ == "__main__":
