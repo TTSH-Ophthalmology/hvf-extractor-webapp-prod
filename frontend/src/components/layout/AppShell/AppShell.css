@@ -29,7 +29,7 @@
 
 @media (max-width: 860px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: 58px minmax(0, 1fr);
   }
 
   .page-content {

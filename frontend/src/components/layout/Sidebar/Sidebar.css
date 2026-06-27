@@ -105,7 +105,30 @@
 
 @media (max-width: 860px) {
   .sidebar {
-    height: auto;
-    min-height: auto;
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    min-height: 82px;
+    padding: 8px 0;
+  }
+
+  .hospital-logo {
+    width: 48px;
+    height: 48px;
+    margin-left: 9px;
+    flex-basis: 48px;
+  }
+
+  .brand-text,
+  .nav-label {
+    max-width: 0;
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-4px);
+    transition-delay: 0ms;
   }
 }
