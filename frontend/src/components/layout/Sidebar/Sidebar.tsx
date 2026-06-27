@@ -1,7 +1,7 @@
 /**
  * components/layout/Sidebar/Sidebar.tsx — Main sidebar with branding.
  *
- * VIEW: renders the TTSH logo, brand text, and navigation.
+ * VIEW: renders the NHG logo, brand text, and navigation.
  * Collapse/expand is controlled by the parent AppShell.
  */
 

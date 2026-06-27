@@ -4,7 +4,7 @@
  * VIEW: displays the current page title, debug mode button, and workflow tabs.
  */
 
-import { CgDebug } from 'react-icons/cg'
+import { Bell } from 'lucide-react'
 import { WorkflowTabs } from './WorkflowTabs'
 import './TopBar.css'
 
@@ -19,16 +19,30 @@ export const TopBar = ({ pageTitle, isDebugMode, onToggleDebugMode }: TopBarProp
     <header className="topbar">
       <div className="topbar-main">
         <h1>{pageTitle}</h1>
-        <button
-          className={`debug-button${isDebugMode ? ' debug-button-active' : ''}`}
-          type="button"
-          role="switch"
-          aria-checked={isDebugMode}
-          onClick={onToggleDebugMode}
-        >
-          <CgDebug size={20} />
-          Debug mode
-        </button>
+        <div className="topbar-actions">
+          <button
+            className={`debug-button${isDebugMode ? ' debug-button-active' : ''}`}
+            type="button"
+            role="switch"
+            aria-checked={isDebugMode}
+            onClick={onToggleDebugMode}
+          >
+            {/* <CgDebug size={17} /> */}
+            <span>Debug Mode</span>
+            <span className="debug-status-dot" aria-hidden="true" />
+          </button>
+
+          <button className="notification-button" type="button" aria-label="Notifications">
+            <Bell size={19} strokeWidth={2.2} />
+            <span aria-hidden="true" />
+          </button>
+
+          <span className="topbar-divider" aria-hidden="true" />
+
+          <button className="profile-button" type="button" aria-label="Profile">
+            <span>DR</span>
+          </button>
+        </div>
       </div>
       <WorkflowTabs />
     </header>
