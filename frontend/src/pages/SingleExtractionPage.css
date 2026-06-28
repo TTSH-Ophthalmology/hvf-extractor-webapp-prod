@@ -85,6 +85,11 @@
   cursor: pointer;
 }
 
+.file-dropzone-dragging {
+  border-color: #003f7d;
+  background: #f4f8fc;
+}
+
 .upload-icon-box {
   display: inline-flex;
   align-items: center;

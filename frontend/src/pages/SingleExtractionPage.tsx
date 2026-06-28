@@ -42,11 +42,32 @@ const EyeUploadPanel = ({
   selectedFile,
 }: EyeUploadPanelProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const [isDraggingFile, setIsDraggingFile] = useState(false)
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) onFileSelected(file)
     e.target.value = ''
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    setIsDraggingFile(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+      setIsDraggingFile(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault()
+    setIsDraggingFile(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (file) onFileSelected(file)
+    e.dataTransfer.clearData()
   }
 
   const handleClearFile = () => {
@@ -75,7 +96,13 @@ const EyeUploadPanel = ({
         )}
       </header>
 
-      <label className="file-dropzone" htmlFor={`file-input-${abbreviation}`}>
+      <label
+        className={`file-dropzone${isDraggingFile ? ' file-dropzone-dragging' : ''}`}
+        htmlFor={`file-input-${abbreviation}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <div className="upload-icon-box">
           <MdOutlineCloudUpload size={24} />
         </div>
