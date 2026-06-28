@@ -6,11 +6,15 @@
  * (extraction lifecycle) hooks — one instance per eye.
  */
 
-import { CloudUpload, FileText, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
+import { FaEye, FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
+import { MdOutlineCloudUpload } from 'react-icons/md'
+import { X } from 'lucide-react'
+import { RiEyeCloseFill, RiSearchEyeLine } from 'react-icons/ri'
 import { ReportTypeSelector, type ReportType } from '../components/ui/ReportTypeSelector'
 import { usePDFUpload } from '../hooks/usePDFUpload'
 import { useExtraction } from '../hooks/useExtraction'
+import type { FileUploadResponse } from '../models/pdf'
 import './SingleExtractionPage.css'
 
 const reportTypeOptions = [
@@ -24,39 +28,61 @@ type EyeUploadPanelProps = {
   abbreviation: Eye
   label: string
   onFileSelected: (file: File) => void
+  onClearFile: () => void
   isUploading: boolean
-  selectedFilename: string | null
+  selectedFile: FileUploadResponse | null
 }
 
 const EyeUploadPanel = ({
   abbreviation,
   label,
   onFileSelected,
+  onClearFile,
   isUploading,
-  selectedFilename,
+  selectedFile,
 }: EyeUploadPanelProps) => {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) onFileSelected(file)
+    e.target.value = ''
   }
 
+  const handleClearFile = () => {
+    onClearFile()
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const fileSizeMb = selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB` : null
+
   return (
-    <section className="eye-upload-panel" aria-labelledby={`${abbreviation}-title`}>
+    <section
+      className={`eye-upload-panel${selectedFile ? ' eye-upload-panel-uploaded' : ''}`}
+      aria-labelledby={`${abbreviation}-title`}
+    >
       <header className="eye-upload-header">
         <div className="eye-upload-title" id={`${abbreviation}-title`}>
           <span className="eye-code">{abbreviation}</span>
           <span>{label}</span>
         </div>
-        <span className="eye-status-mark" aria-hidden="true">~</span>
+        {selectedFile ? (
+          <FaEye className="eye-status-mark" aria-hidden="true" />
+        ) : (
+          <RiEyeCloseFill className="eye-status-mark" aria-hidden="true" />
+        )}
       </header>
 
       <label className="file-dropzone" htmlFor={`file-input-${abbreviation}`}>
         <div className="upload-icon-box">
-          <CloudUpload size={24} strokeWidth={2.2} />
+          <MdOutlineCloudUpload size={24} />
         </div>
         <p>Drag and drop file here</p>
         <span>Supported: PDF (Max 200 MB)</span>
         <input
+          ref={fileInputRef}
           id={`file-input-${abbreviation}`}
           type="file"
           accept=".pdf"
@@ -69,10 +95,30 @@ const EyeUploadPanel = ({
         </span>
       </label>
 
-      <div className="selected-file-row">
-        <FileText size={20} strokeWidth={2} />
-        <strong>{selectedFilename ?? 'No file selected'}</strong>
-      </div>
+      {selectedFile ? (
+        <div className="selected-file-card">
+          <div className="selected-file-icon" aria-hidden="true">
+            <FaRegFilePdf size={16} />
+          </div>
+          <div className="selected-file-details">
+            <strong>{selectedFile.filename}</strong>
+            <span>{fileSizeMb}</span>
+          </div>
+          <button
+            className="selected-file-remove"
+            type="button"
+            aria-label={`Remove ${selectedFile.filename}`}
+            onClick={handleClearFile}
+          >
+            <X size={16} strokeWidth={2} />
+          </button>
+        </div>
+      ) : (
+        <div className="selected-file-row">
+          <FaRegFileLines size={16} />
+          <strong>No file uploaded</strong>
+        </div>
+      )}
     </section>
   )
 }
@@ -120,15 +166,17 @@ export const SingleExtractionPage = () => {
           abbreviation="LE"
           label="Left Eye"
           onFileSelected={leftEye.upload}
+          onClearFile={leftEye.reset}
           isUploading={leftEye.status === 'uploading'}
-          selectedFilename={leftEye.response?.filename ?? null}
+          selectedFile={leftEye.response}
         />
         <EyeUploadPanel
           abbreviation="RE"
           label="Right Eye"
           onFileSelected={rightEye.upload}
+          onClearFile={rightEye.reset}
           isUploading={rightEye.status === 'uploading'}
-          selectedFilename={rightEye.response?.filename ?? null}
+          selectedFile={rightEye.response}
         />
       </div>
 
@@ -144,7 +192,7 @@ export const SingleExtractionPage = () => {
           onClick={handleExtract}
           style={canExtract && !isExtracting ? { background: '#00336a' } : undefined}
         >
-          <Search size={16} strokeWidth={2.2} />
+          <RiSearchEyeLine size={18} />
           {isExtracting ? 'Extracting...' : 'Run Extraction'}
         </button>
       </div>
