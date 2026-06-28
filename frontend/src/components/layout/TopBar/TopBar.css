@@ -16,7 +16,7 @@
   padding: 0 24px 0 18px;
   background: #f8f8f8;
   box-shadow: 0 4px 10px rgb(0 0 0 / 14%);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .topbar h1 {
@@ -104,6 +104,11 @@
   background: #d7dde5;
 }
 
+.profile-menu-root {
+  position: relative;
+  display: inline-flex;
+}
+
 .profile-button {
   display: inline-flex;
   align-items: center;
@@ -117,6 +122,105 @@
   background: linear-gradient(135deg, #005eb8 0%, #22a6b3 52%, #20345c 100%);
   font-size: 12px;
   font-weight: 800;
+}
+
+.profile-button[aria-expanded='true'] {
+  box-shadow: 0 0 0 3px rgb(0 51 106 / 16%);
+}
+
+.profile-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  width: min(250px, calc(100vw - 24px));
+  padding: 8px;
+  border: 1px solid #d7dde5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 34px rgb(15 23 42 / 18%);
+}
+
+.profile-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 10px 10px 12px;
+}
+
+.profile-menu-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #ffffff;
+  background: linear-gradient(135deg, #005eb8 0%, #22a6b3 52%, #20345c 100%);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.profile-menu-header div {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.profile-menu-header strong {
+  overflow: hidden;
+  color: #172033;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-menu-header span:last-child {
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.profile-menu-item:hover {
+  color: #00336a;
+  background: #eef5fc;
+}
+
+.profile-menu-divider {
+  height: 1px;
+  margin: 8px 4px;
+  background: #e5e7eb;
+}
+
+.profile-menu-logout {
+  color: #b42318;
+}
+
+.profile-menu-logout:hover {
+  color: #9f1d14;
+  background: #fff1f0;
 }
 
 @media (max-width: 860px) {
@@ -200,5 +304,10 @@
     width: 32px;
     height: 32px;
     font-size: 11px;
+  }
+
+  .profile-menu {
+    right: -4px;
+    width: min(236px, calc(100vw - 16px));
   }
 }
