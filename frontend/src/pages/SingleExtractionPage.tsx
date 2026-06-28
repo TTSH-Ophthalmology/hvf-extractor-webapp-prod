@@ -6,7 +6,7 @@
  * (extraction lifecycle) hooks — one instance per eye.
  */
 
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { FaEye, FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
 import { MdOutlineCloudUpload } from 'react-icons/md'
 import { X } from 'lucide-react'
@@ -14,7 +14,6 @@ import { RiEyeCloseFill, RiSearchEyeLine } from 'react-icons/ri'
 import { ReportTypeSelector, type ReportType } from '../components/ui/ReportTypeSelector'
 import { usePDFUpload } from '../hooks/usePDFUpload'
 import { useExtraction } from '../hooks/useExtraction'
-import type { FileUploadResponse } from '../models/pdf'
 import './SingleExtractionPage.css'
 
 const reportTypeOptions = [
@@ -24,13 +23,18 @@ const reportTypeOptions = [
 
 type Eye = 'LE' | 'RE'
 
+type SelectedFile = {
+  name: string
+  size: number
+}
+
 type EyeUploadPanelProps = {
   abbreviation: Eye
   label: string
   onFileSelected: (file: File) => void
   onClearFile: () => void
   isUploading: boolean
-  selectedFile: FileUploadResponse | null
+  selectedFile: SelectedFile | null
 }
 
 const EyeUploadPanel = ({
@@ -128,13 +132,13 @@ const EyeUploadPanel = ({
             <FaRegFilePdf size={16} />
           </div>
           <div className="selected-file-details">
-            <strong>{selectedFile.filename}</strong>
+            <strong>{selectedFile.name}</strong>
             <span>{fileSizeMb}</span>
           </div>
           <button
             className="selected-file-remove"
             type="button"
-            aria-label={`Remove ${selectedFile.filename}`}
+            aria-label={`Remove ${selectedFile.name}`}
             onClick={handleClearFile}
           >
             <X size={16} strokeWidth={2} />
@@ -152,6 +156,8 @@ const EyeUploadPanel = ({
 
 export const SingleExtractionPage = () => {
   const [reportType, setReportType] = useState<ReportType>('hvf')
+  const [leftSelectedFile, setLeftSelectedFile] = useState<File | null>(null)
+  const [rightSelectedFile, setRightSelectedFile] = useState<File | null>(null)
 
   const leftEye  = usePDFUpload()
   const rightEye = usePDFUpload()
@@ -159,23 +165,62 @@ export const SingleExtractionPage = () => {
   const leftExtraction  = useExtraction()
   const rightExtraction = useExtraction()
 
-  const canExtract =
-    (leftEye.status === 'success' || rightEye.status === 'success') &&
-    leftExtraction.status  === 'idle' &&
-    rightExtraction.status === 'idle'
+  const hasSelectedFile = Boolean(leftSelectedFile || rightSelectedFile)
 
   const isExtracting =
     leftExtraction.status  === 'extracting' ||
     rightExtraction.status === 'extracting'
 
+  const isUploading =
+    leftEye.status  === 'uploading' ||
+    rightEye.status === 'uploading'
+
+  const canExtract = hasSelectedFile && !isUploading && !isExtracting
+
+  const handleLeftFileSelected = useCallback((file: File) => {
+    setLeftSelectedFile(file)
+    leftExtraction.reset()
+    leftEye.upload(file)
+  }, [leftEye, leftExtraction])
+
+  const handleRightFileSelected = useCallback((file: File) => {
+    setRightSelectedFile(file)
+    rightExtraction.reset()
+    rightEye.upload(file)
+  }, [rightEye, rightExtraction])
+
+  const handleClearLeftFile = useCallback(() => {
+    setLeftSelectedFile(null)
+    leftEye.reset()
+    leftExtraction.reset()
+  }, [leftEye, leftExtraction])
+
+  const handleClearRightFile = useCallback(() => {
+    setRightSelectedFile(null)
+    rightEye.reset()
+    rightExtraction.reset()
+  }, [rightEye, rightExtraction])
+
   const handleExtract = async () => {
     const tasks: Promise<void>[] = []
 
-    if (leftEye.response?.job_id) {
-      tasks.push(leftExtraction.extract(leftEye.response.job_id, 'LE', reportType))
+    let leftJobId = leftEye.response?.job_id
+    if (!leftJobId && leftSelectedFile) {
+      const uploaded = await leftEye.upload(leftSelectedFile)
+      leftJobId = uploaded?.job_id
     }
-    if (rightEye.response?.job_id) {
-      tasks.push(rightExtraction.extract(rightEye.response.job_id, 'RE', reportType))
+
+    let rightJobId = rightEye.response?.job_id
+    if (!rightJobId && rightSelectedFile) {
+      const uploaded = await rightEye.upload(rightSelectedFile)
+      rightJobId = uploaded?.job_id
+    }
+
+    if (leftJobId) {
+      tasks.push(leftExtraction.extract(leftJobId, 'LE', reportType))
+    }
+    if (rightJobId) {
+      tasks.push(rightExtraction.extract(rightJobId, 'RE', reportType))
     }
 
     await Promise.all(tasks)
@@ -192,18 +237,18 @@ export const SingleExtractionPage = () => {
         <EyeUploadPanel
           abbreviation="LE"
           label="Left Eye"
-          onFileSelected={leftEye.upload}
-          onClearFile={leftEye.reset}
+          onFileSelected={handleLeftFileSelected}
+          onClearFile={handleClearLeftFile}
           isUploading={leftEye.status === 'uploading'}
-          selectedFile={leftEye.response}
+          selectedFile={leftSelectedFile}
         />
         <EyeUploadPanel
           abbreviation="RE"
           label="Right Eye"
-          onFileSelected={rightEye.upload}
-          onClearFile={rightEye.reset}
+          onFileSelected={handleRightFileSelected}
+          onClearFile={handleClearRightFile}
           isUploading={rightEye.status === 'uploading'}
-          selectedFile={rightEye.response}
+          selectedFile={rightSelectedFile}
         />
       </div>
 
