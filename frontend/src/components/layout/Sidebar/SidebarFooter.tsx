@@ -4,7 +4,7 @@
  * VIEW: renders the Templates link and Help/Settings utility links at the bottom.
  */
 
-import { CircleHelp, Settings } from 'lucide-react'
+import { CircleHelp, LogOut, Settings } from 'lucide-react'
 import { RiEdit2Fill } from 'react-icons/ri'
 import { NavLink } from 'react-router-dom'
 import './SidebarFooter.css'
@@ -46,6 +46,15 @@ export const SidebarFooter = ({ isCollapsed }: SidebarFooterProps) => {
         >
           <Settings size={18} strokeWidth={2} />
           <span className="nav-label">Settings</span>
+        </NavLink>
+        <NavLink
+          to="/logout"
+          className="utility-link"
+          aria-label="Logout"
+          title={isCollapsed ? 'Logout' : undefined}
+        >
+          <LogOut size={18} strokeWidth={2} />
+          <span className="nav-label">Logout</span>
         </NavLink>
       </nav>
     </div>
