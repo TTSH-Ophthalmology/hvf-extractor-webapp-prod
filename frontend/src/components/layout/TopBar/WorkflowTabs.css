@@ -40,6 +40,13 @@
   clip-path: polygon(0 0, 100% 0, calc(100% - 30px) 100%, 0 100%);
 }
 
+.workflow-tab-disabled {
+  color: #eef2f6;
+  background: #8b95a1;
+  cursor: not-allowed;
+  text-shadow: none;
+}
+
 .workflow-tab:nth-child(2) {
   min-width: 220px;
 }

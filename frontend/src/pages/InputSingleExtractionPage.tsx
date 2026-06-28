@@ -1,5 +1,5 @@
 /**
- * pages/SingleExtractionPage.tsx — Upload HVF PDFs and run extraction.
+ * pages/InputSingleExtractionPage.tsx — Upload HVF PDFs and run extraction.
  *
  * VIEW: renders the report type selector and dual-eye upload panels.
  * State is managed by usePDFUpload (upload lifecycle) and useExtraction
@@ -7,6 +7,7 @@
  */
 
 import { useCallback, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { FaEye, FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
 import { MdOutlineCloudUpload } from 'react-icons/md'
 import { X } from 'lucide-react'
@@ -14,7 +15,9 @@ import { RiEyeCloseFill, RiSearchEyeLine } from 'react-icons/ri'
 import { ReportTypeSelector, type ReportType } from '../components/ui/ReportTypeSelector'
 import { usePDFUpload } from '../hooks/usePDFUpload'
 import { useExtraction } from '../hooks/useExtraction'
-import './SingleExtractionPage.css'
+import { useSingleExtractionWorkflow } from '../context/SingleExtractionWorkflowContext'
+import type { ExtractionResult } from '../models/extraction'
+import './InputSingleExtractionPage.css'
 
 const reportTypeOptions = [
   { value: 'hvf',  label: 'HVF (Humphrey Visual Field)',        abbreviation: 'HVF'  },
@@ -154,7 +157,9 @@ const EyeUploadPanel = ({
   )
 }
 
-export const SingleExtractionPage = () => {
+export const InputSingleExtractionPage = () => {
+  const navigate = useNavigate()
+  const { setResults, clearResults } = useSingleExtractionWorkflow()
   const [reportType, setReportType] = useState<ReportType>('hvf')
   const [leftSelectedFile, setLeftSelectedFile] = useState<File | null>(null)
   const [rightSelectedFile, setRightSelectedFile] = useState<File | null>(null)
@@ -179,30 +184,34 @@ export const SingleExtractionPage = () => {
 
   const handleLeftFileSelected = useCallback((file: File) => {
     setLeftSelectedFile(file)
+    clearResults()
     leftExtraction.reset()
     leftEye.upload(file)
-  }, [leftEye, leftExtraction])
+  }, [clearResults, leftEye, leftExtraction])
 
   const handleRightFileSelected = useCallback((file: File) => {
     setRightSelectedFile(file)
+    clearResults()
     rightExtraction.reset()
     rightEye.upload(file)
-  }, [rightEye, rightExtraction])
+  }, [clearResults, rightEye, rightExtraction])
 
   const handleClearLeftFile = useCallback(() => {
     setLeftSelectedFile(null)
+    clearResults()
     leftEye.reset()
     leftExtraction.reset()
-  }, [leftEye, leftExtraction])
+  }, [clearResults, leftEye, leftExtraction])
 
   const handleClearRightFile = useCallback(() => {
     setRightSelectedFile(null)
+    clearResults()
     rightEye.reset()
     rightExtraction.reset()
-  }, [rightEye, rightExtraction])
+  }, [clearResults, rightEye, rightExtraction])
 
   const handleExtract = async () => {
-    const tasks: Promise<void>[] = []
+    const tasks: Promise<{ eye: Eye; result: ExtractionResult | null }>[] = []
 
     let leftJobId = leftEye.response?.job_id
     if (!leftJobId && leftSelectedFile) {
@@ -217,13 +226,33 @@ export const SingleExtractionPage = () => {
     }
 
     if (leftJobId) {
-      tasks.push(leftExtraction.extract(leftJobId, 'LE', reportType))
+      tasks.push(
+        leftExtraction
+          .extract(leftJobId, 'LE', reportType)
+          .then((result) => ({ eye: 'LE' as Eye, result }))
+      )
     }
     if (rightJobId) {
-      tasks.push(rightExtraction.extract(rightJobId, 'RE', reportType))
+      tasks.push(
+        rightExtraction
+          .extract(rightJobId, 'RE', reportType)
+          .then((result) => ({ eye: 'RE' as Eye, result }))
+      )
     }
 
-    await Promise.all(tasks)
+    const completedResults = await Promise.all(tasks)
+    const nextResults = completedResults.reduce(
+      (acc, { eye, result }) => ({
+        ...acc,
+        [eye]: result?.status === 'complete' ? result : null,
+      }),
+      { LE: null, RE: null } as Record<Eye, ExtractionResult | null>
+    )
+
+    if (nextResults.LE || nextResults.RE) {
+      setResults(nextResults)
+      navigate('/result')
+    }
   }
 
   const uploadError = leftEye.errorMessage ?? rightEye.errorMessage
@@ -273,21 +302,6 @@ export const SingleExtractionPage = () => {
         <p className="extraction-error" role="alert">{extractionError}</p>
       )}
 
-      {(leftExtraction.data || rightExtraction.data) && (
-        <section className="extraction-results" aria-label="Extraction results">
-          {([
-            { eye: 'LE' as Eye, result: leftExtraction.data },
-            { eye: 'RE' as Eye, result: rightExtraction.data },
-          ]).map(({ eye, result }) =>
-            result ? (
-              <article className="extraction-result-panel" key={eye}>
-                <h2>{eye} Result</h2>
-                <pre>{JSON.stringify(result.raw_data, null, 2)}</pre>
-              </article>
-            ) : null
-          )}
-        </section>
-      )}
     </div>
   )
 }

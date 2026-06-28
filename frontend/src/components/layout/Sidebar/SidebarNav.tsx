@@ -6,7 +6,7 @@
 
 import { MdOutlineFileOpen } from 'react-icons/md'
 import { PiStack } from 'react-icons/pi'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 import './SidebarNav.css'
 
 type SidebarNavProps = {
@@ -19,6 +19,8 @@ const navigationItems = [
 ]
 
 export const SidebarNav = ({ isCollapsed }: SidebarNavProps) => {
+  const { pathname } = useLocation()
+
   return (
     <nav className="sidebar-nav" aria-label="Main navigation">
       {navigationItems.map((item) => (
@@ -28,7 +30,9 @@ export const SidebarNav = ({ isCollapsed }: SidebarNavProps) => {
           aria-label={item.label}
           title={isCollapsed ? item.label : undefined}
           className={({ isActive }) =>
-            isActive ? 'nav-link nav-link-active' : 'nav-link'
+            isActive || (item.path === '/' && pathname === '/result')
+              ? 'nav-link nav-link-active'
+              : 'nav-link'
           }
           end={item.path === '/'}
         >

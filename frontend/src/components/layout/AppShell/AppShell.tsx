@@ -17,6 +17,7 @@ type AppShellProps = {
 
 const pageTitles: Record<string, string> = {
   '/': 'Single Extraction',
+  '/result': 'Single Extraction',
   '/visual-fields': 'Batch Extraction',
   '/reports': 'Templates',
   '/patients': 'Help',
