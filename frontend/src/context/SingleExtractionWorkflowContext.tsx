@@ -11,7 +11,9 @@ export type ExtractionReportType = 'hvf' | 'vrvf'
 type SingleExtractionWorkflowContextValue = {
   results: ExtractionResultsByEye
   reportType: ExtractionReportType
+  completedAt: Date | null
   hasResults: boolean
+  setReportType: (reportType: ExtractionReportType) => void
   setResults: (results: ExtractionResultsByEye, reportType?: ExtractionReportType) => void
   clearResults: () => void
 }
@@ -33,12 +35,14 @@ export const SingleExtractionWorkflowProvider = ({
 }: SingleExtractionWorkflowProviderProps) => {
   const [results, setResultsState] = useState<ExtractionResultsByEye>(emptyResults)
   const [reportType, setReportType] = useState<ExtractionReportType>('hvf')
+  const [completedAt, setCompletedAt] = useState<Date | null>(null)
 
   const setResults = useCallback((
     nextResults: ExtractionResultsByEye,
     nextReportType?: ExtractionReportType
   ) => {
     setResultsState(nextResults)
+    setCompletedAt(new Date())
     if (nextReportType) {
       setReportType(nextReportType)
     }
@@ -46,17 +50,20 @@ export const SingleExtractionWorkflowProvider = ({
 
   const clearResults = useCallback(() => {
     setResultsState(emptyResults)
+    setCompletedAt(null)
   }, [])
 
   const value = useMemo(
     () => ({
       results,
       reportType,
+      completedAt,
       hasResults: Boolean(results.LE || results.RE),
+      setReportType,
       setResults,
       clearResults,
     }),
-    [clearResults, reportType, results, setResults]
+    [clearResults, completedAt, reportType, results, setResults]
   )
 
   return (

@@ -23,7 +23,7 @@
   font-size: 31px;
   font-weight: 600;
   letter-spacing: 1px;
-  transform: translateY(-1.5px);
+  transform: translateY(0px);
 }
 
 @media (max-width: 560px) {

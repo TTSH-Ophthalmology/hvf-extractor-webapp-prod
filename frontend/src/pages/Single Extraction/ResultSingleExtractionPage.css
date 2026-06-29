@@ -6,23 +6,25 @@
 
 .result-page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
 
 .result-title-block {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
   min-width: 0;
 }
 
 .result-title-block h1 {
   margin: 0;
-  color: #414956;
+  color: #424751;
   font-family: var(--font-hanken-grotesk);
-  font-size: 27px;
-  font-weight: 800;
+  font-size: 31px;
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -301,9 +303,8 @@
 }
 
 .result-json-preview {
-  max-height: 460px;
   margin: 0 17px 13px;
-  overflow: auto;
+  overflow-x: auto;
   padding: 14px 16px;
   border: 1px solid #d7dde5;
   border-radius: 3px;

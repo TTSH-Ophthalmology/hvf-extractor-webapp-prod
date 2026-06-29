@@ -44,9 +44,19 @@ const escapeCsvValue = (value: string) => {
   return `"${value.replace(/"/g, '""')}"`
 }
 
+const formatCompletedAt = (completedAt: Date | null) => {
+  if (!completedAt) return null
+
+  return completedAt.toLocaleString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
 export const ResultSingleExtractionPage = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('csv')
-  const { results, reportType, hasResults } = useSingleExtractionWorkflow()
+  const { results, reportType, completedAt, hasResults } = useSingleExtractionWorkflow()
 
   if (!hasResults) {
     return <Navigate to="/" replace />
@@ -69,6 +79,7 @@ export const ResultSingleExtractionPage = () => {
   )
 
   const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
+  const completedAtText = formatCompletedAt(completedAt)
   const jsonPreview = resultRows.reduce(
     (acc, row) => ({
       ...acc,
@@ -101,22 +112,23 @@ export const ResultSingleExtractionPage = () => {
 
   return (
     <div className="result-single-extraction-page">
-      <ReportTypePreview
-        options={reportTypeOptions}
-        value={reportType}
-      />
-
       <header className="result-page-header">
         <div className="result-title-block">
           <h1>Extraction Results</h1>
           <div className="result-status-row">
             <span className="result-status-pill">
               <CheckCircle size={13} strokeWidth={3} />
-              Extraction completed
+              {completedAtText
+                ? `Extraction completed at ${completedAtText}`
+                : 'Extraction completed'}
             </span>
             <span>{completedEyesText} eye(s) processed</span>
           </div>
         </div>
+        <ReportTypePreview
+          options={reportTypeOptions}
+          value={reportType}
+        />
       </header>
 
       <section className="result-eye-grid" aria-label="Processed eye reports">

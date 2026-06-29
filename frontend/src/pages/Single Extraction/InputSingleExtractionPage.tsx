@@ -159,8 +159,7 @@ const EyeUploadPanel = ({
 
 export const InputSingleExtractionPage = () => {
   const navigate = useNavigate()
-  const { setResults, clearResults } = useSingleExtractionWorkflow()
-  const [reportType, setReportType] = useState<ReportType>('hvf')
+  const { reportType, setReportType, setResults, clearResults } = useSingleExtractionWorkflow()
   const [leftSelectedFile, setLeftSelectedFile] = useState<File | null>(null)
   const [rightSelectedFile, setRightSelectedFile] = useState<File | null>(null)
 
@@ -260,7 +259,11 @@ export const InputSingleExtractionPage = () => {
 
   return (
     <div className="single-extraction-page">
-      <ReportTypeSelector options={reportTypeOptions} value={reportType} onChange={setReportType} />
+      <ReportTypeSelector
+        options={reportTypeOptions}
+        value={reportType}
+        onChange={setReportType}
+      />
 
       <div className="eye-upload-grid">
         <EyeUploadPanel

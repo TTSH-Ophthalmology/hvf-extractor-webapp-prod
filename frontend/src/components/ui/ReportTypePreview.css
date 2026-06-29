@@ -1,6 +1,10 @@
 .report-type-preview-panel {
+  flex: 0 0 auto;
+  margin-left: auto;
+  width: fit-content;
+  min-width: 112px;
   min-height: 85px;
-  padding: 11px 18px 10px;
+  padding: 11px 24px 10px 34px;
   border: 1px solid #cbd4e0;
   border-radius: 5px;
   background: #ffffff;
@@ -9,27 +13,27 @@
 .report-type-preview-content {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   min-height: 56px;
 }
 
 .report-type-preview-abbreviation {
   align-self: center;
-  text-align: right;
-  padding-right: 12px;
+  text-align: center;
   color: #00939b;
   font-family: var(--font-inter);
   font-size: 31px;
   font-weight: 600;
   letter-spacing: 1px;
+  transform: translate(-6px, 1.5px);
 }
 
 @media (max-width: 560px) {
   .report-type-preview-content {
-    justify-content: flex-end;
+    justify-content: center;
   }
 
   .report-type-preview-abbreviation {
-    text-align: right;
+    text-align: center;
   }
 }
