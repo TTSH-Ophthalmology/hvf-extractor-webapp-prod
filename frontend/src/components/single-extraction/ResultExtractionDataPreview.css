@@ -166,10 +166,6 @@
   border-radius: 50%;
   color: #8a94a3;
   background: #f2f5f8;
-  font-family: var(--font-hanken-grotesk);
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 1px;
 }
 
 .result-json-empty-state strong {
@@ -179,9 +175,9 @@
 }
 
 .result-json-empty-state span:last-child {
-  margin-top: 5px;
+  margin-top: 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 @media (max-width: 560px) {

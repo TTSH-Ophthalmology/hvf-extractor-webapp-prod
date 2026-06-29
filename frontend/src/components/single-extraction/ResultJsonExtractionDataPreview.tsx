@@ -1,3 +1,4 @@
+import { GoEyeClosed } from 'react-icons/go'
 import { EyeBox } from './EyeBox'
 import { FilePreview } from './FilePreview'
 import type { EyeCode } from './types'
@@ -54,9 +55,9 @@ export const ResultJsonExtractionDataPreview = ({
               ) : (
                 <div className="result-json-empty-state">
                   <span className="result-json-empty-mark" aria-hidden="true">
-                    {eye}
+                    <GoEyeClosed size={26} />
                   </span>
-                  <strong>No data extracted</strong>
+                  <strong>No Data Extracted</strong>
                   <span>Run extraction for this eye to preview JSON data.</span>
                 </div>
               )}
