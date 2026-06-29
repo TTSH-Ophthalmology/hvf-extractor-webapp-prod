@@ -80,6 +80,8 @@ export const ResultSingleExtractionPage = () => {
 
   const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
   const completedAtText = formatCompletedAt(completedAt)
+  const visibleEyeCards = resultRows.filter((row) => row.eye !== 'RE')
+  const previewHeaderRow = resultRows.find((row) => row.eye === 'RE') ?? resultRows[0]
   const jsonPreview = resultRows.reduce(
     (acc, row) => ({
       ...acc,
@@ -132,7 +134,7 @@ export const ResultSingleExtractionPage = () => {
       </header>
 
       <section className="result-eye-grid" aria-label="Processed eye reports">
-        {resultRows.map((row) => (
+        {visibleEyeCards.map((row) => (
           <article className="result-eye-card" key={row.eye}>
             <header>
               <div>
@@ -187,6 +189,21 @@ export const ResultSingleExtractionPage = () => {
             <ChevronDown size={14} strokeWidth={2.4} />
           </button>
         </header>
+
+        {previewHeaderRow && (
+          <div className="result-preview-meta-bar">
+            <div className="result-preview-eye-title">
+              <strong>{previewHeaderRow.eye}</strong>
+              <span>{previewHeaderRow.label}</span>
+            </div>
+            <div className="result-preview-file-name">
+              <span className="result-file-icon" aria-hidden="true">
+                <FaRegFilePdf size={15} />
+              </span>
+              <strong>{previewHeaderRow.filename}</strong>
+            </div>
+          </div>
+        )}
 
         {previewMode === 'csv' ? (
           <div className="result-table-wrap">

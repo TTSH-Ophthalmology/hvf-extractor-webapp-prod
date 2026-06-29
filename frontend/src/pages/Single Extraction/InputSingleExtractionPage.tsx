@@ -6,12 +6,13 @@
  * (extraction lifecycle) hooks — one instance per eye.
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FaEye, FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
-import { MdOutlineCloudUpload } from 'react-icons/md'
-import { X } from 'lucide-react'
-import { RiEyeCloseFill, RiSearchEyeLine } from 'react-icons/ri'
+import { RiSearchEyeLine } from 'react-icons/ri'
+import { EyeBox } from '../../components/single-extraction/EyeBox'
+import { FileDropzone } from '../../components/single-extraction/FileDropzone'
+import { FilePreview } from '../../components/single-extraction/FilePreview'
+import type { EyeCode, SelectedFile } from '../../components/single-extraction/types'
 import { ReportTypeSelector, type ReportType } from '../../components/ui/ReportTypeSelector'
 import { usePDFUpload } from '../../hooks/usePDFUpload'
 import { useExtraction } from '../../hooks/useExtraction'
@@ -24,15 +25,8 @@ const reportTypeOptions = [
   { value: 'vrvf', label: 'VRVF (Virtual Reality Visual Field)', abbreviation: 'VRVF' },
 ] satisfies Array<{ value: ReportType; label: string; abbreviation: string }>
 
-type Eye = 'LE' | 'RE'
-
-type SelectedFile = {
-  name: string
-  size: number
-}
-
 type EyeUploadPanelProps = {
-  abbreviation: Eye
+  abbreviation: EyeCode
   label: string
   onFileSelected: (file: File) => void
   onClearFile: () => void
@@ -48,112 +42,19 @@ const EyeUploadPanel = ({
   isUploading,
   selectedFile,
 }: EyeUploadPanelProps) => {
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [isDraggingFile, setIsDraggingFile] = useState(false)
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onFileSelected(file)
-    e.target.value = ''
-  }
-
-  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault()
-    setIsDraggingFile(true)
-  }
-
-  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-      setIsDraggingFile(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
-    e.preventDefault()
-    setIsDraggingFile(false)
-
-    const file = e.dataTransfer.files?.[0]
-    if (file) onFileSelected(file)
-    e.dataTransfer.clearData()
-  }
-
-  const handleClearFile = () => {
-    onClearFile()
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-
-  const fileSizeMb = selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB` : null
-
   return (
-    <section
-      className={`eye-upload-panel${selectedFile ? ' eye-upload-panel-uploaded' : ''}`}
-      aria-labelledby={`${abbreviation}-title`}
+    <EyeBox
+      abbreviation={abbreviation}
+      label={label}
+      hasSelectedFile={Boolean(selectedFile)}
     >
-      <header className="eye-upload-header">
-        <div className="eye-upload-title" id={`${abbreviation}-title`}>
-          <span className="eye-code">{abbreviation}</span>
-          <span>{label}</span>
-        </div>
-        {selectedFile ? (
-          <FaEye className="eye-status-mark" aria-hidden="true" />
-        ) : (
-          <RiEyeCloseFill className="eye-status-mark" aria-hidden="true" />
-        )}
-      </header>
-
-      <label
-        className={`file-dropzone${isDraggingFile ? ' file-dropzone-dragging' : ''}`}
-        htmlFor={`file-input-${abbreviation}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <div className="upload-icon-box">
-          <MdOutlineCloudUpload size={24} />
-        </div>
-        <p>Drag and drop file here</p>
-        <span>Supported: PDF (Max 200 MB)</span>
-        <input
-          ref={fileInputRef}
-          id={`file-input-${abbreviation}`}
-          type="file"
-          accept=".pdf"
-          onChange={handleChange}
-          disabled={isUploading}
-          style={{ display: 'none' }}
-        />
-        <span className="browse-button" role="button" aria-label="Browse files">
-          Browse files
-        </span>
-      </label>
-
-      {selectedFile ? (
-        <div className="selected-file-card">
-          <div className="selected-file-icon" aria-hidden="true">
-            <FaRegFilePdf size={16} />
-          </div>
-          <div className="selected-file-details">
-            <strong>{selectedFile.name}</strong>
-            <span>{fileSizeMb}</span>
-          </div>
-          <button
-            className="selected-file-remove"
-            type="button"
-            aria-label={`Remove ${selectedFile.name}`}
-            onClick={handleClearFile}
-          >
-            <X size={16} strokeWidth={2} />
-          </button>
-        </div>
-      ) : (
-        <div className="selected-file-row">
-          <FaRegFileLines size={16} />
-          <strong>No file uploaded</strong>
-        </div>
-      )}
-    </section>
+      <FileDropzone
+        inputId={`file-input-${abbreviation}`}
+        isUploading={isUploading}
+        onFileSelected={onFileSelected}
+      />
+      <FilePreview selectedFile={selectedFile} onClearFile={onClearFile} />
+    </EyeBox>
   )
 }
 
@@ -210,7 +111,7 @@ export const InputSingleExtractionPage = () => {
   }, [clearResults, rightEye, rightExtraction])
 
   const handleExtract = async () => {
-    const tasks: Promise<{ eye: Eye; result: ExtractionResult | null }>[] = []
+    const tasks: Promise<{ eye: EyeCode; result: ExtractionResult | null }>[] = []
 
     let leftJobId = leftEye.response?.job_id
     if (!leftJobId && leftSelectedFile) {
@@ -228,14 +129,14 @@ export const InputSingleExtractionPage = () => {
       tasks.push(
         leftExtraction
           .extract(leftJobId, 'LE', reportType)
-          .then((result) => ({ eye: 'LE' as Eye, result }))
+          .then((result) => ({ eye: 'LE' as EyeCode, result }))
       )
     }
     if (rightJobId) {
       tasks.push(
         rightExtraction
           .extract(rightJobId, 'RE', reportType)
-          .then((result) => ({ eye: 'RE' as Eye, result }))
+          .then((result) => ({ eye: 'RE' as EyeCode, result }))
       )
     }
 
@@ -245,7 +146,7 @@ export const InputSingleExtractionPage = () => {
         ...acc,
         [eye]: result?.status === 'complete' ? result : null,
       }),
-      { LE: null, RE: null } as Record<Eye, ExtractionResult | null>
+      { LE: null, RE: null } as Record<EyeCode, ExtractionResult | null>
     )
 
     if (nextResults.LE || nextResults.RE) {

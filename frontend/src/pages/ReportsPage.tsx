@@ -4,16 +4,15 @@
  * VIEW: placeholder page for future clinical report builder.
  */
 
-import { PageHeader } from '../components/ui/PageHeader'
 import './ReportsPage.css'
 
 export const ReportsPage = () => {
   return (
     <>
-      <PageHeader
-        title="Reports"
-        description="Prepare clinical summaries and export visual field insight reports."
-      />
+      <header>
+        <h1>Reports</h1>
+        <p>Prepare clinical summaries and export visual field insight reports.</p>
+      </header>
 
       <section className="reports-panel">
         <h3>Report builder</h3>
