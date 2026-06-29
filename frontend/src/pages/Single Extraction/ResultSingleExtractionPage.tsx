@@ -6,8 +6,10 @@ import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { CheckCircle, ChevronDown, Download, Table2 } from 'lucide-react'
 import { FaRegFilePdf } from 'react-icons/fa6'
-import { useSingleExtractionWorkflow } from '../context/SingleExtractionWorkflowContext'
-import type { ExtractionResultsByEye } from '../context/SingleExtractionWorkflowContext'
+import { ReportTypePreview } from '../../components/ui/ReportTypePreview'
+import type { ReportType } from '../../components/ui/ReportTypeSelector'
+import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
+import type { ExtractionResultsByEye } from '../../context/SingleExtractionWorkflowContext'
 import './ResultSingleExtractionPage.css'
 
 type Eye = keyof ExtractionResultsByEye
@@ -25,6 +27,11 @@ const eyeLabels: Record<Eye, string> = {
   RE: 'Right Eye',
 }
 
+const reportTypeOptions = [
+  { value: 'hvf',  label: 'HVF (Humphrey Visual Field)',        abbreviation: 'HVF'  },
+  { value: 'vrvf', label: 'VRVF (Virtual Reality Visual Field)', abbreviation: 'VRVF' },
+] satisfies Array<{ value: ReportType; label: string; abbreviation: string }>
+
 const formatFieldName = (fieldName: string) =>
   fieldName
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
@@ -39,7 +46,7 @@ const escapeCsvValue = (value: string) => {
 
 export const ResultSingleExtractionPage = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('csv')
-  const { results, hasResults } = useSingleExtractionWorkflow()
+  const { results, reportType, hasResults } = useSingleExtractionWorkflow()
 
   if (!hasResults) {
     return <Navigate to="/" replace />
@@ -94,6 +101,11 @@ export const ResultSingleExtractionPage = () => {
 
   return (
     <div className="result-single-extraction-page">
+      <ReportTypePreview
+        options={reportTypeOptions}
+        value={reportType}
+      />
+
       <header className="result-page-header">
         <div className="result-title-block">
           <h1>Extraction Results</h1>

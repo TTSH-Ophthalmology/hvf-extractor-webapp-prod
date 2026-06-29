@@ -12,11 +12,11 @@ import { FaEye, FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
 import { MdOutlineCloudUpload } from 'react-icons/md'
 import { X } from 'lucide-react'
 import { RiEyeCloseFill, RiSearchEyeLine } from 'react-icons/ri'
-import { ReportTypeSelector, type ReportType } from '../components/ui/ReportTypeSelector'
-import { usePDFUpload } from '../hooks/usePDFUpload'
-import { useExtraction } from '../hooks/useExtraction'
-import { useSingleExtractionWorkflow } from '../context/SingleExtractionWorkflowContext'
-import type { ExtractionResult } from '../models/extraction'
+import { ReportTypeSelector, type ReportType } from '../../components/ui/ReportTypeSelector'
+import { usePDFUpload } from '../../hooks/usePDFUpload'
+import { useExtraction } from '../../hooks/useExtraction'
+import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
+import type { ExtractionResult } from '../../models/extraction'
 import './InputSingleExtractionPage.css'
 
 const reportTypeOptions = [
@@ -250,7 +250,7 @@ export const InputSingleExtractionPage = () => {
     )
 
     if (nextResults.LE || nextResults.RE) {
-      setResults(nextResults)
+      setResults(nextResults, reportType)
       navigate('/result')
     }
   }
