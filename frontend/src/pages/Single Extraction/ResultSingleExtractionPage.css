@@ -67,8 +67,9 @@
 }
 
 .result-data-panel-json {
-  height: calc(100vh - 148px);
-  min-height: 520px;
+  height: 430px;
+  min-height: 360px;
+  margin-bottom: 72px;
 }
 
 .result-data-panel > header {
@@ -138,37 +139,51 @@
   background: #0b4c8f !important;
 }
 
-.result-panel-resize-handle {
+.result-panel-resize-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 28px;
+  width: 28px;
+  height: 26px;
   padding: 0;
   border: 1px solid #cbd4e0;
   border-radius: 4px;
   color: #4b5a6d;
   background: #ffffff;
   box-shadow: 0 1px 2px rgb(15 23 42 / 12%);
-  cursor: ns-resize;
+  cursor: pointer;
   touch-action: none;
+  user-select: none;
 }
 
 .result-panel-resize-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  flex: 0 0 42px;
-  min-height: 42px;
-  padding: 6px 10px;
+  gap: 6px;
+  flex: 0 0 38px;
+  min-height: 38px;
+  padding: 5px 10px;
   border-top: 1px solid #d7dde5;
   background: #f8fafc;
 }
 
-.result-panel-resize-handle:hover,
-.result-panel-resize-handle:focus-visible {
+.result-panel-resize-button:hover,
+.result-panel-resize-button:focus-visible {
   border-color: #0b4c8f;
   color: #0b4c8f;
+}
+
+.result-panel-resize-button:active {
+  background: #eaf1f8;
+}
+
+.result-panel-resize-button:disabled {
+  border-color: #d7dde5;
+  color: #a7b0bd;
+  background: #eef2f6;
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 @media (max-width: 560px) {
@@ -184,7 +199,7 @@
   }
 
   .result-data-panel-json {
-    height: calc(100vh - 196px);
-    min-height: 520px;
+    height: 380px;
+    min-height: 320px;
   }
 }

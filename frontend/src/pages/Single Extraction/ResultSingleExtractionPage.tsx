@@ -2,9 +2,17 @@
  * pages/ResultSingleExtractionPage.tsx — Displays completed single-extraction results.
  */
 
-import { useCallback, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
 import { Navigate } from 'react-router-dom'
-import { CheckCircle, ChevronsUpDown } from 'lucide-react'
+import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
 import { LuClipboardList } from 'react-icons/lu'
 import { ResultExtractionDataPreview } from '../../components/single-extraction/ResultExtractionDataPreview'
 import type { PreviewMode } from '../../components/single-extraction/ResultExtractionDataPreview'
@@ -52,12 +60,17 @@ const formatCompletedAt = (completedAt: Date | null) => {
 const clamp = (value: number, min: number, max: number) =>
   Math.min(Math.max(value, min), max)
 
+const PANEL_RESIZE_STEP = 32
+const PANEL_RESIZE_REPEAT_MS = 85
+
 export const ResultSingleExtractionPage = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('csv')
   const [previewPanelSizes, setPreviewPanelSizes] = useState<
     Partial<Record<PreviewMode, PreviewPanelSize>>
   >({})
+  const previewPanelSizesRef = useRef<Partial<Record<PreviewMode, PreviewPanelSize>>>({})
   const previewPanelRef = useRef<HTMLElement | null>(null)
+  const resizeRepeatRef = useRef<number | null>(null)
   const { results, uploadedFiles, reportType, completedAt, hasResults } = useSingleExtractionWorkflow()
 
   const getPreviewPanelMaxHeight = useCallback((panel: HTMLElement) => {
@@ -109,59 +122,133 @@ export const ResultSingleExtractionPage = () => {
           Math.max(desiredEyeHeights.length - 1, 0) * gridRowGap
         : Math.max(...desiredEyeHeights)
 
-      return headerHeight + gridVerticalMargin + gridContentHeight + footerHeight + 2
+      return headerHeight + gridVerticalMargin + gridContentHeight + footerHeight
     }
 
     return panel.scrollHeight
   }, [previewMode])
 
-  const handlePreviewResizePointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const stopPreviewResizeRepeat = useCallback(() => {
+    if (resizeRepeatRef.current !== null) {
+      window.clearInterval(resizeRepeatRef.current)
+      resizeRepeatRef.current = null
+    }
+  }, [])
+
+  const scrollPreviewPanelDelta = useCallback((delta: number) => {
     const panel = previewPanelRef.current
-    const currentSize = previewPanelSizes[previewMode]
-    if (previewMode !== 'json' || !panel || !currentSize) return
+    if (!panel) return
+
+    const scrollContainer = panel.closest('.page-content')
+
+    if (delta > 0) {
+      const scrollToBottom = () => {
+        if (scrollContainer instanceof HTMLElement) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight
+          return
+        }
+
+        const scrollingElement = document.scrollingElement ?? document.documentElement
+        window.scrollTo({
+          top: scrollingElement.scrollHeight,
+          behavior: 'auto',
+        })
+      }
+
+      scrollToBottom()
+      window.requestAnimationFrame(scrollToBottom)
+    } else if (delta < 0) {
+      if (scrollContainer instanceof HTMLElement) {
+        scrollContainer.scrollTop += delta
+      } else {
+        window.scrollBy({
+          top: delta,
+          behavior: 'auto',
+        })
+      }
+    }
+  }, [])
+
+  const resizePreviewPanel = useCallback((direction: 'up' | 'down') => {
+    const panel = previewPanelRef.current
+    if (previewMode !== 'json' || !panel) return
+
+    const currentSize = previewPanelSizesRef.current[previewMode]
+    if (!currentSize) return
+
+    const maxHeight = Math.ceil(Math.max(currentSize.min, getPreviewPanelMaxHeight(panel)))
+    const nextHeight = clamp(
+      currentSize.height + (direction === 'down' ? PANEL_RESIZE_STEP : -PANEL_RESIZE_STEP),
+      currentSize.min,
+      maxHeight
+    )
+    const appliedDelta = nextHeight - currentSize.height
+
+    if (appliedDelta === 0) return
+
+    panel.style.height = `${nextHeight}px`
+    scrollPreviewPanelDelta(appliedDelta)
+
+    const nextSizes = {
+      ...previewPanelSizesRef.current,
+      [previewMode]: {
+        height: nextHeight,
+        min: currentSize.min,
+        max: maxHeight,
+      },
+    }
+
+    previewPanelSizesRef.current = nextSizes
+    setPreviewPanelSizes((currentSizes) => ({
+      ...currentSizes,
+      [previewMode]: {
+        height: nextHeight,
+        min: currentSize.min,
+        max: maxHeight,
+      },
+    }))
+  }, [getPreviewPanelMaxHeight, previewMode, scrollPreviewPanelDelta])
+
+  const handlePreviewResizePointerDown = (
+    direction: 'up' | 'down',
+    event: ReactPointerEvent<HTMLButtonElement>
+  ) => {
+    if (previewMode !== 'json') return
 
     event.preventDefault()
     event.currentTarget.setPointerCapture(event.pointerId)
+    stopPreviewResizeRepeat()
+    resizePreviewPanel(direction)
 
-    const startY = event.clientY
-    const startHeight = currentSize.height
-    const maxHeight = Math.ceil(Math.max(currentSize.max, getPreviewPanelMaxHeight(panel)))
-    let lastAppliedHeight = startHeight
+    resizeRepeatRef.current = window.setInterval(() => {
+      resizePreviewPanel(direction)
+    }, PANEL_RESIZE_REPEAT_MS)
 
-    const handlePointerMove = (moveEvent: PointerEvent) => {
-      const nextHeight = clamp(
-        startHeight + moveEvent.clientY - startY,
-        currentSize.min,
-        maxHeight
-      )
-      const appliedDelta = nextHeight - lastAppliedHeight
-
-      setPreviewPanelSizes((currentSizes) => ({
-        ...currentSizes,
-        [previewMode]: {
-          height: nextHeight,
-          min: currentSize.min,
-          max: maxHeight,
-        },
-      }))
-
-      if (appliedDelta !== 0) {
-        window.scrollBy({
-          top: appliedDelta,
-          behavior: 'auto',
-        })
-        lastAppliedHeight = nextHeight
-      }
+    const handlePointerEnd = () => {
+      stopPreviewResizeRepeat()
+      window.removeEventListener('pointerup', handlePointerEnd)
+      window.removeEventListener('pointercancel', handlePointerEnd)
     }
 
-    const handlePointerUp = () => {
-      window.removeEventListener('pointermove', handlePointerMove)
-      window.removeEventListener('pointerup', handlePointerUp)
-    }
-
-    window.addEventListener('pointermove', handlePointerMove)
-    window.addEventListener('pointerup', handlePointerUp)
+    window.addEventListener('pointerup', handlePointerEnd)
+    window.addEventListener('pointercancel', handlePointerEnd)
   }
+
+  const handlePreviewResizeKeyDown = (
+    direction: 'up' | 'down',
+    event: ReactKeyboardEvent<HTMLButtonElement>
+  ) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return
+
+    event.preventDefault()
+    resizePreviewPanel(direction)
+  }
+
+  useEffect(() => {
+    return () => {
+      stopPreviewResizeRepeat()
+    }
+  }, [stopPreviewResizeRepeat])
 
   const resultRows: ResultRow[] = ([
     { eye: 'LE' as Eye, result: results.LE },
@@ -183,20 +270,27 @@ export const ResultSingleExtractionPage = () => {
   const previewMeasurementKey = resultRows
     .map((row) => `${row.eye}:${JSON.stringify(row.rawData).length}`)
     .join('|')
+  const currentPreviewPanelSize = previewPanelSizes[previewMode]
+  const canShrinkPreviewPanel = previewMode === 'json' && currentPreviewPanelSize
+    ? currentPreviewPanelSize.height > currentPreviewPanelSize.min
+    : false
+  const canGrowPreviewPanel = previewMode === 'json' && currentPreviewPanelSize
+    ? currentPreviewPanelSize.height < currentPreviewPanelSize.max
+    : false
 
   useLayoutEffect(() => {
     const panel = previewPanelRef.current
     if (!panel || previewMode !== 'json') return
 
     const measuredHeight = Math.ceil(panel.getBoundingClientRect().height)
-    const maxHeight = Math.ceil(Math.max(measuredHeight, getPreviewPanelMaxHeight(panel)))
 
     setPreviewPanelSizes((currentSizes) => {
       const currentSize = currentSizes[previewMode]
       const minHeight = currentSize?.min ?? measuredHeight
+      const maxHeight = Math.ceil(Math.max(minHeight, getPreviewPanelMaxHeight(panel)))
       const nextHeight = clamp(currentSize?.height ?? measuredHeight, minHeight, maxHeight)
 
-      return {
+      const nextSizes = {
         ...currentSizes,
         [previewMode]: {
           height: nextHeight,
@@ -204,6 +298,9 @@ export const ResultSingleExtractionPage = () => {
           max: maxHeight,
         },
       }
+
+      previewPanelSizesRef.current = nextSizes
+      return nextSizes
     })
   }, [fieldNames.length, getPreviewPanelMaxHeight, previewMeasurementKey, previewMode, resultRows.length])
 
@@ -283,12 +380,24 @@ export const ResultSingleExtractionPage = () => {
         {previewMode === 'json' && (
           <footer className="result-panel-resize-footer">
             <button
-              className="result-panel-resize-handle"
+              className="result-panel-resize-button"
               type="button"
-              aria-label="Resize preview panel vertically"
-              onPointerDown={handlePreviewResizePointerDown}
+              aria-label="Decrease preview panel height"
+              disabled={!canShrinkPreviewPanel}
+              onPointerDown={(event) => handlePreviewResizePointerDown('up', event)}
+              onKeyDown={(event) => handlePreviewResizeKeyDown('up', event)}
             >
-              <ChevronsUpDown size={18} strokeWidth={2.5} aria-hidden="true" />
+              <ChevronUp size={15} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+            <button
+              className="result-panel-resize-button"
+              type="button"
+              aria-label="Increase preview panel height"
+              disabled={!canGrowPreviewPanel}
+              onPointerDown={(event) => handlePreviewResizePointerDown('down', event)}
+              onKeyDown={(event) => handlePreviewResizeKeyDown('down', event)}
+            >
+              <ChevronDown size={15} strokeWidth={2.5} aria-hidden="true" />
             </button>
           </footer>
         )}
