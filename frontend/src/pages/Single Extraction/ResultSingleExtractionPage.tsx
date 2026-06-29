@@ -4,8 +4,9 @@
 
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { CheckCircle, ChevronDown, Download, Table2 } from 'lucide-react'
-import { FaRegFilePdf } from 'react-icons/fa6'
+import { CheckCircle, ChevronDown, Download } from 'lucide-react'
+import { LuClipboardList } from 'react-icons/lu'
+import { FilePreview } from '../../components/single-extraction/FilePreview'
 import { ReportTypePreview } from '../../components/ui/ReportTypePreview'
 import type { ReportType } from '../../components/ui/ReportTypeSelector'
 import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
@@ -18,7 +19,7 @@ type PreviewMode = 'csv' | 'json'
 type ResultRow = {
   eye: Eye
   label: string
-  filename: string
+  uploadedFile: File | null
   rawData: Record<string, string>
 }
 
@@ -56,7 +57,7 @@ const formatCompletedAt = (completedAt: Date | null) => {
 
 export const ResultSingleExtractionPage = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('csv')
-  const { results, reportType, completedAt, hasResults } = useSingleExtractionWorkflow()
+  const { results, uploadedFiles, reportType, completedAt, hasResults } = useSingleExtractionWorkflow()
 
   if (!hasResults) {
     return <Navigate to="/" replace />
@@ -70,7 +71,7 @@ export const ResultSingleExtractionPage = () => {
     .map(({ eye, result }) => ({
       eye,
       label: eyeLabels[eye],
-      filename: result?.filename ?? 'Uploaded report',
+      uploadedFile: uploadedFiles[eye],
       rawData: result?.raw_data ?? {},
     }))
 
@@ -80,7 +81,6 @@ export const ResultSingleExtractionPage = () => {
 
   const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
   const completedAtText = formatCompletedAt(completedAt)
-  const visibleEyeCards = resultRows.filter((row) => row.eye !== 'RE')
   const previewHeaderRow = resultRows.find((row) => row.eye === 'RE') ?? resultRows[0]
   const jsonPreview = resultRows.reduce(
     (acc, row) => ({
@@ -133,35 +133,11 @@ export const ResultSingleExtractionPage = () => {
         />
       </header>
 
-      <section className="result-eye-grid" aria-label="Processed eye reports">
-        {visibleEyeCards.map((row) => (
-          <article className="result-eye-card" key={row.eye}>
-            <header>
-              <div>
-                <strong>{row.eye}</strong>
-                <span>{row.label}</span>
-              </div>
-              <span className="result-eye-indicator" aria-hidden="true" />
-            </header>
-
-            <div className="result-file-card">
-              <span className="result-file-icon" aria-hidden="true">
-                <FaRegFilePdf size={15} />
-              </span>
-              <div>
-                <strong>{row.filename}</strong>
-                <span>Uploaded report</span>
-              </div>
-            </div>
-          </article>
-        ))}
-      </section>
-
       <section className="result-data-panel" aria-label="Preview extraction data">
         <header>
           <div className="result-data-heading">
             <div className="result-data-title">
-              <Table2 size={17} strokeWidth={2.2} />
+              <LuClipboardList size={20} aria-hidden="true" />
               <h2>Preview Extraction Data</h2>
             </div>
             <div className="result-preview-toggle" aria-label="Preview format">
@@ -197,10 +173,7 @@ export const ResultSingleExtractionPage = () => {
               <span>{previewHeaderRow.label}</span>
             </div>
             <div className="result-preview-file-name">
-              <span className="result-file-icon" aria-hidden="true">
-                <FaRegFilePdf size={15} />
-              </span>
-              <strong>{previewHeaderRow.filename}</strong>
+              <FilePreview selectedFile={previewHeaderRow.uploadedFile} />
             </div>
           </div>
         )}

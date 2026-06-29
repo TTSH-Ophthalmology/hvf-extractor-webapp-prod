@@ -150,7 +150,10 @@ export const InputSingleExtractionPage = () => {
     )
 
     if (nextResults.LE || nextResults.RE) {
-      setResults(nextResults, reportType)
+      setResults(nextResults, reportType, {
+        LE: leftSelectedFile,
+        RE: rightSelectedFile,
+      })
       navigate('/result')
     }
   }

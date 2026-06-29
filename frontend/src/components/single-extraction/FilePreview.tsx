@@ -1,10 +1,11 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { X } from 'lucide-react'
 import { FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
+import './FilePreview.css'
 
 type FilePreviewProps = {
   selectedFile: File | null
-  onClearFile: () => void
+  onClearFile?: () => void
 }
 
 export const FilePreview = ({
@@ -37,7 +38,7 @@ export const FilePreview = ({
 
   const handleClearFile = (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
-    onClearFile()
+    onClearFile?.()
   }
 
   return (
@@ -56,14 +57,16 @@ export const FilePreview = ({
         <strong>{selectedFile.name}</strong>
         <span>{fileSizeMb}</span>
       </div>
-      <button
-        className="selected-file-remove"
-        type="button"
-        aria-label={`Remove ${selectedFile.name}`}
-        onClick={handleClearFile}
-      >
-        <X size={16} strokeWidth={2} />
-      </button>
+      {onClearFile && (
+        <button
+          className="selected-file-remove"
+          type="button"
+          aria-label={`Remove ${selectedFile.name}`}
+          onClick={handleClearFile}
+        >
+          <X size={16} strokeWidth={2} />
+        </button>
+      )}
     </div>
   )
 }

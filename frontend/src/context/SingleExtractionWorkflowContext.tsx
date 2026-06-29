@@ -6,19 +6,34 @@ export type ExtractionResultsByEye = {
   RE: ExtractionResult | null
 }
 
+export type ExtractionFilesByEye = {
+  LE: File | null
+  RE: File | null
+}
+
 export type ExtractionReportType = 'hvf' | 'vrvf'
 
 type SingleExtractionWorkflowContextValue = {
   results: ExtractionResultsByEye
+  uploadedFiles: ExtractionFilesByEye
   reportType: ExtractionReportType
   completedAt: Date | null
   hasResults: boolean
   setReportType: (reportType: ExtractionReportType) => void
-  setResults: (results: ExtractionResultsByEye, reportType?: ExtractionReportType) => void
+  setResults: (
+    results: ExtractionResultsByEye,
+    reportType?: ExtractionReportType,
+    uploadedFiles?: ExtractionFilesByEye
+  ) => void
   clearResults: () => void
 }
 
 const emptyResults: ExtractionResultsByEye = {
+  LE: null,
+  RE: null,
+}
+
+const emptyFiles: ExtractionFilesByEye = {
   LE: null,
   RE: null,
 }
@@ -34,14 +49,19 @@ export const SingleExtractionWorkflowProvider = ({
   children,
 }: SingleExtractionWorkflowProviderProps) => {
   const [results, setResultsState] = useState<ExtractionResultsByEye>(emptyResults)
+  const [uploadedFiles, setUploadedFiles] = useState<ExtractionFilesByEye>(emptyFiles)
   const [reportType, setReportType] = useState<ExtractionReportType>('hvf')
   const [completedAt, setCompletedAt] = useState<Date | null>(null)
 
   const setResults = useCallback((
     nextResults: ExtractionResultsByEye,
-    nextReportType?: ExtractionReportType
+    nextReportType?: ExtractionReportType,
+    nextUploadedFiles?: ExtractionFilesByEye
   ) => {
     setResultsState(nextResults)
+    if (nextUploadedFiles) {
+      setUploadedFiles(nextUploadedFiles)
+    }
     setCompletedAt(new Date())
     if (nextReportType) {
       setReportType(nextReportType)
@@ -50,12 +70,14 @@ export const SingleExtractionWorkflowProvider = ({
 
   const clearResults = useCallback(() => {
     setResultsState(emptyResults)
+    setUploadedFiles(emptyFiles)
     setCompletedAt(null)
   }, [])
 
   const value = useMemo(
     () => ({
       results,
+      uploadedFiles,
       reportType,
       completedAt,
       hasResults: Boolean(results.LE || results.RE),
@@ -63,7 +85,7 @@ export const SingleExtractionWorkflowProvider = ({
       setResults,
       clearResults,
     }),
-    [clearResults, completedAt, reportType, results, setResults]
+    [clearResults, completedAt, reportType, results, setResults, uploadedFiles]
   )
 
   return (
