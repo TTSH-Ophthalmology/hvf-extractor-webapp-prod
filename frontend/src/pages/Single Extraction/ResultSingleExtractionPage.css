@@ -52,6 +52,7 @@
 }
 
 .result-data-panel {
+  position: relative;
   overflow: hidden;
   border: 1px solid #d7dde5;
   border-radius: 5px;
@@ -59,9 +60,13 @@
   box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
 }
 
-.result-data-panel-json {
+.result-data-panel-resizable {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.result-data-panel-json {
   height: calc(100vh - 148px);
   min-height: 520px;
 }
@@ -131,6 +136,39 @@
 .result-preview-toggle-active {
   color: #ffffff !important;
   background: #0b4c8f !important;
+}
+
+.result-panel-resize-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #cbd4e0;
+  border-radius: 4px;
+  color: #4b5a6d;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 12%);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.result-panel-resize-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex: 0 0 42px;
+  min-height: 42px;
+  padding: 6px 10px;
+  border-top: 1px solid #d7dde5;
+  background: #f8fafc;
+}
+
+.result-panel-resize-handle:hover,
+.result-panel-resize-handle:focus-visible {
+  border-color: #0b4c8f;
+  color: #0b4c8f;
 }
 
 @media (max-width: 560px) {

@@ -54,7 +54,6 @@
   box-sizing: border-box;
   margin: 0;
   min-height: 100%;
-  overflow: auto;
   padding: 14px 16px;
   border: 1px solid #d7dde5;
   border-radius: 3px;
@@ -88,7 +87,7 @@
 }
 
 .result-json-eye-grid .result-json-preview {
-  height: 100%;
+  height: auto;
 }
 
 .result-json-eye-grid .eye-upload-header {
