@@ -8,7 +8,6 @@ import { CheckCircle } from 'lucide-react'
 import { LuClipboardList } from 'react-icons/lu'
 import { ResultExtractionDataPreview } from '../../components/single-extraction/ResultExtractionDataPreview'
 import type { PreviewMode } from '../../components/single-extraction/ResultExtractionDataPreview'
-import { ResultEyePreviewBox } from '../../components/single-extraction/ResultEyePreviewBox'
 import { DownloadDataButton } from '../../components/single-extraction/DownloadDataButton'
 import { ReportTypePreview } from '../../components/ui/ReportTypePreview'
 import type { ReportType } from '../../components/ui/ReportTypeSelector'
@@ -33,12 +32,6 @@ const reportTypeOptions = [
   { value: 'hvf',  label: 'HVF (Humphrey Visual Field)',        abbreviation: 'HVF'  },
   { value: 'vrvf', label: 'VRVF (Virtual Reality Visual Field)', abbreviation: 'VRVF' },
 ] satisfies Array<{ value: ReportType; label: string; abbreviation: string }>
-
-const escapeCsvValue = (value: string) => {
-  if (!/[",\n\r]/.test(value)) return value
-
-  return `"${value.replace(/"/g, '""')}"`
-}
 
 const formatCompletedAt = (completedAt: Date | null) => {
   if (!completedAt) return null
@@ -97,7 +90,10 @@ export const ResultSingleExtractionPage = () => {
         />
       </header>
 
-      <section className="result-data-panel" aria-label="Preview extraction data">
+      <section
+        className={`result-data-panel${previewMode === 'json' ? ' result-data-panel-json' : ''}`}
+        aria-label="Preview extraction data"
+      >
         <header>
           <div className="result-data-heading">
             <div className="result-data-title">
@@ -130,13 +126,12 @@ export const ResultSingleExtractionPage = () => {
           />
         </header>
 
-        <ResultEyePreviewBox rows={resultRows} uploadedFiles={uploadedFiles}>
-          <ResultExtractionDataPreview
-            mode={previewMode}
-            rows={resultRows}
-            fieldNames={fieldNames}
-          />
-        </ResultEyePreviewBox>
+        <ResultExtractionDataPreview
+          mode={previewMode}
+          rows={resultRows}
+          fieldNames={fieldNames}
+          uploadedFiles={uploadedFiles}
+        />
       </section>
     </div>
   )

@@ -3,7 +3,7 @@
 }
 
 .result-preview-eye-box .eye-upload-header {
-  min-height: 55px;
+  min-height: 53px;
 }
 
 .result-eye-title-list {
@@ -25,6 +25,7 @@
   justify-content: flex-end;
   gap: 8px;
   min-width: 0;
+  transform: translateX(6px);
 }
 
 .result-preview-file-divider {
@@ -89,6 +90,10 @@
     flex: 1 1 160px;
     width: auto;
     max-width: 100%;
+  }
+
+  .result-preview-header-files {
+    transform: none;
   }
 
   .result-preview-header-file .selected-file-card,

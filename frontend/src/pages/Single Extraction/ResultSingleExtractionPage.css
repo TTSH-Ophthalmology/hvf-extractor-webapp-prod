@@ -59,10 +59,18 @@
   box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
 }
 
+.result-data-panel-json {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 148px);
+  min-height: 520px;
+}
+
 .result-data-panel > header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: 0 0 auto;
   gap: 16px;
   min-height: 65px;
   padding: 0 15px;
@@ -135,5 +143,10 @@
     align-items: flex-start;
     flex-direction: column;
     padding: 14px;
+  }
+
+  .result-data-panel-json {
+    height: calc(100vh - 196px);
+    min-height: 520px;
   }
 }
