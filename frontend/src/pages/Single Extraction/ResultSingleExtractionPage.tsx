@@ -4,9 +4,12 @@
 
 import { useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import { CheckCircle, ChevronDown, Download } from 'lucide-react'
+import { CheckCircle } from 'lucide-react'
 import { LuClipboardList } from 'react-icons/lu'
-import { FilePreview } from '../../components/single-extraction/FilePreview'
+import { ResultExtractionDataPreview } from '../../components/single-extraction/ResultExtractionDataPreview'
+import type { PreviewMode } from '../../components/single-extraction/ResultExtractionDataPreview'
+import { ResultEyePreviewBox } from '../../components/single-extraction/ResultEyePreviewBox'
+import { DownloadDataButton } from '../../components/single-extraction/DownloadDataButton'
 import { ReportTypePreview } from '../../components/ui/ReportTypePreview'
 import type { ReportType } from '../../components/ui/ReportTypeSelector'
 import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
@@ -14,12 +17,10 @@ import type { ExtractionResultsByEye } from '../../context/SingleExtractionWorkf
 import './ResultSingleExtractionPage.css'
 
 type Eye = keyof ExtractionResultsByEye
-type PreviewMode = 'csv' | 'json'
 
 type ResultRow = {
   eye: Eye
   label: string
-  uploadedFile: File | null
   rawData: Record<string, string>
 }
 
@@ -32,12 +33,6 @@ const reportTypeOptions = [
   { value: 'hvf',  label: 'HVF (Humphrey Visual Field)',        abbreviation: 'HVF'  },
   { value: 'vrvf', label: 'VRVF (Virtual Reality Visual Field)', abbreviation: 'VRVF' },
 ] satisfies Array<{ value: ReportType; label: string; abbreviation: string }>
-
-const formatFieldName = (fieldName: string) =>
-  fieldName
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .replace(/[\s-]+/g, '_')
-    .toUpperCase()
 
 const escapeCsvValue = (value: string) => {
   if (!/[",\n\r]/.test(value)) return value
@@ -71,7 +66,6 @@ export const ResultSingleExtractionPage = () => {
     .map(({ eye, result }) => ({
       eye,
       label: eyeLabels[eye],
-      uploadedFile: uploadedFiles[eye],
       rawData: result?.raw_data ?? {},
     }))
 
@@ -81,36 +75,6 @@ export const ResultSingleExtractionPage = () => {
 
   const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
   const completedAtText = formatCompletedAt(completedAt)
-  const previewHeaderRow = resultRows.find((row) => row.eye === 'RE') ?? resultRows[0]
-  const jsonPreview = resultRows.reduce(
-    (acc, row) => ({
-      ...acc,
-      [row.eye]: row.rawData,
-    }),
-    {} as Record<Eye, Record<string, string>>
-  )
-
-  const handleDownload = () => {
-    const headers = ['EYE', ...fieldNames]
-    const csvRows = [
-      headers.map(escapeCsvValue).join(','),
-      ...resultRows.map((row) =>
-        [row.eye, ...fieldNames.map((fieldName) => row.rawData[fieldName] ?? '')]
-          .map(escapeCsvValue)
-          .join(',')
-      ),
-    ]
-
-    const csv = csvRows.join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = 'single-extraction-results.csv'
-    link.click()
-    URL.revokeObjectURL(url)
-  }
 
   return (
     <div className="result-single-extraction-page">
@@ -137,7 +101,7 @@ export const ResultSingleExtractionPage = () => {
         <header>
           <div className="result-data-heading">
             <div className="result-data-title">
-              <LuClipboardList size={20} aria-hidden="true" />
+              <LuClipboardList size={21} aria-hidden="true" />
               <h2>Preview Extraction Data</h2>
             </div>
             <div className="result-preview-toggle" aria-label="Preview format">
@@ -159,53 +123,20 @@ export const ResultSingleExtractionPage = () => {
               </button>
             </div>
           </div>
-          <button className="result-download-button" type="button" onClick={handleDownload}>
-            <Download size={14} strokeWidth={2.4} />
-            <span>Download</span>
-            <ChevronDown size={14} strokeWidth={2.4} />
-          </button>
+          <DownloadDataButton
+            rows={resultRows}
+            fieldNames={fieldNames}
+            filenamePrefix="single-extraction-results"
+          />
         </header>
 
-        {previewHeaderRow && (
-          <div className="result-preview-meta-bar">
-            <div className="result-preview-eye-title">
-              <strong>{previewHeaderRow.eye}</strong>
-              <span>{previewHeaderRow.label}</span>
-            </div>
-            <div className="result-preview-file-name">
-              <FilePreview selectedFile={previewHeaderRow.uploadedFile} />
-            </div>
-          </div>
-        )}
-
-        {previewMode === 'csv' ? (
-          <div className="result-table-wrap">
-            <table className="result-data-table">
-              <thead>
-                <tr>
-                  <th>Eye</th>
-                  {fieldNames.map((fieldName) => (
-                    <th key={fieldName}>{formatFieldName(fieldName)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {resultRows.map((row) => (
-                  <tr key={row.eye}>
-                    <th scope="row">{row.eye}</th>
-                    {fieldNames.map((fieldName) => (
-                      <td key={fieldName}>{row.rawData[fieldName] || '-'}</td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <pre className="result-json-preview">
-            {JSON.stringify(jsonPreview, null, 2)}
-          </pre>
-        )}
+        <ResultEyePreviewBox rows={resultRows} uploadedFiles={uploadedFiles}>
+          <ResultExtractionDataPreview
+            mode={previewMode}
+            rows={resultRows}
+            fieldNames={fieldNames}
+          />
+        </ResultEyePreviewBox>
       </section>
     </div>
   )

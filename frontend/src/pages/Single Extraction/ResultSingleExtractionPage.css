@@ -64,7 +64,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 52px;
+  min-height: 64px;
   padding: 0 15px;
 }
 
@@ -72,7 +72,7 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 24px;
   min-width: 0;
 }
 
@@ -80,7 +80,7 @@
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 9px;
+  gap: 11px;
   color: #181c1e;
 }
 
@@ -91,7 +91,7 @@
 .result-data-title h2 {
   margin: 0;
   font-family: var(--font-hanken-grotesk);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
   line-height: 1.2;
 }
@@ -106,7 +106,7 @@
 }
 
 .result-preview-toggle button {
-  min-height: 28px;
+  min-height: 25px;
   padding: 0;
   border: 0;
   color: #5f6b7a;
@@ -125,165 +125,6 @@
   background: #0b4c8f !important;
 }
 
-.result-download-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 102px;
-  min-height: 30px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: 3px;
-  color: #ffffff;
-  background: #0b4c8f;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.result-download-button:hover {
-  background: #003f7d;
-}
-
-.result-preview-meta-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 42px;
-  margin: 0 17px;
-  padding: 0 12px;
-  border: 1px solid #d7dde5;
-  border-bottom: 0;
-  border-radius: 3px 3px 0 0;
-  background: #f8fafc;
-}
-
-.result-preview-eye-title {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 10px;
-  min-width: 0;
-  color: #1f2937;
-}
-
-.result-preview-eye-title strong {
-  color: #0b4c8f;
-  font-family: var(--font-hanken-grotesk);
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
-  line-height: 1;
-}
-
-.result-preview-eye-title span {
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.result-preview-file-name {
-  display: block;
-  min-width: 0;
-  max-width: 55%;
-}
-
-.result-preview-file-name .selected-file-card,
-.result-preview-file-name .selected-file-row {
-  min-width: 210px;
-  min-height: 32px;
-  max-width: 100%;
-  margin: 0;
-  padding: 0 8px;
-  border-color: #d7dde5;
-  border-radius: 2px;
-}
-
-.result-preview-file-name .selected-file-card {
-  gap: 8px;
-}
-
-.result-preview-file-name .selected-file-icon {
-  width: 22px;
-  height: 22px;
-}
-
-.result-preview-file-name .selected-file-icon svg {
-  width: 13px;
-  height: 13px;
-}
-
-.result-preview-file-name .selected-file-details strong {
-  font-size: 11px;
-}
-
-.result-preview-file-name .selected-file-details span {
-  font-size: 8px;
-}
-
-.result-table-wrap {
-  margin: 0 17px 13px;
-  overflow-x: auto;
-  border: 1px solid #d7dde5;
-  border-radius: 0 0 3px 3px;
-}
-
-.result-data-table {
-  width: 100%;
-  min-width: 920px;
-  border-collapse: collapse;
-  background: #ffffff;
-}
-
-.result-data-table th,
-.result-data-table td {
-  min-width: 86px;
-  padding: 10px 9px;
-  border-bottom: 1px solid #d7dde5;
-  color: #374151;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.25;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.result-data-table thead th {
-  color: #7b8491;
-  background: #f3f6f9;
-  font-size: 8px;
-  font-weight: 900;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-}
-
-.result-data-table tbody th {
-  min-width: 46px;
-  color: #0b4c8f;
-  font-weight: 900;
-}
-
-.result-data-table tbody tr:last-child th,
-.result-data-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.result-json-preview {
-  margin: 0 17px 13px;
-  overflow-x: auto;
-  padding: 14px 16px;
-  border: 1px solid #d7dde5;
-  border-radius: 3px;
-  color: #172033;
-  background: #fbfcfe;
-  font-size: 12px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-}
-
-.result-preview-meta-bar + .result-json-preview {
-  border-radius: 0 0 3px 3px;
-}
-
 @media (max-width: 560px) {
   .result-page-header {
     align-items: stretch;
@@ -294,29 +135,5 @@
     align-items: flex-start;
     flex-direction: column;
     padding: 14px;
-  }
-
-  .result-download-button {
-    width: 100%;
-  }
-
-  .result-preview-meta-bar {
-    align-items: flex-start;
-    flex-direction: column;
-    margin: 0 12px;
-    padding: 10px 12px;
-  }
-
-  .result-preview-file-name {
-    justify-content: flex-start;
-    max-width: 100%;
-  }
-
-  .result-table-wrap {
-    margin: 0 12px 12px;
-  }
-
-  .result-json-preview {
-    margin: 0 12px 12px;
   }
 }
