@@ -13,9 +13,10 @@
 .sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: 80px;
-  padding: 12px 0 10px 10px;
+  padding: 10px 0px 10px;
   border: 0;
   border-bottom: 1px solid #edf0f4;
   color: inherit;
@@ -26,44 +27,18 @@
 
 .hospital-logo {
   display: block;
-  width: 68px;
-  height: 68px;
-  margin-right: 1px;
-  margin-top: -8px;
+  width: calc(100%);
+  max-width: 225px;
+  height: auto;
   object-fit: contain;
-  flex: 0 0 62px;
+  flex: 0 0 auto;
+  transform: translateX(-5px);
   transition:
     width 180ms ease,
     height 180ms ease,
     margin 180ms ease,
-    flex-basis 180ms ease;
-}
-
-.brand-text {
-  margin-left: 12px;
-  min-width: 0;
-  overflow: hidden;
-  opacity: 1;
-  transition: opacity 160ms ease 80ms;
-}
-
-.brand-text strong {
-  display: block;
-  font-family: var(--font-hanken-grotesk);
-  color: #00336A;
-  font-size: 19px;
-  font-weight: 800;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.brand-text span {
-  display: block;
-  margin-top: 3px;
-  color: #717b89;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+    flex-basis 180ms ease,
+    transform 180ms ease;
 }
 
 .nav-label {
@@ -89,11 +64,11 @@
 .sidebar-collapsed .hospital-logo {
   width: 48px;
   height: 48px;
-  margin-left: 9px;
+  margin-left: 0;
   flex-basis: 48px;
+  transform: translate(-2px, -5px);
 }
 
-.sidebar-collapsed .brand-text,
 .sidebar-collapsed .nav-label {
   max-width: 0;
   width: 0;
@@ -118,11 +93,11 @@
   .hospital-logo {
     width: 48px;
     height: 48px;
-    margin-left: 9px;
+    margin-left: 0;
     flex-basis: 48px;
+    transform: translate(-3px, -5px);
   }
 
-  .brand-text,
   .nav-label {
     max-width: 0;
     width: 0;

@@ -10,10 +10,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 68px;
+  min-height: 65px;
   min-width: 0;
   gap: 24px;
-  padding: 0 24px 0 18px;
+  padding: 0 24px 0 26px;
   background: #f8f8f8;
   box-shadow: 0 4px 10px rgb(0 0 0 / 14%);
   overflow: visible;
@@ -25,7 +25,7 @@
   overflow: hidden;
   color: #00336a;
   font-family: var(--font-hanken-grotesk);
-  font-size: 27px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.18;
   text-overflow: ellipsis;

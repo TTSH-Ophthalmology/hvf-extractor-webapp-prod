@@ -1,7 +1,7 @@
 /**
  * components/layout/TopBar/TopBar.tsx — Header with page title and debug toggle.
  *
- * VIEW: displays the current page title, debug mode button, and workflow tabs.
+ * VIEW: displays the product title, debug mode button, and workflow tabs.
  */
 
 import { useEffect, useRef, useState } from 'react'
@@ -12,7 +12,6 @@ import { WorkflowTabs } from './WorkflowTabs'
 import './TopBar.css'
 
 type TopBarProps = {
-  pageTitle: string
   isDebugMode: boolean
   onToggleDebugMode: () => void
 }
@@ -40,7 +39,7 @@ const getInitials = (displayName: string) => {
   return initials || 'U'
 }
 
-export const TopBar = ({ pageTitle, isDebugMode, onToggleDebugMode }: TopBarProps) => {
+export const TopBar = ({ isDebugMode, onToggleDebugMode }: TopBarProps) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -97,7 +96,7 @@ export const TopBar = ({ pageTitle, isDebugMode, onToggleDebugMode }: TopBarProp
   return (
     <header className="topbar">
       <div className="topbar-main">
-        <h1>{pageTitle}</h1>
+        <h1>HVF Extraction</h1>
         <div className="topbar-actions">
           <button
             className={`debug-button${isDebugMode ? ' debug-button-active' : ''}`}

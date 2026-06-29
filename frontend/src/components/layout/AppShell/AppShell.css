@@ -1,6 +1,6 @@
 .app-shell {
   display: grid;
-  grid-template-columns: 236px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
