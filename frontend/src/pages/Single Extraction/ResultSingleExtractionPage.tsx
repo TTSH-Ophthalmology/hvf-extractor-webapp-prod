@@ -12,7 +12,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { Navigate } from 'react-router-dom'
-import { CheckCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronDown, ChevronUp, Maximize2, Minimize2 } from 'lucide-react'
+import { FaCheckCircle } from 'react-icons/fa'
 import { LuClipboardList } from 'react-icons/lu'
 import { ResultExtractionDataPreview } from '../../components/single-extraction/ResultExtractionDataPreview'
 import type { PreviewMode } from '../../components/single-extraction/ResultExtractionDataPreview'
@@ -209,6 +210,42 @@ export const ResultSingleExtractionPage = () => {
     }))
   }, [getPreviewPanelMaxHeight, previewMode, scrollPreviewPanelDelta])
 
+  const setPreviewPanelHeight = useCallback((heightTarget: 'min' | 'max') => {
+    const panel = previewPanelRef.current
+    if (previewMode !== 'json' || !panel) return
+
+    const currentSize = previewPanelSizesRef.current[previewMode]
+    if (!currentSize) return
+
+    const maxHeight = Math.ceil(Math.max(currentSize.min, getPreviewPanelMaxHeight(panel)))
+    const nextHeight = heightTarget === 'max' ? maxHeight : currentSize.min
+    const appliedDelta = nextHeight - currentSize.height
+
+    if (appliedDelta === 0) return
+
+    panel.style.height = `${nextHeight}px`
+    scrollPreviewPanelDelta(appliedDelta)
+
+    const nextSizes = {
+      ...previewPanelSizesRef.current,
+      [previewMode]: {
+        height: nextHeight,
+        min: currentSize.min,
+        max: maxHeight,
+      },
+    }
+
+    previewPanelSizesRef.current = nextSizes
+    setPreviewPanelSizes((currentSizes) => ({
+      ...currentSizes,
+      [previewMode]: {
+        height: nextHeight,
+        min: currentSize.min,
+        max: maxHeight,
+      },
+    }))
+  }, [getPreviewPanelMaxHeight, previewMode, scrollPreviewPanelDelta])
+
   const handlePreviewResizePointerDown = (
     direction: 'up' | 'down',
     event: ReactPointerEvent<HTMLButtonElement>
@@ -277,6 +314,9 @@ export const ResultSingleExtractionPage = () => {
   const canGrowPreviewPanel = previewMode === 'json' && currentPreviewPanelSize
     ? currentPreviewPanelSize.height < currentPreviewPanelSize.max
     : false
+  const isPreviewPanelAtMax = previewMode === 'json' && currentPreviewPanelSize
+    ? currentPreviewPanelSize.height >= currentPreviewPanelSize.max
+    : false
 
   useLayoutEffect(() => {
     const panel = previewPanelRef.current
@@ -315,7 +355,7 @@ export const ResultSingleExtractionPage = () => {
           <h1>Extraction Results</h1>
           <div className="result-status-row">
             <span className="result-status-pill">
-              <CheckCircle size={13} strokeWidth={3} />
+              <FaCheckCircle size={13} aria-hidden="true" />
               {completedAtText
                 ? `Extraction completed at ${completedAtText}`
                 : 'Extraction completed'}
@@ -398,6 +438,21 @@ export const ResultSingleExtractionPage = () => {
               onKeyDown={(event) => handlePreviewResizeKeyDown('down', event)}
             >
               <ChevronDown size={15} strokeWidth={2.5} aria-hidden="true" />
+            </button>
+                        <button
+              className="result-panel-resize-button result-panel-resize-jump-button"
+              type="button"
+              aria-label={isPreviewPanelAtMax
+                ? 'Collapse preview panel to minimum height'
+                : 'Expand preview panel to maximum height'}
+              disabled={!currentPreviewPanelSize}
+              onClick={() => setPreviewPanelHeight(isPreviewPanelAtMax ? 'min' : 'max')}
+            >
+              {isPreviewPanelAtMax ? (
+                <Minimize2 size={13} strokeWidth={2.5} aria-hidden="true" />
+              ) : (
+                <Maximize2 size={13} strokeWidth={2.5} aria-hidden="true" />
+              )}
             </button>
           </footer>
         )}
