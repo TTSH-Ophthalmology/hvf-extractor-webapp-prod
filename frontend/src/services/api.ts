@@ -24,8 +24,13 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // TODO: redirect to login page
-      console.warn("Authentication required.");
+      const requestUrl = error.config?.url ?? "";
+      const isLoginRequest = requestUrl.includes("/api/token");
+      const isAlreadyOnLoginPage = window.location.pathname === "/token";
+
+      if (!isLoginRequest && !isAlreadyOnLoginPage) {
+        window.location.href = "/token";
+      }
     }
 
     return Promise.reject(error);

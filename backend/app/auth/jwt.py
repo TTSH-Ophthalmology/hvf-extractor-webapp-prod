@@ -5,7 +5,7 @@ from app.config import settings
 JWT_SECRET = settings.jwt_secret_key
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
 REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 
