@@ -12,7 +12,7 @@ import { RiSearchEyeLine } from 'react-icons/ri'
 import { EyeBox } from '../../components/single-extraction/EyeBox'
 import { FileDropzone } from '../../components/single-extraction/FileDropzone'
 import { FilePreview } from '../../components/single-extraction/FilePreview'
-import type { EyeCode, SelectedFile } from '../../components/single-extraction/types'
+import type { EyeCode } from '../../components/single-extraction/types'
 import { ReportTypeSelector, type ReportType } from '../../components/ui/ReportTypeSelector'
 import { usePDFUpload } from '../../hooks/usePDFUpload'
 import { useExtraction } from '../../hooks/useExtraction'
@@ -31,7 +31,7 @@ type EyeUploadPanelProps = {
   onFileSelected: (file: File) => void
   onClearFile: () => void
   isUploading: boolean
-  selectedFile: SelectedFile | null
+  selectedFile: File | null
 }
 
 const EyeUploadPanel = ({
