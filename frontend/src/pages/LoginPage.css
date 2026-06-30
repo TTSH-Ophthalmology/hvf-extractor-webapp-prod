@@ -99,7 +99,7 @@
   position: relative;
   z-index: 1;
   max-width: 560px;
-  transform: translate(1.25px, clamp(-52px, -5vmin, -28px));
+  transform: translate(5px, clamp(-52px, -5vmin, -28px));
 }
 
 .login-eyebrow {
