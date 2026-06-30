@@ -48,60 +48,74 @@ export const LoginPage = () => {
               src={nhgeiLogo}
               alt="NHGEI logo"
             />
-            <div>
-              <h2>Welcome back!</h2>
-              <p>Sign in to continue to the HVF extraction workspace.</p>
-            </div>
           </div>
 
-          {error && <p className="login-error">{error}</p>}
-
-          <label className="login-field">
-            <span>Username</span>
-            <div className="login-input-wrap">
-              <UserRound size={18} strokeWidth={2.2} />
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
-                placeholder="Enter your username"
-              />
+          <div className="login-form-content">
+            <div>
+              <h2>Welcome Back!</h2>
             </div>
-          </label>
 
-          <label className="login-field">
-            <span>Password</span>
-            <div className="login-input-wrap">
-              <LockKeyhole size={18} strokeWidth={2.2} />
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                className="login-password-toggle"
-                onClick={() => setShowPassword((current) => !current)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? (
-                  <EyeOff size={18} strokeWidth={2.2} />
-                ) : (
-                  <Eye size={18} strokeWidth={2.2} />
-                )}
-              </button>
+            {error && <p className="login-error">{error}</p>}
+
+            <label className="login-field">
+              <span>Username</span>
+              <div className="login-input-wrap">
+                <UserRound size={16} strokeWidth={2.2} />
+                <input
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  placeholder="Enter your username"
+                />
+              </div>
+            </label>
+
+            <label className="login-field">
+              <span>Password</span>
+              <div className="login-input-wrap">
+                <LockKeyhole size={16} strokeWidth={2.2} />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword((current) => !current)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff size={16} strokeWidth={2.2} />
+                  ) : (
+                    <Eye size={16} strokeWidth={2.2} />
+                  )}
+                </button>
+              </div>
+            </label>
+
+            <div className="login-options">
+              <label className="login-remember">
+                <input type="checkbox" />
+                <span>Remember me</span>
+              </label>
+              <a href="/forgot-password">Forgot password?</a>
             </div>
-          </label>
 
-          <button type="submit" className="login-submit">
-            Login
-          </button>
+            <button type="submit" className="login-submit">
+              Login
+            </button>
 
-          <p className="login-footnote">
-            Authorized hospital staff access only
-          </p>
+            <p className="login-signup-prompt">
+              Don't have an account? <a href="/signup">Sign up</a>
+            </p>
+
+            <p className="login-footnote">
+              Authorized hospital staff access only
+            </p>
+          </div>
         </form>
       </section>
     </main>

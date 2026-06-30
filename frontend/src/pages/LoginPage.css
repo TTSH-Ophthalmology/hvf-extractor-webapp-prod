@@ -7,6 +7,7 @@
   min-height: 100svh;
   padding: var(--login-page-padding);
   overflow: hidden;
+  font-family: var(--font-hanken-grotesk);
   background:
     radial-gradient(circle at 14% 18%, rgb(36 166 179 / 35%) 0 18%, transparent 34%),
     linear-gradient(135deg, #073d78 0%, #0a6692 45%, #168ca0 100%);
@@ -241,7 +242,7 @@
   flex-direction: column;
   justify-content: flex-start;
   min-width: 0;
-  padding: clamp(18px, 3.2vmin, 30px) clamp(28px, 3.7vmin, 42px) clamp(26px, 4.6vmin, 46px);
+  padding: clamp(18px, 3.2vmin, 30px) clamp(24px, 3.3vmin, 36px) clamp(22px, 4vmin, 40px);
   overflow: auto;
   background:
     radial-gradient(circle at 94% 8%, rgb(22 140 160 / 12%) 0 12%, transparent 24%),
@@ -252,7 +253,7 @@
   display: grid;
   justify-items: start;
   gap: 0;
-  margin-bottom: clamp(24px, 4.2vmin, 38px);
+  margin-bottom: clamp(22px, 4vmin, 34px);
   text-align: left;
 }
 
@@ -263,66 +264,77 @@
   height: auto;
   object-fit: contain;
   flex: 0 0 auto;
-  margin-bottom: clamp(34px, 6vmin, 56px);
   transform: translate(-16px, -8px);
 }
 
-.login-card-header div {
+.login-form-content {
   display: grid;
-  min-width: 0;
+  gap: 0;
+  margin-top: clamp(56px, 10.5vmin, 96px);
+}
+
+.login-form-content > div:first-child {
+  display: grid;
   gap: 6px;
+  margin-bottom: 24px;
 }
 
-.login-card-header span {
-  color: #168ca0;
-  font-size: 13px;
-  font-weight: 850;
-}
-
-.login-card-header h2 {
+.login-form-content h2 {
   margin: 0;
   color: #172033;
   font-family: var(--font-hanken-grotesk);
-  font-size: clamp(28px, 3vw, 36px);
+  font-size: clamp(28px, 3.1vw, 36px);
   font-weight: 800;
   line-height: 1.05;
 }
 
-.login-card-header p {
-  max-width: 260px;
-  margin: 0;
+.login-form-content p,
+.login-signup-prompt {
+  max-width: 350px;
+  margin: 15px 0 0 0;
   color: #7a8695;
   font-size: 12px;
-  font-weight: 650;
+  font-weight: 600;
+  font-family: var(--font-hanken-grotesk);
   line-height: 1.35;
 }
 
+.login-form-content a {
+  color: #2563ff;
+  font-weight: 750;
+}
+
+.login-form-content a:hover {
+  color: #00336a;
+  text-decoration: underline;
+}
+
 .login-error {
-  margin: 0 0 18px;
-  padding: 12px 14px;
+  margin: 0 0 14px;
+  padding: 10px 12px;
   border: 1px solid #fac5c0;
   border-radius: 6px;
   color: #b42318;
   background: #fff1f0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
 }
 
 .login-field {
   display: grid;
   gap: 8px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   color: #273448;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 750;
 }
 
 .login-input-wrap {
   display: flex;
   align-items: center;
-  min-height: clamp(46px, 5.4vmin, 52px);
-  gap: 11px;
-  padding: 0 14px;
+  min-height: clamp(40px, 4.6vmin, 46px);
+  gap: 12px;
+  padding: 0 12px;
   border: 1.5px solid #cbd5df;
   border-radius: 7px;
   color: #168ca0;
@@ -336,30 +348,34 @@
 .login-input-wrap:focus-within {
   border-color: #168ca0;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgb(22 140 160 / 13%);
+  box-shadow: 0 0 10px 1px rgb(22 140 160 / 9%);
 }
 
 .login-input-wrap input {
   width: 100%;
   min-width: 0;
-  height: clamp(44px, 5.1vmin, 50px);
+  height: clamp(38px, 4.4vmin, 44px);
+  padding: 0;
   border: 0;
   outline: 0;
   color: #18202f;
   background: transparent;
-  font-size: 15px;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .login-input-wrap input::placeholder {
   color: #8c99a6;
+  font-weight: 650;
 }
 
 .login-password-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 30px;
+  height: 30px;
   flex: 0 0 auto;
   border: 0;
   border-radius: 50%;
@@ -372,18 +388,44 @@
   background: #eef5fc;
 }
 
+.login-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 2px 0 16px;
+  color: #4f5d70;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.login-remember {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.login-remember input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #168ca0;
+}
+
 .login-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(46px, 5.4vmin, 52px);
-  margin-top: 8px;
+  min-height: clamp(40px, 4.6vmin, 46px);
+  margin-top: 0;
   border: 0;
   border-radius: 7px;
   color: #ffffff;
   background: linear-gradient(135deg, #00336a 0%, #0c6f8f 56%, #168ca0 100%);
   box-shadow: 0 14px 26px rgb(0 51 106 / 24%);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 850;
   transition:
     transform 160ms ease,
@@ -399,10 +441,15 @@
   transform: translateY(0);
 }
 
+.login-signup-prompt {
+  margin: 12px 0 0;
+  text-align: center;
+}
+
 .login-footnote {
-  margin: 18px 0 0;
+  margin: 10px 0 0;
   color: #6a7787;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.45;
   text-align: center;
@@ -474,7 +521,7 @@
     width: min(350px, calc(100% - 24px));
     max-height: calc(100% - 112px);
     margin-top: 72px;
-    padding: 24px 20px;
+    padding: 20px 20px 24px;
   }
 
   .login-eyebrow {
@@ -482,17 +529,20 @@
   }
 
   .login-card-header {
-    margin-bottom: 22px;
+    margin-bottom: 16px;
   }
 
   .login-hospital-logo {
     width: 190px;
-    margin-bottom: 30px;
     transform: translate(-12px, -6px);
   }
 
-  .login-card-header h2 {
-    font-size: 28px;
+  .login-form-content {
+    margin-top: 56px;
+  }
+
+  .login-form-content h2 {
+    font-size: 29px;
   }
 }
 
@@ -511,21 +561,20 @@
   }
 
   .login-card {
-    padding: clamp(22px, 4vmin, 34px) clamp(24px, 3.6vmin, 36px);
+    padding: clamp(18px, 3.4vmin, 28px) clamp(22px, 3.2vmin, 32px);
   }
 
   .login-card-header {
-    margin-bottom: 18px;
+    margin-bottom: 10px;
   }
 
   .login-hospital-logo {
     width: 176px;
-    margin-bottom: 22px;
     transform: translate(-12px, -6px);
   }
 
-  .login-card-header p {
-    display: none;
+  .login-form-content {
+    margin-top: 36px;
   }
 
   .login-error {
@@ -550,11 +599,14 @@
 
   .login-hospital-logo {
     width: 150px;
-    margin-bottom: 14px;
     transform: translate(-10px, -5px);
   }
 
-  .login-card-header h2 {
+  .login-form-content {
+    margin-top: 24px;
+  }
+
+  .login-form-content h2 {
     font-size: 26px;
   }
 }
