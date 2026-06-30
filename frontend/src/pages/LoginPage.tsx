@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
 import nhgeiLogo from "../assets/images/NHGEI-logo.jpg";
 import api from "../services/api";
 import "./LoginPage.css";
@@ -34,10 +34,6 @@ export const LoginPage = () => {
           <div className="login-hero-content">
             <p className="login-eyebrow">Tan Tock Seng Hospital</p>
             <h1>HVF Extractor</h1>
-            <p>
-              Secure access for reviewing Humphrey visual field reports and
-              managing patient extraction workflows.
-            </p>
           </div>
         </div>
 
@@ -55,7 +51,12 @@ export const LoginPage = () => {
               <h2>Welcome Back!</h2>
             </div>
 
-            {error && <p className="login-error">{error}</p>}
+            {error && (
+              <p className="login-error">
+                <AlertCircle size={18} strokeWidth={2.4} aria-hidden="true" />
+                <span>{error}</span>
+              </p>
+            )}
 
             <label className="login-field">
               <span>Username</span>

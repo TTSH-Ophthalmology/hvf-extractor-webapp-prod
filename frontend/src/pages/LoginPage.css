@@ -1,61 +1,32 @@
 .login-page {
-  --login-page-padding: clamp(16px, 3vmin, 36px);
-
   position: relative;
   display: grid;
   place-items: center;
   min-height: 100svh;
-  padding: var(--login-page-padding);
+  padding: 0;
   overflow: hidden;
   font-family: var(--font-hanken-grotesk);
-  background:
-    radial-gradient(circle at 14% 18%, rgb(36 166 179 / 35%) 0 18%, transparent 34%),
-    linear-gradient(135deg, #073d78 0%, #0a6692 45%, #168ca0 100%);
+  background: #ffffff;
 }
 
 .login-page::before,
 .login-page::after {
-  position: absolute;
-  content: "";
-  pointer-events: none;
-}
-
-.login-page::before {
-  inset: 0;
-  opacity: 0.18;
-  background-image:
-    linear-gradient(120deg, transparent 0 16%, rgb(255 255 255 / 42%) 16% 17%, transparent 17% 100%),
-    radial-gradient(circle, rgb(255 255 255 / 42%) 1px, transparent 1.5px);
-  background-position:
-    0 0,
-    0 0;
-  background-size:
-    100% 100%,
-    28px 28px;
-}
-
-.login-page::after {
-  right: -120px;
-  bottom: -170px;
-  width: 420px;
-  height: 420px;
-  border-radius: 50%;
-  background: rgb(190 236 239 / 26%);
+  display: none;
 }
 
 .login-shell {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
-  width: min(950px, calc(100vw - (var(--login-page-padding) * 2)));
-  height: min(500px, calc(100svh - (var(--login-page-padding) * 2)));
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 450px);
+  width: 100vw;
+  height: 100svh;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgb(255 255 255 / 38%);
-  border-radius: 8px;
+  border: 0;
+  border-radius: 0;
   background: rgb(255 255 255 / 92%);
-  box-shadow: 0 28px 70px rgb(2 31 59 / 30%);
+  box-shadow: none;
 }
 
 .login-hero {
@@ -242,7 +213,7 @@
   flex-direction: column;
   justify-content: flex-start;
   min-width: 0;
-  padding: clamp(18px, 3.2vmin, 30px) clamp(24px, 3.3vmin, 36px) clamp(22px, 4vmin, 40px);
+  padding: clamp(30px, 4.5vmin, 48px) clamp(42px, 5.4vmin, 68px) clamp(32px, 5vmin, 56px);
   overflow: auto;
   background:
     radial-gradient(circle at 94% 8%, rgb(22 140 160 / 12%) 0 12%, transparent 24%),
@@ -250,33 +221,49 @@
 }
 
 .login-card-header {
-  display: grid;
-  justify-items: start;
-  gap: 0;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0px;
   margin-bottom: clamp(22px, 4vmin, 34px);
   text-align: left;
+  transform: translate(-10px, -5px);
+}
+
+.login-card-header::before {
+  position: relative;
+  z-index: 2;
+  width: 6px;
+  height: clamp(40px, 4vmin, 48px);
+  margin-top: 4px;
+  flex: 0 0 6px;
+  background: linear-gradient(180deg, #00336a 0%, #168ca0 100%);
+  content: "";
 }
 
 .login-hospital-logo {
   display: block;
-  width: clamp(190px, 17vw, 245px);
+  width: clamp(220px, 19vw, 285px);
   max-width: 100%;
   height: auto;
   object-fit: contain;
   flex: 0 0 auto;
-  transform: translate(-16px, -8px);
+  position: relative;
+  z-index: 1;
+  transform: translate(-10px, -12px);
 }
 
 .login-form-content {
   display: grid;
   gap: 0;
   margin-top: clamp(56px, 10.5vmin, 96px);
+  padding-inline: clamp(10px, 1.8vw, 24px);
 }
 
 .login-form-content > div:first-child {
   display: grid;
   gap: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .login-form-content h2 {
@@ -310,20 +297,37 @@
 }
 
 .login-error {
-  margin: 0 0 14px;
-  padding: 10px 12px;
-  border: 1px solid #fac5c0;
-  border-radius: 6px;
-  color: #b42318;
-  background: #fff1f0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: none;
+  min-height: clamp(40px, 4.6vmin, 46px);
+  box-sizing: border-box;
+  margin: 0 0 40px;
+  padding: 0 14px;
+  border: 1.5px solid #ff8a8a;
+  border-radius: 7px;
+  color: #d00000;
+  background: #fff0f0;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 750;
+}
+
+.login-error svg {
+  flex: 0 0 auto;
+  color: #d00000;
+  stroke: #d00000;
+}
+
+.login-error span {
+  color: #d00000;
 }
 
 .login-field {
   display: grid;
-  gap: 8px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 18px;
   color: #273448;
   font-size: 13px;
   font-weight: 750;
@@ -393,7 +397,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 2px 0 16px;
+  margin: 4px 0 20px;
   color: #4f5d70;
   font-size: 12px;
   font-weight: 650;
@@ -456,10 +460,6 @@
 }
 
 @media (max-width: 920px) {
-  .login-page {
-    --login-page-padding: clamp(14px, 3vmin, 28px);
-  }
-
   .login-shell {
     grid-template-columns: 1fr;
     place-items: center;
@@ -493,15 +493,13 @@
 
 @media (max-width: 560px) {
   .login-page {
-    --login-page-padding: clamp(12px, 4vmin, 20px);
-
     background: linear-gradient(160deg, #073d78 0%, #168ca0 100%);
   }
 
   .login-shell {
-    width: calc(100vw - (var(--login-page-padding) * 2));
-    height: calc(100svh - (var(--login-page-padding) * 2));
-    border-radius: 8px;
+    width: 100vw;
+    height: 100svh;
+    border-radius: 0;
   }
 
   .login-hero {
@@ -521,7 +519,7 @@
     width: min(350px, calc(100% - 24px));
     max-height: calc(100% - 112px);
     margin-top: 72px;
-    padding: 20px 20px 24px;
+    padding: 24px 26px 28px;
   }
 
   .login-eyebrow {
@@ -533,12 +531,13 @@
   }
 
   .login-hospital-logo {
-    width: 190px;
-    transform: translate(-12px, -6px);
+    width: 210px;
+    transform: translate(-4px, -7px);
   }
 
   .login-form-content {
     margin-top: 56px;
+    padding-inline: 4px;
   }
 
   .login-form-content h2 {
@@ -547,10 +546,6 @@
 }
 
 @media (max-height: 760px) {
-  .login-page {
-    --login-page-padding: clamp(12px, 2.5vmin, 24px);
-  }
-
   .login-hero {
     padding: clamp(26px, 4vmin, 44px) clamp(26px, 4vmin, 44px) clamp(26px, 4vmin, 44px) clamp(44px, 6vmin, 68px);
   }
@@ -561,7 +556,7 @@
   }
 
   .login-card {
-    padding: clamp(18px, 3.4vmin, 28px) clamp(22px, 3.2vmin, 32px);
+    padding: clamp(20px, 3.6vmin, 32px) clamp(30px, 4.4vmin, 46px);
   }
 
   .login-card-header {
@@ -569,21 +564,22 @@
   }
 
   .login-hospital-logo {
-    width: 176px;
-    transform: translate(-12px, -6px);
+    width: 196px;
+    transform: translate(-4px, -7px);
   }
 
   .login-form-content {
     margin-top: 36px;
+    padding-inline: clamp(6px, 1.4vw, 14px);
   }
 
   .login-error {
-    margin-bottom: 12px;
-    padding: 10px 12px;
+    margin-bottom: 24px;
+    padding: 0 12px;
   }
 
   .login-field {
-    margin-bottom: 12px;
+    margin-bottom: 14px;
   }
 
   .login-footnote {
@@ -598,12 +594,12 @@
   }
 
   .login-hospital-logo {
-    width: 150px;
-    transform: translate(-10px, -5px);
+    width: 170px;
+    transform: translate(-3px, -5px);
   }
 
   .login-form-content {
-    margin-top: 24px;
+    margin-top: 26px;
   }
 
   .login-form-content h2 {
