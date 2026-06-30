@@ -263,7 +263,7 @@
 .login-form-content > div:first-child {
   display: grid;
   gap: 6px;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 .login-form-content h2 {
@@ -296,7 +296,7 @@
   text-decoration: underline;
 }
 
-.login-error {
+.login-form-content .login-error {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -304,23 +304,23 @@
   max-width: none;
   min-height: clamp(40px, 4.6vmin, 46px);
   box-sizing: border-box;
-  margin: 0 0 40px;
+  margin: 0 0 52px;
   padding: 0 14px;
   border: 1.5px solid #ff8a8a;
   border-radius: 7px;
   color: #d00000;
   background: #fff0f0;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 700;
 }
 
-.login-error svg {
+.login-form-content .login-error svg {
   flex: 0 0 auto;
   color: #d00000;
   stroke: #d00000;
 }
 
-.login-error span {
+.login-form-content .login-error span {
   color: #d00000;
 }
 
@@ -573,8 +573,8 @@
     padding-inline: clamp(6px, 1.4vw, 14px);
   }
 
-  .login-error {
-    margin-bottom: 24px;
+  .login-form-content .login-error {
+    margin-bottom: 15px;
     padding: 0 12px;
   }
 
