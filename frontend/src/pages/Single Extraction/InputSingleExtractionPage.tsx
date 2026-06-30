@@ -48,6 +48,7 @@ const delay = (milliseconds: number) =>
     window.setTimeout(resolve, milliseconds)
   })
 
+// better to add delay to overlay steps so that the user can see the progress, even if the upload/extraction is very fast
 const DEBUG_OVERLAY_STEP_DELAY_MS = 100
 const DEBUG_OVERLAY_SUCCESS_DELAY_MS = 1400
 
