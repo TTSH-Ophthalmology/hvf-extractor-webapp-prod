@@ -43,7 +43,11 @@ export const LoginPage = () => {
 
         <form onSubmit={handleLogin} className="login-card">
           <div className="login-card-header">
-            <img src={nhgeiLogo} alt="NHGEI logo" />
+            <img
+              className="login-hospital-logo"
+              src={nhgeiLogo}
+              alt="NHGEI logo"
+            />
             <div>
               <h2>Welcome back!</h2>
               <p>Sign in to continue to the HVF extraction workspace.</p>
