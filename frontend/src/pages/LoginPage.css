@@ -63,7 +63,7 @@
   flex-direction: column;
   justify-content: center;
   min-width: 0;
-  padding: clamp(38px, 5.4vmin, 72px);
+  padding: clamp(38px, 5.4vmin, 72px) clamp(38px, 5.4vmin, 72px) clamp(38px, 5.4vmin, 72px) clamp(58px, 7.2vmin, 96px);
   overflow: hidden;
   color: #ffffff;
   background:
@@ -239,9 +239,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
-  padding: clamp(26px, 4.6vmin, 46px) clamp(28px, 3.7vmin, 42px);
+  padding: clamp(18px, 3.2vmin, 30px) clamp(28px, 3.7vmin, 42px) clamp(26px, 4.6vmin, 46px);
   overflow: auto;
   background:
     radial-gradient(circle at 94% 8%, rgb(22 140 160 / 12%) 0 12%, transparent 24%),
@@ -252,14 +252,19 @@
   display: grid;
   justify-items: start;
   gap: 0;
-  margin-bottom: clamp(26px, 5vmin, 46px);
+  margin-bottom: clamp(24px, 4.2vmin, 38px);
   text-align: left;
 }
 
-.login-card-header img {
-  width: clamp(92px, 9vw, 116px);
+.login-hospital-logo {
+  display: block;
+  width: clamp(190px, 17vw, 245px);
+  max-width: 100%;
   height: auto;
-  margin-bottom: clamp(44px, 8vmin, 72px);
+  object-fit: contain;
+  flex: 0 0 auto;
+  margin-bottom: clamp(34px, 6vmin, 56px);
+  transform: translate(-16px, -8px);
 }
 
 .login-card-header div {
@@ -416,7 +421,7 @@
   .login-hero {
     position: absolute;
     inset: 0;
-    padding: clamp(24px, 5vmin, 40px);
+    padding: clamp(24px, 5vmin, 40px) clamp(24px, 5vmin, 40px) clamp(24px, 5vmin, 40px) clamp(36px, 7vmin, 56px);
   }
 
   .login-hero h1 {
@@ -453,7 +458,7 @@
   }
 
   .login-hero {
-    padding: 22px;
+    padding: 22px 22px 22px 30px;
     justify-content: flex-start;
   }
 
@@ -480,9 +485,10 @@
     margin-bottom: 22px;
   }
 
-  .login-card-header img {
-    width: 92px;
-    margin-bottom: 34px;
+  .login-hospital-logo {
+    width: 190px;
+    margin-bottom: 30px;
+    transform: translate(-12px, -6px);
   }
 
   .login-card-header h2 {
@@ -496,7 +502,7 @@
   }
 
   .login-hero {
-    padding: clamp(26px, 4vmin, 44px);
+    padding: clamp(26px, 4vmin, 44px) clamp(26px, 4vmin, 44px) clamp(26px, 4vmin, 44px) clamp(44px, 6vmin, 68px);
   }
 
   .login-hero-content p:last-child {
@@ -512,8 +518,10 @@
     margin-bottom: 18px;
   }
 
-  .login-card-header img {
-    margin-bottom: 28px;
+  .login-hospital-logo {
+    width: 176px;
+    margin-bottom: 22px;
+    transform: translate(-12px, -6px);
   }
 
   .login-card-header p {
@@ -540,9 +548,10 @@
     display: none;
   }
 
-  .login-card-header img {
-    width: 76px;
-    margin-bottom: 18px;
+  .login-hospital-logo {
+    width: 150px;
+    margin-bottom: 14px;
+    transform: translate(-10px, -5px);
   }
 
   .login-card-header h2 {
