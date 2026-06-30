@@ -49,6 +49,6 @@ tinydb==4.8.2
 tzdata==2026.2
 ujson==5.13.0
 uvicorn==0.29.0
-uvloop==0.22.1
+uvloop==0.22.1; sys_platform != "win32"
 watchfiles==1.2.0
 websockets==16.0
