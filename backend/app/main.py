@@ -40,7 +40,7 @@ REFRESH_COOKIE_PATH = "/api/refresh"
 app = FastAPI(
     title="NHGEI HVF Extractor API",
     description="Backend API for NHGEI HVF Extractor — extracts structured data from HVF/VRVF PDF reports.",
-    version="1.0.0",
+    version="1.1.0",
 )
 
 # ---------------------------------------------------------------------------
