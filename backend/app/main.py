@@ -18,7 +18,7 @@ from app.logging_config import setup_logging
 from app.routers import extraction, pdf
 
 from app.auth.service import verify_admin
-from app.auth.jwt import create_access_token
+from app.auth.jwt import create_access_token, create_refresh_token, verify_token
 from app.dependencies import get_current_user
 
 # Initialise logging before anything else creates a logger.
@@ -93,10 +93,24 @@ def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,      # True if HTTPS
-        samesite="lax",    # use "none" only if cross-site + HTTPS
-        max_age=60 * 60 * 8,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 15,
         path="/",
+    )
+
+    refresh_token = create_refresh_token(
+        user_id=username
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 60 * 10,
+        path="/api/refresh",
     )
 
     logger.info(
@@ -108,6 +122,38 @@ def login(
     return {
         "message": "Login successfully"
     }
+
+
+@app.post("/api/refresh")
+def refresh(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh-token")
+    
+    try:
+        payload = verify_token(refresh_token, expect="refresh")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid refresh-token")
+    
+    username = payload.get("sub")
+
+    new_access_token = create_access_token(
+        user_id=username,
+        role="admin"
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=60 * 15,
+        path="/",
+    )
+
+    return {"message": "Access token refreshed"}
 
 
 @app.get("/api/me")
@@ -127,6 +173,14 @@ def logout(
     response.delete_cookie(
         key="access_token",
         path="/",
+        httponly=True,
+        secure=False,
+        samesite="lax",
+    )
+
+    response.delete_cookie(
+        key="refresh_token",
+        path="/api/refresh",
         httponly=True,
         secure=False,
         samesite="lax",

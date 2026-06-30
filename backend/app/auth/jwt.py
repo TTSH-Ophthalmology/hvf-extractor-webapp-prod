@@ -5,8 +5,8 @@ from app.config import settings
 JWT_SECRET = settings.jwt_secret_key
 ALGORITHM = "HS256"
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
-REFRESH_TOKEN_EXPIRE_DAYS = 7
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
+REFRESH_TOKEN_EXPIRE_HOURS = 10
 
 
 def create_token(data: dict, expire_delta: timedelta, token_type: str):
@@ -33,7 +33,7 @@ def create_access_token(user_id: str, role: str):
 def create_refresh_token(user_id: str):
     return create_token(
         {"sub": user_id},
-        timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
+        timedelta(days=REFRESH_TOKEN_EXPIRE_HOURS),
         "refresh"
     )
 
