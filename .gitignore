@@ -44,3 +44,4 @@ Thumbs.db
 .aider*
 .continue/
 *.ai-context
+backend/app/db/database.json
