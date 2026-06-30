@@ -27,12 +27,15 @@ from app.auth.csrf import (
 )
 from app.auth.service import verify_admin
 from app.auth.jwt import create_access_token, create_refresh_token, verify_token
+from app.db.db import store
 from app.dependencies import get_current_user
 
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
 
 logger = logging.getLogger(__name__)
+
+REFRESH_COOKIE_PATH = "/api/refresh"
 
 app = FastAPI(
     title="NHGEI HVF Extractor API",
@@ -128,6 +131,12 @@ def login(
     refresh_token = create_refresh_token(
         user_id=username
     )
+    refresh_payload = verify_token(refresh_token, expect="refresh")
+    store.save_refresh_token(
+        token_id=refresh_payload["jti"],
+        username=username,
+        expires_at=refresh_payload["exp"],
+    )
 
     response.set_cookie(
         key="refresh_token",
@@ -136,7 +145,7 @@ def login(
         secure=cookie_secure(),
         samesite="Strict",
         max_age=60 * 60 * 10,
-        path="/api/refresh",
+        path=REFRESH_COOKIE_PATH,
     )
     set_csrf_cookie(response, create_csrf_token())
 
@@ -164,10 +173,28 @@ def refresh(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid refresh-token")
     
     username = payload.get("sub")
+    token_id = payload.get("jti")
+
+    if not username or not token_id:
+        raise HTTPException(status_code=401, detail="Invalid refresh-token")
+
+    if not store.is_refresh_token_active(token_id, username):
+        raise HTTPException(status_code=401, detail="Revoked refresh-token")
+
+    store.revoke_refresh_token(token_id)
 
     new_access_token = create_access_token(
         user_id=username,
         role="admin"
+    )
+    new_refresh_token = create_refresh_token(
+        user_id=username
+    )
+    new_refresh_payload = verify_token(new_refresh_token, expect="refresh")
+    store.save_refresh_token(
+        token_id=new_refresh_payload["jti"],
+        username=username,
+        expires_at=new_refresh_payload["exp"],
     )
 
     response.set_cookie(
@@ -178,6 +205,15 @@ def refresh(request: Request, response: Response):
         samesite="lax",
         max_age=60 * 15,
         path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="Strict",
+        max_age=60 * 60 * 10,
+        path=REFRESH_COOKIE_PATH,
     )
     set_csrf_cookie(response, create_csrf_token())
 
@@ -192,12 +228,7 @@ def me(user=Depends(get_current_user)):
     }
 
 
-@app.post("/api/logout")
-def logout(
-    request: Request,
-    response: Response
-):
-
+def clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(
         key="access_token",
         path="/",
@@ -208,12 +239,51 @@ def logout(
 
     response.delete_cookie(
         key="refresh_token",
-        path="/api/refresh",
+        path=REFRESH_COOKIE_PATH,
         httponly=True,
         secure=cookie_secure(),
         samesite="Strict",
     )
     delete_csrf_cookie(response)
+
+
+@app.post("/api/refresh/revoke")
+def revoke_refresh_token(
+    request: Request,
+    response: Response
+):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if refresh_token:
+        try:
+            payload = verify_token(refresh_token, expect="refresh")
+            token_id = payload.get("jti")
+            if token_id:
+                store.revoke_refresh_token(token_id)
+        except ValueError:
+            logger.info(
+                "Refresh revoke requested with invalid token: ip=%s",
+                request.client.host,
+            )
+
+    clear_auth_cookies(response)
+
+    logger.info(
+        "Refresh token revoked: ip=%s",
+        request.client.host,
+    )
+
+    return {
+        "message": "Logout successfully"
+    }
+
+
+@app.post("/api/logout")
+def logout(
+    request: Request,
+    response: Response
+):
+    clear_auth_cookies(response)
 
     logger.info(
         "Logout: ip=%s",

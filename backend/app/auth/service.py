@@ -2,8 +2,8 @@ from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from app.auth.jwt import verify_token
 from argon2 import PasswordHasher
-from argon2.exceptions import VerifyMismatchError
-from app.config import settings
+from argon2.exceptions import VerificationError, VerifyMismatchError
+from app.db.db import store
 
 oauth_scheme = OAuth2PasswordBearer('/api/token')
 ph = PasswordHasher()
@@ -20,10 +20,12 @@ def get_current_user(token: str = Depends(oauth_scheme)):
 
 
 def verify_admin(username: str, password: str) -> bool:
-    if username != settings.admin_username:
-        HTTPException(status_code=401, detail="Invalid credentials")
+    user = store.get_user(username)
+    if not user or user.get("role") != "admin":
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
     try:
-        ph.verify(settings.admin_password_hash, password)
+        ph.verify(user["password_hash"], password)
         return True
-    except VerifyMismatchError:
+    except (VerificationError, VerifyMismatchError):
         raise HTTPException(status_code=401, detail="Invalid credentials")
