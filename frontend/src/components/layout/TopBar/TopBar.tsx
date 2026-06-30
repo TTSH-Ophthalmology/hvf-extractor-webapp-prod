@@ -96,7 +96,7 @@ export const TopBar = ({ isDebugMode, onToggleDebugMode }: TopBarProps) => {
   return (
     <header className="topbar">
       <div className="topbar-main">
-        <h1>HVF Extraction</h1>
+        <h1>HVF Extractor</h1>
         <div className="topbar-actions">
           <button
             className={`debug-button${isDebugMode ? ' debug-button-active' : ''}`}
