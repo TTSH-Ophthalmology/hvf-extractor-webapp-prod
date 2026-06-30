@@ -275,7 +275,7 @@
 .login-form-content {
   display: grid;
   gap: 0;
-  margin-top: clamp(56px, 10.5vmin, 96px);
+  margin-top: clamp(82px, 12.5vmin, 124px);
   padding-inline: clamp(10px, 1.8vw, 24px);
 }
 
@@ -294,8 +294,7 @@
   line-height: 1.05;
 }
 
-.login-form-content p,
-.login-signup-prompt {
+.login-form-content p {
   max-width: 350px;
   margin: 15px 0 0 0;
   color: #7a8695;
@@ -411,45 +410,20 @@
   background: #eef5fc;
 }
 
-.login-options {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 4px 0 20px;
-  color: #4f5d70;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.login-remember {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-  gap: 8px;
-  cursor: pointer;
-}
-
-.login-remember input {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  accent-color: #168ca0;
-}
-
 .login-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: clamp(40px, 4.6vmin, 46px);
-  margin-top: 0;
+  min-height: clamp(42px, 4.6vmin, 48px);
+  margin-top: 25px;
   border: 0;
   border-radius: 7px;
   color: #ffffff;
   background: linear-gradient(135deg, #00336a 0%, #0c6f8f 56%, #168ca0 100%);
   box-shadow: 0 14px 26px rgb(0 51 106 / 24%);
-  font-size: 14px;
-  font-weight: 850;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
   transition:
     transform 160ms ease,
     box-shadow 160ms ease;
@@ -462,11 +436,6 @@
 
 .login-submit:active {
   transform: translateY(0);
-}
-
-.login-signup-prompt {
-  margin: 12px 0 0;
-  text-align: center;
 }
 
 .login-footnote {
@@ -557,7 +526,7 @@
   }
 
   .login-form-content {
-    margin-top: 56px;
+    margin-top: 74px;
     padding-inline: 4px;
   }
 
@@ -590,7 +559,7 @@
   }
 
   .login-form-content {
-    margin-top: 36px;
+    margin-top: 58px;
     padding-inline: clamp(6px, 1.4vw, 14px);
   }
 
@@ -620,7 +589,7 @@
   }
 
   .login-form-content {
-    margin-top: 26px;
+    margin-top: 46px;
   }
 
   .login-form-content h2 {

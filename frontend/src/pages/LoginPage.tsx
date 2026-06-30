@@ -97,21 +97,9 @@ export const LoginPage = () => {
               </div>
             </label>
 
-            <div className="login-options">
-              <label className="login-remember">
-                <input type="checkbox" />
-                <span>Remember me</span>
-              </label>
-              <a href="/forgot-password">Forgot password?</a>
-            </div>
-
             <button type="submit" className="login-submit">
               Login
             </button>
-
-            <p className="login-signup-prompt">
-              Don't have an account? <a href="/signup">Sign up</a>
-            </p>
 
             <p className="login-footnote">
               Authorized hospital staff access only
