@@ -9,14 +9,22 @@ import logging
 import time
 from datetime import datetime
 
-from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form, UploadFile, File
+from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.logging_config import setup_logging
 from app.routers import extraction, pdf
 
+from app.auth.csrf import (
+    create_csrf_token,
+    delete_csrf_cookie,
+    set_csrf_cookie,
+    validate_csrf,
+    cookie_secure,
+)
 from app.auth.service import verify_admin
 from app.auth.jwt import create_access_token, create_refresh_token, verify_token
 from app.dependencies import get_current_user
@@ -44,6 +52,24 @@ app.add_middleware(
 )
 
 app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+
+@app.middleware("http")
+async def csrf_protect(request: Request, call_next) -> Response:
+    if (
+        request.url.path.startswith("/api/")
+        and request.method in {"POST", "PUT", "PATCH", "DELETE"}
+        and request.url.path != "/api/token"
+    ):
+        try:
+            validate_csrf(request)
+        except HTTPException as exc:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": exc.detail},
+            )
+
+    return await call_next(request)
 
 
 @app.middleware("http")
@@ -93,7 +119,7 @@ def login(
         key="access_token",
         value=access_token,
         httponly=True,
-        secure=False,
+        secure=cookie_secure(),
         samesite="lax",
         max_age=60 * 15,
         path="/",
@@ -107,11 +133,12 @@ def login(
         key="refresh_token",
         value=refresh_token,
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=cookie_secure(),
+        samesite="Strict",
         max_age=60 * 60 * 10,
         path="/api/refresh",
     )
+    set_csrf_cookie(response, create_csrf_token())
 
     logger.info(
         "Login successful: user=%s ip=%s",
@@ -147,11 +174,12 @@ def refresh(request: Request, response: Response):
         key="access_token",
         value=new_access_token,
         httponly=True,
-        secure=False,
+        secure=cookie_secure(),
         samesite="lax",
         max_age=60 * 15,
         path="/",
     )
+    set_csrf_cookie(response, create_csrf_token())
 
     return {"message": "Access token refreshed"}
 
@@ -174,7 +202,7 @@ def logout(
         key="access_token",
         path="/",
         httponly=True,
-        secure=False,
+        secure=cookie_secure(),
         samesite="lax",
     )
 
@@ -182,9 +210,10 @@ def logout(
         key="refresh_token",
         path="/api/refresh",
         httponly=True,
-        secure=False,
-        samesite="lax",
+        secure=cookie_secure(),
+        samesite="Strict",
     )
+    delete_csrf_cookie(response)
 
     logger.info(
         "Logout: ip=%s",

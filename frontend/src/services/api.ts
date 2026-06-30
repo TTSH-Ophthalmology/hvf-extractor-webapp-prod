@@ -19,6 +19,31 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
+function getCookie(name: string): string | null {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+
+  if (parts.length !== 2) {
+    return null;
+  }
+
+  return parts.pop()?.split(";").shift() ?? null;
+}
+
+api.interceptors.request.use((config) => {
+  const method = config.method?.toUpperCase();
+
+  if (method && ["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+    const csrfToken = getCookie("csrf_token");
+
+    if (csrfToken) {
+      config.headers.set("X-CSRF-Token", csrfToken);
+    }
+  }
+
+  return config;
+});
+
 // Global error handling
 api.interceptors.response.use(
   (response) => response,
