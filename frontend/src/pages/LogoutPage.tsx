@@ -10,7 +10,7 @@ export const LogoutPage = () => {
     setLoading(true);
 
     try {
-      await api.post("/api/logout");
+      await api.post("/api/refresh/revoke");
     } finally {
       navigate("/token", { replace: true });
     }
