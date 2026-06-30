@@ -1,4 +1,6 @@
 .eye-upload-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
   border: 1px solid #cbd4e0;
   border-radius: 5px;
