@@ -119,6 +119,7 @@
   font-weight: 800;
   line-height: 0.98;
   letter-spacing: 0;
+  white-space: nowrap;
 }
 
 .login-hero-content p:last-child {
@@ -449,24 +450,27 @@
 
 @media (max-width: 920px) {
   .login-shell {
+    --login-card-top-offset: clamp(150px, 22svh, 210px);
+
     grid-template-columns: 1fr;
-    place-items: center;
+    place-items: start center;
   }
 
   .login-hero {
     position: absolute;
     inset: 0;
+    justify-content: flex-start;
     padding: clamp(24px, 5vmin, 40px) clamp(24px, 5vmin, 40px) clamp(24px, 5vmin, 40px) clamp(36px, 7vmin, 56px);
   }
 
   .login-hero h1 {
-    max-width: 620px;
-    font-size: clamp(34px, 8vw, 58px);
+    max-width: none;
+    font-size: clamp(34px, 7vw, 54px);
   }
 
   .login-hero-content {
-    max-width: 330px;
-    transform: translateY(-24px);
+    max-width: calc(100vw - 72px);
+    transform: translateY(0);
   }
 
   .login-hero-content p:last-child {
@@ -475,7 +479,8 @@
 
   .login-card {
     width: min(360px, calc(100% - 32px));
-    max-height: calc(100% - 32px);
+    max-height: calc(100svh - var(--login-card-top-offset) - 16px);
+    margin-top: var(--login-card-top-offset);
     box-shadow: 0 26px 56px rgb(0 31 65 / 28%);
   }
 }
@@ -486,6 +491,8 @@
   }
 
   .login-shell {
+    --login-card-top-offset: 112px;
+
     width: 100vw;
     height: 100svh;
     border-radius: 0;
@@ -502,13 +509,13 @@
   }
 
   .login-hero h1 {
-    font-size: clamp(30px, 11vw, 44px);
+    font-size: clamp(26px, 9vw, 38px);
   }
 
   .login-card {
     width: min(350px, calc(100% - 24px));
-    max-height: calc(100% - 112px);
-    margin-top: 72px;
+    max-height: calc(100svh - var(--login-card-top-offset) - 12px);
+    margin-top: var(--login-card-top-offset);
     padding: 24px 26px 28px;
   }
 
@@ -526,7 +533,7 @@
   }
 
   .login-form-content {
-    margin-top: 74px;
+    margin-top: 42px;
     padding-inline: 4px;
   }
 
@@ -559,7 +566,7 @@
   }
 
   .login-form-content {
-    margin-top: 58px;
+    margin-top: 30px;
     padding-inline: clamp(6px, 1.4vw, 14px);
   }
 
@@ -589,7 +596,7 @@
   }
 
   .login-form-content {
-    margin-top: 46px;
+    margin-top: 18px;
   }
 
   .login-form-content h2 {
