@@ -1,8 +1,10 @@
 from datetime import timedelta, datetime, timezone
-from jose import jwt, JWTError
-from app.config import settings
+from uuid import uuid4
 
-JWT_SECRET = settings.jwt_secret_key
+from jose import jwt, JWTError
+
+from app.db.db import store
+
 ALGORITHM = "HS256"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 15
@@ -19,7 +21,10 @@ def create_token(data: dict, expire_delta: timedelta, token_type: str):
         "type": token_type
     })
 
-    return jwt.encode(payload, JWT_SECRET, algorithm=ALGORITHM)
+    if token_type == "refresh":
+        payload["jti"] = str(uuid4())
+
+    return jwt.encode(payload, store.get_jwt_secret(), algorithm=ALGORITHM)
 
 
 def create_access_token(user_id: str, role: str):
@@ -29,11 +34,10 @@ def create_access_token(user_id: str, role: str):
         "access"
     )
 
-# Not using.
 def create_refresh_token(user_id: str):
     return create_token(
         {"sub": user_id},
-        timedelta(days=REFRESH_TOKEN_EXPIRE_HOURS),
+        timedelta(hours=REFRESH_TOKEN_EXPIRE_HOURS),
         "refresh"
     )
 
@@ -41,7 +45,7 @@ def create_refresh_token(user_id: str):
 def verify_token(token: str, expect: str):
     try:
 
-        payload = jwt.decode(token, JWT_SECRET, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, store.get_jwt_secret(), algorithms=[ALGORITHM])
 
         if payload.get('type') != expect:
             raise ValueError("Invalid token type")
