@@ -99,7 +99,7 @@
   position: relative;
   z-index: 1;
   max-width: 560px;
-  transform: translateY(clamp(-52px, -5vmin, -28px));
+  transform: translate(1.25px, clamp(-52px, -5vmin, -28px));
 }
 
 .login-eyebrow {
@@ -470,7 +470,7 @@
 
   .login-hero-content {
     max-width: calc(100vw - 72px);
-    transform: translateY(0);
+    transform: translateX(10px);
   }
 
   .login-hero-content p:last-child {
@@ -505,7 +505,7 @@
 
   .login-hero-content {
     max-width: 230px;
-    transform: translateY(0);
+    transform: translateX(8px);
   }
 
   .login-hero h1 {

@@ -89,9 +89,9 @@ export const LoginPage = () => {
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
-                    <EyeOff size={16} strokeWidth={2.2} />
-                  ) : (
                     <Eye size={16} strokeWidth={2.2} />
+                  ) : (
+                    <EyeOff size={16} strokeWidth={2.2} />
                   )}
                 </button>
               </div>
