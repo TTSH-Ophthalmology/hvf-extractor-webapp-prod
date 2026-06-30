@@ -1,11 +1,12 @@
 /**
  * components/layout/Sidebar/Sidebar.tsx — Main sidebar with branding.
  *
- * VIEW: renders the TTSH logo, brand text, and navigation.
+ * VIEW: renders the sidebar brand logo and navigation.
  * Collapse/expand is controlled by the parent AppShell.
  */
 
-import ttshLogo from '../../../assets/images/TTSH-logo.png'
+import NHGLogo from '../../../assets/images/NHG-logo.png'
+import NHGEILogo from '../../../assets/images/NHGEI-logo.jpg'
 import { SidebarFooter } from './SidebarFooter'
 import { SidebarNav } from './SidebarNav'
 import './Sidebar.css'
@@ -25,11 +26,11 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
         aria-expanded={!isCollapsed}
         onClick={onToggleCollapsed}
       >
-        <img className="hospital-logo" src={ttshLogo} alt="Tan Tock Seng Hospital" />
-        <div className="brand-text">
-          <strong>NHGEI HVF Extractor</strong>
-          <span>OPHTHALMOLOGY DEPT</span>
-        </div>
+        <img
+          className="hospital-logo"
+          src={isCollapsed ? NHGLogo : NHGEILogo}
+          alt={isCollapsed ? 'NHG' : 'NHG Eye Institute'}
+        />
       </button>
 
       <SidebarNav isCollapsed={isCollapsed} />

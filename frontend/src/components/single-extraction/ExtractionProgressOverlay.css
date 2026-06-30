@@ -1,0 +1,134 @@
+.extraction-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(15 23 42 / 42%);
+  backdrop-filter: blur(2px);
+}
+
+.extraction-overlay-box {
+  display: grid;
+  justify-items: center;
+  width: min(390px, 100%);
+  padding: 28px 30px 26px;
+  border: 1px solid #d7dde5;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 0 24px 54px rgb(15 23 42 / 22%);
+  text-align: center;
+}
+
+.extraction-overlay-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 16px;
+  border-radius: 50%;
+  color: #0b4c8f;
+  background: #eaf1f8;
+}
+
+.extraction-overlay-success .extraction-overlay-mark {
+  color: #00706a;
+  background: #c8f4ef;
+}
+
+.extraction-overlay-warning .extraction-overlay-mark {
+  color: #9a5a00;
+  background: #fff1d6;
+}
+
+.extraction-overlay-error .extraction-overlay-mark {
+  color: #b42318;
+  background: #ffe4e0;
+}
+
+.extraction-overlay-spinner {
+  width: 25px;
+  height: 25px;
+  border: 3px solid #b9d1e8;
+  border-top-color: #0b4c8f;
+  border-radius: 50%;
+  animation: extraction-overlay-spin 760ms linear infinite;
+}
+
+.extraction-overlay-copy h2 {
+  margin: 0;
+  color: #181c1e;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.extraction-overlay-copy p {
+  margin: 9px 0 0;
+  color: #68717e;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.extraction-overlay-progress {
+  width: 100%;
+  height: 8px;
+  margin-top: 22px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e8edf3;
+}
+
+.extraction-overlay-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #0b4c8f;
+  transition: width 180ms ease;
+}
+
+.extraction-overlay-success .extraction-overlay-progress span {
+  background: #00706a;
+}
+
+.extraction-overlay-action {
+  min-width: 116px;
+  min-height: 34px;
+  margin-top: 22px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  background: #0b4c8f;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.extraction-overlay-error .extraction-overlay-action {
+  background: #b42318;
+}
+
+.extraction-overlay-warning .extraction-overlay-action {
+  background: #9a5a00;
+}
+
+@keyframes extraction-overlay-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 560px) {
+  .extraction-overlay {
+    padding: 18px;
+  }
+
+  .extraction-overlay-box {
+    padding: 24px 20px 22px;
+  }
+}

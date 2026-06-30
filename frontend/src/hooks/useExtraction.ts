@@ -17,7 +17,7 @@ interface UseExtractionResult {
   status: ExtractionStatus
   data: ExtractionResult | null
   errorMessage: string | null
-  extract: (jobId: string, eye: 'LE' | 'RE', reportType: string) => Promise<void>
+  extract: (jobId: string, eye: 'LE' | 'RE', reportType: string) => Promise<ExtractionResult | null>
   reset: () => void
 }
 
@@ -37,7 +37,7 @@ export function useExtraction(): UseExtractionResult {
 
       if (result.status === 'complete') {
         setStatus('complete')
-        return
+        return result
       }
 
       // Poll if extraction is still in progress (future async jobs)
@@ -65,12 +65,14 @@ export function useExtraction(): UseExtractionResult {
 
       if (result.status !== 'error') {
         setTimeout(poll, POLL_INTERVAL_MS)
-        return
+        return null
       }
     } catch (err) {
       setStatus('error')
       setErrorMessage(err instanceof Error ? err.message : 'Extraction failed')
     }
+
+    return null
   }, [])
 
   const reset = useCallback(() => {

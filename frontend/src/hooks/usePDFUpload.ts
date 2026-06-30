@@ -16,7 +16,7 @@ interface UsePDFUploadResult {
   status: UploadStatus
   response: FileUploadResponse | null
   errorMessage: string | null
-  upload: (file: File) => Promise<void>
+  upload: (file: File) => Promise<FileUploadResponse | null>
   reset: () => void
 }
 
@@ -33,9 +33,11 @@ export function usePDFUpload(): UsePDFUploadResult {
       const result = await uploadFile(file)
       setResponse(result)
       setStatus('success')
+      return result
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Upload failed')
       setStatus('error')
+      return null
     }
   }, [])
 

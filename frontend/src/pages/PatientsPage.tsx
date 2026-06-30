@@ -4,16 +4,15 @@
  * VIEW: placeholder page for the future patient management feature.
  */
 
-import { PageHeader } from '../components/ui/PageHeader'
 import './PatientsPage.css'
 
 export const PatientsPage = () => {
   return (
     <>
-      <PageHeader
-        title="Patients"
-        description="Search, register, and manage patient records before reviewing visual field tests."
-      />
+      <header>
+        <h1>Patients</h1>
+        <p>Search, register, and manage patient records before reviewing visual field tests.</p>
+      </header>
 
       <section className="empty-panel">
         <h3>Patient list</h3>

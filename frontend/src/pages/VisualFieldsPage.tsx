@@ -4,16 +4,15 @@
  * VIEW: placeholder page for future batch visual field extraction.
  */
 
-import { PageHeader } from '../components/ui/PageHeader'
 import './VisualFieldsPage.css'
 
 export const VisualFieldsPage = () => {
   return (
     <>
-      <PageHeader
-        title="Visual fields"
-        description="Upload, inspect, and compare visual field test results for each eye."
-      />
+      <header>
+        <h1>Visual fields</h1>
+        <p>Upload, inspect, and compare visual field test results for each eye.</p>
+      </header>
 
       <section className="visual-field-panel">
         <h3>Visual field viewer</h3>
