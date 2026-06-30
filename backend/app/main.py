@@ -8,6 +8,8 @@ No business logic lives here.
 import logging
 import time
 from datetime import datetime
+from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,15 +23,28 @@ from app.auth.service import verify_admin
 from app.auth.jwt import create_access_token, create_refresh_token, verify_token
 from app.dependencies import get_current_user
 
+BASE_DIR = Path(__file__).resolve().parent
+FOLDER_PATH = BASE_DIR .parent/ "data/uploads"
+
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
 
 logger = logging.getLogger(__name__)
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # clean up uploads folder before shutdown
+    for file in Path(FOLDER_PATH).iterdir():
+        if file.is_file():
+            file.unlink()
+
+
 app = FastAPI(
     title="NHGEI HVF Extractor API",
     description="Backend API for NHGEI HVF Extractor — extracts structured data from HVF/VRVF PDF reports.",
     version="1.0.0",
+    lifespan=lifespan
 )
 
 # ---------------------------------------------------------------------------
