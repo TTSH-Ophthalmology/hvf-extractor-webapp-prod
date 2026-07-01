@@ -27,6 +27,7 @@
 }
 
 .eye-upload-title {
+  min-width: 0;
   display: inline-flex;
   align-items: center;
   gap: 10px;

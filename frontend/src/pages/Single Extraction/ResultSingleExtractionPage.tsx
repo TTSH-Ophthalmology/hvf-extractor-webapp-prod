@@ -357,10 +357,10 @@ export const ResultSingleExtractionPage = () => {
             <span className="result-status-pill">
               <FaCheckCircle size={13} aria-hidden="true" />
               {completedAtText
-                ? `Extraction completed at ${completedAtText}`
-                : 'Extraction completed'}
+                ? `Completed at ${completedAtText}`
+                : 'Completed'}
             </span>
-            <span>{completedEyesText} eye(s) processed</span>
+            <span className="result-eye-count">{completedEyesText} eye(s) processed</span>
           </div>
         </div>
         <ReportTypePreview

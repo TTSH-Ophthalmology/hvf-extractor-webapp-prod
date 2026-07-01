@@ -10,13 +10,21 @@
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
+  min-width: 0;
   gap: 8px;
 }
 
 .result-eye-title-item {
   display: inline-flex;
   align-items: center;
+  min-width: 0;
   gap: 10px;
+}
+
+.result-eye-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .result-preview-header-files {
@@ -37,7 +45,7 @@
 }
 
 .result-preview-header-file {
-  flex: 0 0 190px;
+  flex: 0 1 190px;
   width: 190px;
   min-width: 0;
   max-width: 190px;
@@ -89,7 +97,6 @@
   .result-preview-header-file {
     flex: 1 1 160px;
     width: auto;
-    max-width: 100%;
   }
 
   .result-preview-header-files {

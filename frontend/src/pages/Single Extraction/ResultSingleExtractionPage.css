@@ -21,6 +21,9 @@
 
 .result-title-block h1 {
   margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   padding-top: 5px;
   padding-left: 6px;
   color: #424751;
@@ -34,6 +37,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  min-width: 0;
   gap: 14px;
   color: #68717e;
   font-size: 14px;
@@ -43,6 +47,7 @@
 .result-status-pill {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   gap: 7px;
   min-height: 25px;
   padding: 2px 12px;
@@ -51,6 +56,15 @@
   background: #c8f4ef;
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+.result-eye-count {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .result-data-panel {
@@ -87,8 +101,7 @@
 .result-data-heading {
   display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 24px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -101,11 +114,15 @@
 }
 
 .result-data-title svg {
+  flex-shrink: 0;
   color: #00336a;
 }
 
 .result-data-title h2 {
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--font-hanken-grotesk);
   font-size: 22px;
   font-weight: 600;
@@ -115,7 +132,6 @@
 .result-preview-toggle {
   display: inline-grid;
   grid-template-columns: repeat(2, 45px);
-  overflow: hidden;
   border: 1px solid #cbd4e0;
   border-radius: 4px;
   background: #f3f6f9;
@@ -193,10 +209,6 @@
 }
 
 @media (max-width: 560px) {
-  .result-page-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
 
   .result-data-panel > header {
     align-items: flex-start;

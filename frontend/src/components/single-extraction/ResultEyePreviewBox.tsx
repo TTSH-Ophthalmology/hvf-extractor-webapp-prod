@@ -36,12 +36,12 @@ export const ResultEyePreviewBox = ({
             {hasBothEyes ? (
               <span className="result-eye-title-item">
                 <span className="eye-code">OU</span>
-                <span>Both Eyes</span>
+                <span className="result-eye-label">Both Eyes</span>
               </span>
             ) : (
               <span className="result-eye-title-item">
                 <span className="eye-code">{firstRow.eye}</span>
-                <span>{firstRow.label}</span>
+                <span className="result-eye-label">{firstRow.label}</span>
               </span>
             )}
           </div>
