@@ -27,9 +27,14 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
         onClick={onToggleCollapsed}
       >
         <img
-          className="hospital-logo"
-          src={isCollapsed ? NHGLogo : NHGEILogo}
-          alt={isCollapsed ? 'NHG' : 'NHG Eye Institute'}
+          className="hospital-logo hospital-logo-full"
+          src={NHGEILogo}
+          alt={'NHG Eye Institute'}
+        />
+        <img
+          className="hospital-logo hospital-logo-collapsed"
+          src={NHGLogo}
+          alt={'NHG'}
         />
       </button>
 
