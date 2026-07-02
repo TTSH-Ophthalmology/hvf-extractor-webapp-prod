@@ -1,6 +1,6 @@
-import type { EyeCode } from './types'
-import { ResultCsvExtractionDataPreview } from './ResultCsvExtractionDataPreview'
-import { ResultJsonExtractionDataPreview } from './ResultJsonExtractionDataPreview'
+import { ResultCsvExtractionDataPreview } from '../ResultCsvExtractionDataPreview/ResultCsvExtractionDataPreview'
+import { ResultJsonExtractionDataPreview } from '../ResultJsonExtractionDataPreview/ResultJsonExtractionDataPreview'
+import type { EyeCode } from '../types'
 import './ResultExtractionDataPreview.css'
 
 export type PreviewMode = 'csv' | 'json'

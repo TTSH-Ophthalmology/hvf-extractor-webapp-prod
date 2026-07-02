@@ -1,6 +1,6 @@
-import { ResultEyePreviewBox } from './ResultEyePreviewBox'
-import type { EyeCode } from './types'
-import type { ResultExtractionDataRow } from './ResultExtractionDataPreview'
+import { ResultEyePreviewBox } from '../ResultEyePreviewBox/ResultEyePreviewBox'
+import type { ResultExtractionDataRow } from '../ResultExtractionDataPreview/ResultExtractionDataPreview'
+import type { EyeCode } from '../types'
 
 type ResultCsvExtractionDataPreviewProps = {
   rows: ResultExtractionDataRow[]

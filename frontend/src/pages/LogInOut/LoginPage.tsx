@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertCircle, Eye, EyeOff, LockKeyhole, UserRound } from "lucide-react";
-import nhgeiLogo from "../assets/images/NHGEI-logo.jpg";
-import api from "../services/api";
+import nhgeiLogo from "../../assets/images/NHGEI-logo.jpg";
+import api from "../../services/api";
 import "./LoginPage.css";
 
 export const LoginPage = () => {

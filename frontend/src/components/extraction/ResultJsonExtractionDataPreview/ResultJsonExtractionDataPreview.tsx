@@ -1,8 +1,8 @@
 import { GoEyeClosed } from 'react-icons/go'
-import { EyeBox } from './EyeBox'
-import { FilePreview } from './FilePreview'
-import type { EyeCode } from './types'
-import type { ResultExtractionDataRow } from './ResultExtractionDataPreview'
+import { FilePreview } from '../../ui/Upload/FilePreview/FilePreview'
+import { EyeBox } from '../EyeBox/EyeBox'
+import type { ResultExtractionDataRow } from '../ResultExtractionDataPreview/ResultExtractionDataPreview'
+import type { EyeCode } from '../types'
 
 type ResultJsonExtractionDataPreviewProps = {
   rows: ResultExtractionDataRow[]

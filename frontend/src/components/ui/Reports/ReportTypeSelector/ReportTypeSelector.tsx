@@ -1,11 +1,11 @@
 /**
- * components/ui/ReportTypeSelector.tsx — HVF / VRVF report type picker.
+ * components/ui/Reports/ReportTypeSelector/ReportTypeSelector.tsx — HVF / VRVF report type picker.
  *
  * VIEW: wraps SelectFieldDropdown with report-type specific options.
  */
 
 import './ReportTypeSelector.css'
-import { SelectFieldDropdown } from './SelectFieldDropdown'
+import { SelectFieldDropdown } from '../../SelectFieldDropdown/SelectFieldDropdown'
 
 export type ReportType = 'hvf' | 'vrvf'
 

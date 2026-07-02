@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { FaEye } from 'react-icons/fa6'
 import { RiEyeCloseFill } from 'react-icons/ri'
-import type { EyeCode } from './types'
+import type { EyeCode } from '../types'
 import './EyeBox.css'
 
 type EyeBoxProps = {

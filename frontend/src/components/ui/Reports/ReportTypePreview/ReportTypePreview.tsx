@@ -1,8 +1,8 @@
 /**
- * components/ui/ReportTypePreview.tsx — Read-only HVF / VRVF report type display.
+ * components/ui/Reports/ReportTypePreview/ReportTypePreview.tsx — Read-only HVF / VRVF report type display.
  */
 
-import type { ReportType } from './ReportTypeSelector'
+import type { ReportType } from '../ReportTypeSelector/ReportTypeSelector'
 import './ReportTypePreview.css'
 
 type ReportTypeOption = {

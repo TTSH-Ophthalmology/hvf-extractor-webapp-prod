@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from 'react'
-import { EyeBox } from './EyeBox'
-import { FilePreview } from './FilePreview'
-import type { EyeCode } from './types'
+import { FilePreview } from '../../ui/Upload/FilePreview/FilePreview'
+import { EyeBox } from '../EyeBox/EyeBox'
+import type { EyeCode } from '../types'
 import './ResultEyePreviewBox.css'
 
 export type ResultEyePreviewRow = {
