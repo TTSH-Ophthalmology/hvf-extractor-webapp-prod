@@ -15,6 +15,7 @@
   flex: 0 1 190px;
   justify-content: center;
   min-width: 200px;
+  min-height: 37px;
   margin: 0;
   padding: 0 30px;
   border: 0;
@@ -25,7 +26,7 @@
   font-style: italic;
   font-weight: 700;
   letter-spacing: 0.6px;
-  line-height: 37px;
+  line-height: 1;
   overflow: hidden;
   text-align: center;
   text-shadow: 1px 1px 1px rgb(0 0 0 / 20%);
@@ -34,8 +35,8 @@
 }
 
 .workflow-tab-active {
-  justify-content: flex-start;
-  padding-left: 50px;
+  justify-content: center;
+  padding-right: 50px;
   background: #82d2d8;
   clip-path: polygon(0 0, 100% 0, calc(100% - 30px) 100%, 0 100%);
 }
@@ -74,14 +75,16 @@
   }
 
   .workflow-tab {
+    min-height: 32px;
     padding: 0 18px;
     font-size: 13px;
-    line-height: 32px;
+    line-height: 1;
   }
 
   .workflow-tab-active {
     justify-content: center;
     padding-left: 18px;
+    padding-right: 32px;
   }
 
   .workflow-tab + .workflow-tab {
@@ -97,6 +100,7 @@
 
   .workflow-tab-active {
     padding-left: 12px;
+    padding-right: 26px;
   }
 
   .workflow-tab + .workflow-tab {
