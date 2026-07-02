@@ -63,7 +63,7 @@
 
   .workflow-tab,
   .workflow-tab:nth-child(2) {
-    flex: 1 1 0;
+    flex: 0 1 190px;
     min-width: 0;
   }
 }
@@ -85,7 +85,6 @@
   }
 
   .workflow-tab + .workflow-tab {
-    margin-left: -22px;
     padding: 0 18px 0 28px;
   }
 }
@@ -101,7 +100,6 @@
   }
 
   .workflow-tab + .workflow-tab {
-    margin-left: -18px;
     padding: 0 12px 0 24px;
   }
 }
