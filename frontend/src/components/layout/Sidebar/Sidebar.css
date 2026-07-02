@@ -27,7 +27,7 @@
 
 .hospital-logo {
   display: block;
-  max-width: 225px;
+  max-width: 250px;
   height: auto;
   object-fit: contain;
   flex: 0 0 auto;
@@ -99,38 +99,5 @@
   .sidebar {
     height: 100vh;
     min-height: 100vh;
-  }
-
-  .sidebar-brand {
-    justify-content: center;
-    min-height: 82px;
-    padding: 8px 0;
-  }
-
-  .hospital-logo-full {
-    display: none;
-    width: 48px;
-    height: 48px;
-    margin-left: 0;
-    flex-basis: 48px;
-    transform: translate(-3px, -5px);
-  }
-
-  .hospital-logo-collapsed {
-    display: block;
-    width: 48px;
-    height: 48px;
-    margin-left: 0;
-    flex-basis: 48px;
-    transform: translate(-3px, -5px);
-  }
-
-  .nav-label {
-    max-width: 0;
-    width: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-4px);
-    transition-delay: 0ms;
   }
 }

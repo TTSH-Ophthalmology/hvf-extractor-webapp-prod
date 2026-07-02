@@ -5,7 +5,7 @@
  * Manages sidebar collapse state and debug mode toggle.
  */
 
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { TopBar } from '../TopBar/TopBar'
 import './AppShell.css'
@@ -17,6 +17,23 @@ type AppShellProps = {
 export const AppShell = ({ children }: AppShellProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDebugMode, setIsDebugMode] = useState(false)
+
+  useEffect(() => {
+    const smallViewportQuery = window.matchMedia('(max-width: 860px)')
+
+    const collapseForSmallViewport = (event: MediaQueryListEvent | MediaQueryList) => {
+      if (event.matches) {
+        setIsSidebarCollapsed(true)
+      }
+    }
+
+    collapseForSmallViewport(smallViewportQuery)
+    smallViewportQuery.addEventListener('change', collapseForSmallViewport)
+
+    return () => {
+      smallViewportQuery.removeEventListener('change', collapseForSmallViewport)
+    }
+  }, [])
 
   return (
     <div className={`app-shell${isSidebarCollapsed ? ' app-shell-collapsed' : ''}`}>

@@ -54,19 +54,3 @@
   width: 4px;
 }
 
-@media (max-width: 860px) {
-  .sidebar-nav {
-    display: grid;
-  }
-
-  .nav-link {
-    justify-content: center;
-    gap: 0;
-    min-height: 52px;
-    padding: 0;
-  }
-
-  .nav-link svg {
-    flex: 0 0 auto;
-  }
-}
