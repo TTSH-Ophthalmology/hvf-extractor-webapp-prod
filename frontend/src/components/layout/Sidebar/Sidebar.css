@@ -13,9 +13,10 @@
 .sidebar-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   width: 100%;
-  min-height: 82px;
-  padding: 12px 0;
+  min-height: 80px;
+  padding: 10px 0px 10px;
   border: 0;
   border-bottom: 1px solid #edf0f4;
   color: inherit;
@@ -26,43 +27,31 @@
 
 .hospital-logo {
   display: block;
-  width: 62px;
-  height: 62px;
-  margin-left: 1px;
+  width: calc(100%);
+  max-width: 225px;
+  height: auto;
   object-fit: contain;
-  flex: 0 0 62px;
-}
-
-.brand-text {
-  margin-left: -3px;
-  min-width: 0;
-  overflow: hidden;
-  opacity: 1;
-  transition: opacity 160ms ease;
-}
-
-.brand-text strong {
-  display: block;
-  font-family: var(--font-hanken-grotesk);
-  color: #00336a;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-.brand-text span {
-  display: block;
-  margin-top: 5px;
-  color: #717b89;
-  font-size: 8px;
-  font-weight: 600;
-  letter-spacing: 0.8px;
+  flex: 0 0 auto;
+  transform: translateX(-5px);
+  transition:
+    width 180ms ease,
+    height 180ms ease,
+    margin 180ms ease,
+    flex-basis 180ms ease,
+    transform 180ms ease;
 }
 
 .nav-label {
+  display: inline-block;
+  max-width: 160px;
   min-width: 0;
   overflow: hidden;
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    max-width 180ms ease 90ms,
+    opacity 150ms ease 100ms,
+    transform 150ms ease 100ms;
   white-space: nowrap;
 }
 
@@ -73,22 +62,48 @@
 }
 
 .sidebar-collapsed .hospital-logo {
-  width: 60px;
-  height: 60px;
+  width: 48px;
+  height: 48px;
   margin-left: 0;
-  flex-basis: 60px;
+  flex-basis: 48px;
+  transform: translate(-2px, -5px);
 }
 
-.sidebar-collapsed .brand-text,
 .sidebar-collapsed .nav-label {
+  max-width: 0;
   width: 0;
   opacity: 0;
   pointer-events: none;
+  transform: translateX(-4px);
+  transition-delay: 0ms;
 }
 
 @media (max-width: 860px) {
   .sidebar {
-    height: auto;
-    min-height: auto;
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  .sidebar-brand {
+    justify-content: center;
+    min-height: 82px;
+    padding: 8px 0;
+  }
+
+  .hospital-logo {
+    width: 48px;
+    height: 48px;
+    margin-left: 0;
+    flex-basis: 48px;
+    transform: translate(-3px, -5px);
+  }
+
+  .nav-label {
+    max-width: 0;
+    width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-4px);
+    transition-delay: 0ms;
   }
 }

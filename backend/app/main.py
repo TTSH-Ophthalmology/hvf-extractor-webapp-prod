@@ -7,14 +7,27 @@ No business logic lives here.
 
 import logging
 import time
+from datetime import datetime
 
-from fastapi import FastAPI, Request, Response
+from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.logging_config import setup_logging
 from app.routers import extraction, pdf
+
+from app.auth.csrf import (
+    create_csrf_token,
+    delete_csrf_cookie,
+    set_csrf_cookie,
+    validate_csrf,
+    cookie_secure,
+)
+from app.auth.service import verify_admin
+from app.auth.jwt import create_access_token, create_refresh_token, verify_token
+from app.dependencies import get_current_user
 
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
@@ -42,6 +55,24 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 
 @app.middleware("http")
+async def csrf_protect(request: Request, call_next) -> Response:
+    if (
+        request.url.path.startswith("/api/")
+        and request.method in {"POST", "PUT", "PATCH", "DELETE"}
+        and request.url.path != "/api/token"
+    ):
+        try:
+            validate_csrf(request)
+        except HTTPException as exc:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={"detail": exc.detail},
+            )
+
+    return await call_next(request)
+
+
+@app.middleware("http")
 async def log_requests(request: Request, call_next) -> Response:
     """Log every request with method, path, status code, and duration."""
     start = time.perf_counter()
@@ -56,23 +87,153 @@ async def log_requests(request: Request, call_next) -> Response:
     )
     return response
 
+# JWT system
+
+
+@app.post("/api/token")
+def login(
+    request: Request,
+    response: Response,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    ip = request.client.host
+    try:
+        verify_admin(username, password)
+
+    except Exception:
+        logger.exception(
+            "%s: %s has failed to log in from %s.",
+            datetime.now(),
+            username,
+            ip
+        )
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    access_token = create_access_token(
+        user_id=username,
+        role="admin"
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="lax",
+        max_age=60 * 15,
+        path="/",
+    )
+
+    refresh_token = create_refresh_token(
+        user_id=username
+    )
+
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="Strict",
+        max_age=60 * 60 * 10,
+        path="/api/refresh",
+    )
+    set_csrf_cookie(response, create_csrf_token())
+
+    logger.info(
+        "Login successful: user=%s ip=%s",
+        username,
+        ip,
+    )
+
+    return {
+        "message": "Login successfully"
+    }
+
+
+@app.post("/api/refresh")
+def refresh(request: Request, response: Response):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="Missing refresh-token")
+    
+    try:
+        payload = verify_token(refresh_token, expect="refresh")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid refresh-token")
+    
+    username = payload.get("sub")
+
+    new_access_token = create_access_token(
+        user_id=username,
+        role="admin"
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=new_access_token,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="lax",
+        max_age=60 * 15,
+        path="/",
+    )
+    set_csrf_cookie(response, create_csrf_token())
+
+    return {"message": "Access token refreshed"}
+
+
+@app.get("/api/me")
+def me(user=Depends(get_current_user)):
+    return {
+        "username": user["sub"],
+        "role": user["role"],
+    }
+
+
+@app.post("/api/logout")
+def logout(
+    request: Request,
+    response: Response
+):
+
+    response.delete_cookie(
+        key="access_token",
+        path="/",
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="lax",
+    )
+
+    response.delete_cookie(
+        key="refresh_token",
+        path="/api/refresh",
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="Strict",
+    )
+    delete_csrf_cookie(response)
+
+    logger.info(
+        "Logout: ip=%s",
+        request.client.host,
+    )
+
+    return {
+        "message": "Logout successfully"
+    }
+
 
 # ---------------------------------------------------------------------------
 # Routers (VIEW layer)
 # ---------------------------------------------------------------------------
-app.include_router(pdf.router,        prefix="/api")
-app.include_router(extraction.router, prefix="/api")
+api_dependencies = [Depends(get_current_user)]
 
-
-@app.get("/api/health", tags=["Health"])
-async def health_check() -> dict:
-    """Liveness probe — confirms the API is running."""
-    return {"status": "healthy", "version": "1.0.0"}
-
-
-@app.get("/", tags=["Root"])
-async def root() -> dict:
-    return {"message": "NHGEI HVF Extractor API", "docs_url": "/docs"}
+app.include_router(pdf.router,        prefix="/api",
+                   dependencies=api_dependencies)
+app.include_router(extraction.router, prefix="/api",
+                   dependencies=api_dependencies)
 
 
 if __name__ == "__main__":

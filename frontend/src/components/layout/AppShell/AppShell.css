@@ -1,6 +1,6 @@
 .app-shell {
   display: grid;
-  grid-template-columns: 235px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
   transition: grid-template-columns 180ms ease;
@@ -20,18 +20,20 @@
 }
 
 .page-content {
-  width: min(1120px, 100%);
+  width: 100%;
+  box-sizing: border-box;
   min-height: 0;
-  padding: 32px;
+  padding: 32px 28px 20px 32px;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
 @media (max-width: 860px) {
   .app-shell {
-    grid-template-columns: 1fr;
+    grid-template-columns: 58px minmax(0, 1fr);
   }
 
   .page-content {
-    padding: 24px;
+    padding: 24px 24px 18px;
   }
 }

@@ -6,7 +6,6 @@
  */
 
 import { type ReactNode, useState } from 'react'
-import { useLocation } from 'react-router-dom'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { TopBar } from '../TopBar/TopBar'
 import './AppShell.css'
@@ -15,19 +14,9 @@ type AppShellProps = {
   children: ReactNode
 }
 
-const pageTitles: Record<string, string> = {
-  '/': 'Single Extraction',
-  '/visual-fields': 'Batch Extraction',
-  '/reports': 'Templates',
-  '/patients': 'Help',
-  '/settings': 'Settings',
-}
-
 export const AppShell = ({ children }: AppShellProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDebugMode, setIsDebugMode] = useState(false)
-  const { pathname } = useLocation()
-  const pageTitle = pageTitles[pathname] ?? 'Single Extraction'
 
   return (
     <div className={`app-shell${isSidebarCollapsed ? ' app-shell-collapsed' : ''}`}>
@@ -38,7 +27,6 @@ export const AppShell = ({ children }: AppShellProps) => {
 
       <div className="workspace">
         <TopBar
-          pageTitle={pageTitle}
           isDebugMode={isDebugMode}
           onToggleDebugMode={() => setIsDebugMode((c) => !c)}
         />

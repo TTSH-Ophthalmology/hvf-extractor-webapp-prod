@@ -4,16 +4,15 @@
  * VIEW: placeholder page for future app settings and preferences.
  */
 
-import { PageHeader } from '../components/ui/PageHeader'
 import './SettingsPage.css'
 
 export const SettingsPage = () => {
   return (
     <>
-      <PageHeader
-        title="Settings"
-        description="Configure app preferences, backend connection settings, and local storage behaviour."
-      />
+      <header>
+        <h1>Settings</h1>
+        <p>Configure app preferences, backend connection settings, and local storage behaviour.</p>
+      </header>
 
       <section className="settings-panel">
         <h3>Application settings</h3>
