@@ -1,9 +1,13 @@
 .result-preview-eye-content {
   min-height: 0;
+  min-width: 0;
   padding: 14px;
 }
 
 .result-table-wrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   overflow-x: auto;
   border: 1px solid #d7dde5;
@@ -11,8 +15,8 @@
 }
 
 .result-data-table {
-  width: 100%;
-  min-width: 920px;
+  width: max-content;
+  min-width: 100%;
   border-collapse: collapse;
   background: #ffffff;
 }
