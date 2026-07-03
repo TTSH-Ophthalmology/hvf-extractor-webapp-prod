@@ -3,6 +3,7 @@ import './DownloadDataButton.css'
 
 type DownloadRow = {
   eye: string
+  filename: string
   rawData: Record<string, string>
 }
 
@@ -19,11 +20,11 @@ const escapeCsvValue = (value: string) => {
 }
 
 const buildCsv = (rows: DownloadRow[], fieldNames: string[]) => {
-  const headers = ['EYE', ...fieldNames]
+  const headers = ['EYE', 'FILE', ...fieldNames]
   const csvRows = [
     headers.map(escapeCsvValue).join(','),
     ...rows.map((row) =>
-      [row.eye, ...fieldNames.map((fieldName) => row.rawData[fieldName] ?? '')]
+      [row.eye, row.filename, ...fieldNames.map((fieldName) => row.rawData[fieldName] ?? '')]
         .map(escapeCsvValue)
         .join(',')
     ),

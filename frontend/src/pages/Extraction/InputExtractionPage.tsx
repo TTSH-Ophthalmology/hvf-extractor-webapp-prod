@@ -16,10 +16,10 @@ import type { EyeCode } from '../../components/extraction/types'
 import { ReportTypeSelector, type ReportType } from '../../components/ui/Reports/ReportTypeSelector/ReportTypeSelector'
 import { FileDropzone } from '../../components/ui/Upload/FileDropzone/FileDropzone'
 import { FilePreview } from '../../components/ui/Upload/FilePreview/FilePreview'
-import { usePDFUpload } from '../../hooks/usePDFUpload'
-import { useExtraction } from '../../hooks/useExtraction'
 import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
-import type { ExtractionResult } from '../../models/extraction'
+import { uploadFile } from '../../services/pdfService'
+import { triggerExtraction } from '../../services/extractionService'
+import type { ExtractionResultEntry } from '../../context/ExtractionWorkflowContext'
 import './InputExtractionPage.css'
 
 const reportTypeOptions = [
@@ -92,173 +92,125 @@ export const InputExtractionPage = () => {
   const { reportType, setReportType, setResults, clearResults } = useExtractionWorkflow()
   const [leftSelectedFiles, setLeftSelectedFiles] = useState<File[]>([])
   const [rightSelectedFiles, setRightSelectedFiles] = useState<File[]>([])
+  const [isProcessing, setIsProcessing] = useState(false)
   const [overlayState, setOverlayState] = useState<ExtractionOverlayState | null>(null)
 
-  const leftEye  = usePDFUpload()
-  const rightEye = usePDFUpload()
-
-  const leftExtraction  = useExtraction()
-  const rightExtraction = useExtraction()
-
-  const leftSelectedFile = leftSelectedFiles[leftSelectedFiles.length - 1] ?? null
-  const rightSelectedFile = rightSelectedFiles[rightSelectedFiles.length - 1] ?? null
   const hasSelectedFile = leftSelectedFiles.length > 0 || rightSelectedFiles.length > 0
 
-  const isExtracting =
-    leftExtraction.status  === 'extracting' ||
-    rightExtraction.status === 'extracting'
-
-  const isUploading =
-    leftEye.status  === 'uploading' ||
-    rightEye.status === 'uploading'
-
-  const canExtract = hasSelectedFile && !isUploading && !isExtracting
+  const canExtract = hasSelectedFile && !isProcessing
 
   const handleLeftFilesSelected = useCallback((files: File[]) => {
-    const latestFile = files[files.length - 1]
     setLeftSelectedFiles((currentFiles) => [...currentFiles, ...files])
     clearResults()
-    leftExtraction.reset()
-    leftEye.upload(latestFile)
-  }, [clearResults, leftEye, leftExtraction])
+  }, [clearResults])
 
   const handleRightFilesSelected = useCallback((files: File[]) => {
-    const latestFile = files[files.length - 1]
     setRightSelectedFiles((currentFiles) => [...currentFiles, ...files])
     clearResults()
-    rightExtraction.reset()
-    rightEye.upload(latestFile)
-  }, [clearResults, rightEye, rightExtraction])
+  }, [clearResults])
 
   const handleClearLeftFile = useCallback((fileIndex: number) => {
     setLeftSelectedFiles((currentFiles) => currentFiles.filter((_, index) => index !== fileIndex))
     clearResults()
-    leftEye.reset()
-    leftExtraction.reset()
-  }, [clearResults, leftEye, leftExtraction])
+  }, [clearResults])
 
   const handleClearRightFile = useCallback((fileIndex: number) => {
     setRightSelectedFiles((currentFiles) => currentFiles.filter((_, index) => index !== fileIndex))
     clearResults()
-    rightEye.reset()
-    rightExtraction.reset()
-  }, [clearResults, rightEye, rightExtraction])
+  }, [clearResults])
 
   const handleExtract = async () => {
+    const selectedReports = [
+      ...leftSelectedFiles.map((file) => ({ eye: 'LE' as EyeCode, file })),
+      ...rightSelectedFiles.map((file) => ({ eye: 'RE' as EyeCode, file })),
+    ]
+
+    if (selectedReports.length === 0) {
+      setOverlayState({
+        variant: 'warning',
+        title: 'No Report Ready',
+        message: 'Select at least one report before running extraction.',
+        actionLabel: 'Close',
+      })
+      return
+    }
+
+    setIsProcessing(true)
     setOverlayState({
       variant: 'loading',
       title: 'Preparing Extraction',
-      message: 'Checking selected files before extraction starts.',
+      message: `Preparing ${selectedReports.length} report${selectedReports.length === 1 ? '' : 's'} for extraction.`,
       progress: 12,
     })
     await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
 
-    const tasks: Promise<{ eye: EyeCode; result: ExtractionResult | null }>[] = []
-
-    let leftJobId = leftEye.response?.job_id
-    if (!leftJobId && leftSelectedFile) {
+    try {
       setOverlayState({
         variant: 'loading',
-        title: 'Uploading Left Eye',
-        message: 'Uploading the left eye report for extraction.',
-        progress: 28,
+        title: 'Uploading Reports',
+        message: 'Uploading all selected reports for extraction.',
+        progress: 32,
       })
       await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
-      const uploaded = await leftEye.upload(leftSelectedFile)
-      leftJobId = uploaded?.job_id
-    }
 
-    let rightJobId = rightEye.response?.job_id
-    if (!rightJobId && rightSelectedFile) {
+      const uploadedReports = await Promise.all(
+        selectedReports.map(async ({ eye, file }) => ({
+          eye,
+          file,
+          upload: await uploadFile(file),
+        }))
+      )
+
       setOverlayState({
         variant: 'loading',
-        title: 'Uploading Right Eye',
-        message: 'Uploading the right eye report for extraction.',
-        progress: leftJobId ? 42 : 28,
+        title: 'Extracting Report Data',
+        message: 'Reading every uploaded report and preparing extracted fields.',
+        progress: 72,
       })
       await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
-      const uploaded = await rightEye.upload(rightSelectedFile)
-      rightJobId = uploaded?.job_id
-    }
 
-    if ((leftSelectedFile && !leftJobId) || (rightSelectedFile && !rightJobId)) {
+      const completedResults = await Promise.all(
+        uploadedReports.map(async ({ eye, file, upload }) => ({
+          eye,
+          originalFilename: file.name,
+          result: await triggerExtraction(upload.job_id, eye, reportType),
+        }))
+      )
+
+      const nextResults: ExtractionResultEntry[] = completedResults
+        .filter(({ result }) => result.status === 'complete')
+        .map(({ eye, originalFilename, result }) => ({ eye, originalFilename, result }))
+
+      if (nextResults.length > 0) {
+        setOverlayState({
+          variant: 'success',
+          title: 'Extraction Complete',
+          message: 'Extraction successful. Opening the results page...',
+          progress: 100,
+        })
+        setResults(nextResults, reportType)
+        await delay(DEBUG_OVERLAY_SUCCESS_DELAY_MS)
+        navigate('/result')
+        return
+      }
+
       setOverlayState({
         variant: 'error',
-        title: 'Upload Failed',
-        message: leftEye.errorMessage ?? rightEye.errorMessage ?? 'One or more reports could not be uploaded.',
+        title: 'Extraction Failed',
+        message: 'No completed extraction result was returned.',
         actionLabel: 'Close',
       })
-      return
-    }
-
-    if (leftJobId) {
-      tasks.push(
-        leftExtraction
-          .extract(leftJobId, 'LE', reportType)
-          .then((result) => ({ eye: 'LE' as EyeCode, result }))
-      )
-    }
-    if (rightJobId) {
-      tasks.push(
-        rightExtraction
-          .extract(rightJobId, 'RE', reportType)
-          .then((result) => ({ eye: 'RE' as EyeCode, result }))
-      )
-    }
-
-    if (tasks.length === 0) {
+    } catch (err) {
       setOverlayState({
-        variant: 'warning',
-        title: 'No Report Ready',
-        message: 'Select at least one report and wait for upload to finish before running extraction.',
+        variant: 'error',
+        title: 'Extraction Failed',
+        message: err instanceof Error ? err.message : 'One or more reports could not be extracted.',
         actionLabel: 'Close',
       })
-      return
+    } finally {
+      setIsProcessing(false)
     }
-
-    setOverlayState({
-      variant: 'loading',
-      title: 'Extracting Report Data',
-      message: 'Reading the uploaded report and preparing extracted fields.',
-      progress: 72,
-    })
-    await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
-
-    const completedResults = await Promise.all(tasks)
-    const nextResults = completedResults.reduce(
-      (acc, { eye, result }) => ({
-        ...acc,
-        [eye]: result?.status === 'complete' ? result : null,
-      }),
-      { LE: null, RE: null } as Record<EyeCode, ExtractionResult | null>
-    )
-
-    if (nextResults.LE || nextResults.RE) {
-      setOverlayState({
-        variant: 'success',
-        title: 'Extraction Complete',
-        message: 'Extraction successful. Opening the results page...',
-        progress: 100,
-      })
-      setResults(nextResults, reportType, {
-        LE: leftSelectedFile,
-        RE: rightSelectedFile,
-      })
-      await delay(DEBUG_OVERLAY_SUCCESS_DELAY_MS)
-      navigate('/result')
-      return
-    }
-
-    setOverlayState({
-      variant: 'error',
-      title: 'Extraction Failed',
-      message: leftExtraction.errorMessage ?? rightExtraction.errorMessage ?? 'No completed extraction result was returned.',
-      actionLabel: 'Close',
-    })
   }
-
-  const uploadError = leftEye.errorMessage ?? rightEye.errorMessage
-  const extractionError = leftExtraction.errorMessage ?? rightExtraction.errorMessage
 
   return (
     <div className="extraction-page">
@@ -274,7 +226,7 @@ export const InputExtractionPage = () => {
           label="Left Eye"
           onFilesSelected={handleLeftFilesSelected}
           onClearFile={handleClearLeftFile}
-          isUploading={leftEye.status === 'uploading'}
+          isUploading={isProcessing}
           selectedFiles={leftSelectedFiles}
         />
         <EyeUploadPanel
@@ -282,31 +234,23 @@ export const InputExtractionPage = () => {
           label="Right Eye"
           onFilesSelected={handleRightFilesSelected}
           onClearFile={handleClearRightFile}
-          isUploading={rightEye.status === 'uploading'}
+          isUploading={isProcessing}
           selectedFiles={rightSelectedFiles}
         />
       </div>
-
-      {uploadError && (
-        <p className="extraction-error" role="alert">{uploadError}</p>
-      )}
 
       <div className="extraction-action-row">
         <button
           className="run-extraction-button"
           type="button"
-          disabled={!canExtract || isExtracting}
+          disabled={!canExtract}
           onClick={handleExtract}
-          style={canExtract && !isExtracting ? { background: '#00336a' } : undefined}
+          style={canExtract ? { background: '#00336a' } : undefined}
         >
           <RiSearchEyeLine size={18} />
-          {isExtracting ? 'Extracting...' : 'Run Extraction'}
+          {isProcessing ? 'Extracting...' : 'Run Extraction'}
         </button>
       </div>
-
-      {extractionError && (
-        <p className="extraction-error" role="alert">{extractionError}</p>
-      )}
 
       {overlayState && (
         <ExtractionProgressOverlay

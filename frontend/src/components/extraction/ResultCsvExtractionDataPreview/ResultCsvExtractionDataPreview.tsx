@@ -22,6 +22,7 @@ export const ResultCsvExtractionDataPreview = ({
           <thead>
             <tr>
               <th>Eye</th>
+              <th>File</th>
               {fieldNames.map((fieldName) => (
                 <th key={fieldName}>{formatFieldName(fieldName)}</th>
               ))}
@@ -29,8 +30,9 @@ export const ResultCsvExtractionDataPreview = ({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.eye}>
+              <tr key={row.id}>
                 <th scope="row">{row.eye}</th>
+                <td>{row.filename}</td>
                 {fieldNames.map((fieldName) => (
                   <td key={fieldName}>{row.rawData[fieldName] || '-'}</td>
                 ))}

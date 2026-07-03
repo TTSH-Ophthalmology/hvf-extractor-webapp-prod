@@ -1,42 +1,28 @@
 import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react'
 import type { ExtractionResult } from '../models/extraction'
 
-export type ExtractionResultsByEye = {
-  LE: ExtractionResult | null
-  RE: ExtractionResult | null
-}
-
-export type ExtractionFilesByEye = {
-  LE: File | null
-  RE: File | null
+export type ExtractionResultEntry = {
+  eye: 'LE' | 'RE'
+  originalFilename: string
+  result: ExtractionResult
 }
 
 export type ExtractionReportType = 'hvf' | 'vrvf'
 
 type ExtractionWorkflowContextValue = {
-  results: ExtractionResultsByEye
-  uploadedFiles: ExtractionFilesByEye
+  results: ExtractionResultEntry[]
   reportType: ExtractionReportType
   completedAt: Date | null
   hasResults: boolean
   setReportType: (reportType: ExtractionReportType) => void
   setResults: (
-    results: ExtractionResultsByEye,
-    reportType?: ExtractionReportType,
-    uploadedFiles?: ExtractionFilesByEye
+    results: ExtractionResultEntry[],
+    reportType?: ExtractionReportType
   ) => void
   clearResults: () => void
 }
 
-const emptyResults: ExtractionResultsByEye = {
-  LE: null,
-  RE: null,
-}
-
-const emptyFiles: ExtractionFilesByEye = {
-  LE: null,
-  RE: null,
-}
+const emptyResults: ExtractionResultEntry[] = []
 
 const ExtractionWorkflowContext =
   createContext<ExtractionWorkflowContextValue | null>(null)
@@ -48,20 +34,15 @@ type ExtractionWorkflowProviderProps = {
 export const ExtractionWorkflowProvider = ({
   children,
 }: ExtractionWorkflowProviderProps) => {
-  const [results, setResultsState] = useState<ExtractionResultsByEye>(emptyResults)
-  const [uploadedFiles, setUploadedFiles] = useState<ExtractionFilesByEye>(emptyFiles)
+  const [results, setResultsState] = useState<ExtractionResultEntry[]>(emptyResults)
   const [reportType, setReportType] = useState<ExtractionReportType>('hvf')
   const [completedAt, setCompletedAt] = useState<Date | null>(null)
 
   const setResults = useCallback((
-    nextResults: ExtractionResultsByEye,
-    nextReportType?: ExtractionReportType,
-    nextUploadedFiles?: ExtractionFilesByEye
+    nextResults: ExtractionResultEntry[],
+    nextReportType?: ExtractionReportType
   ) => {
     setResultsState(nextResults)
-    if (nextUploadedFiles) {
-      setUploadedFiles(nextUploadedFiles)
-    }
     setCompletedAt(new Date())
     if (nextReportType) {
       setReportType(nextReportType)
@@ -70,22 +51,20 @@ export const ExtractionWorkflowProvider = ({
 
   const clearResults = useCallback(() => {
     setResultsState(emptyResults)
-    setUploadedFiles(emptyFiles)
     setCompletedAt(null)
   }, [])
 
   const value = useMemo(
     () => ({
       results,
-      uploadedFiles,
       reportType,
       completedAt,
-      hasResults: Boolean(results.LE || results.RE),
+      hasResults: results.length > 0,
       setReportType,
       setResults,
       clearResults,
     }),
-    [clearResults, completedAt, reportType, results, setResults, uploadedFiles]
+    [clearResults, completedAt, reportType, results, setResults]
   )
 
   return (

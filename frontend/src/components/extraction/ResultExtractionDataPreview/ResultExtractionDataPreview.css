@@ -1,7 +1,7 @@
 .result-preview-csv-content {
   min-height: 0;
   min-width: 0;
-  padding: 2px 20px 25px 20px;
+  padding: 0px 22px 25px 22px;
 }
 
 .result-table-wrap {
@@ -27,17 +27,23 @@
   padding: 10px 9px;
   border-bottom: 1px solid #d7dde5;
   color: #374151;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1.25;
   text-align: left;
   vertical-align: middle;
 }
 
+.result-data-table th:nth-child(2),
+.result-data-table td:nth-child(2) {
+  min-width: 160px;
+  padding-right: 15px;
+}
+
 .result-data-table thead th {
   color: #7b8491;
   background: #f3f6f9;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.2px;
   text-transform: uppercase;

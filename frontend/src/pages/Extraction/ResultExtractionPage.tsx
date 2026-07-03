@@ -10,14 +10,15 @@ import { ResultExtractionDataPreview } from '../../components/extraction/ResultE
 import { ReportTypePreview } from '../../components/ui/Reports/ReportTypePreview/ReportTypePreview'
 import type { ReportType } from '../../components/ui/Reports/ReportTypeSelector/ReportTypeSelector'
 import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
-import type { ExtractionResultsByEye } from '../../context/ExtractionWorkflowContext'
 import './ResultExtractionPage.css'
 
-type Eye = keyof ExtractionResultsByEye
+type Eye = 'LE' | 'RE'
 
 type ResultRow = {
+  id: string
   eye: Eye
   label: string
+  filename: string
   rawData: Record<string, string>
 }
 
@@ -44,15 +45,12 @@ const formatCompletedAt = (completedAt: Date | null) => {
 export const ResultExtractionPage = () => {
   const { results, reportType, completedAt, hasResults } = useExtractionWorkflow()
 
-  const resultRows: ResultRow[] = ([
-    { eye: 'LE' as Eye, result: results.LE },
-    { eye: 'RE' as Eye, result: results.RE },
-  ])
-    .filter(({ result }) => Boolean(result))
-    .map(({ eye, result }) => ({
+  const resultRows: ResultRow[] = results.map(({ eye, originalFilename, result }, index) => ({
+      id: `${result.job_id}-${index}`,
       eye,
       label: eyeLabels[eye],
-      rawData: result?.raw_data ?? {},
+      filename: originalFilename,
+      rawData: result.raw_data,
     }))
 
   const fieldNames = Array.from(
@@ -60,6 +58,7 @@ export const ResultExtractionPage = () => {
   )
 
   const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
+  const completedFilesText = `${resultRows.length} file${resultRows.length === 1 ? '' : 's'} processed`
   const completedAtText = formatCompletedAt(completedAt)
 
   if (!hasResults) {
@@ -78,7 +77,7 @@ export const ResultExtractionPage = () => {
                 ? `Completed at ${completedAtText}`
                 : 'Completed'}
             </span>
-            <span className="result-eye-count">{completedEyesText} eye(s) processed</span>
+            <span className="result-eye-count">{completedFilesText} ({completedEyesText})</span>
           </div>
         </div>
         <ReportTypePreview

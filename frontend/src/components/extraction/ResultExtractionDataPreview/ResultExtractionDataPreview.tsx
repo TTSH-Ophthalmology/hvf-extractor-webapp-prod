@@ -3,8 +3,10 @@ import type { EyeCode } from '../types'
 import './ResultExtractionDataPreview.css'
 
 export type ResultExtractionDataRow = {
+  id: string
   eye: EyeCode
   label: string
+  filename: string
   rawData: Record<string, string>
 }
 
