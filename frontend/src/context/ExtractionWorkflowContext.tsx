@@ -13,7 +13,7 @@ export type ExtractionFilesByEye = {
 
 export type ExtractionReportType = 'hvf' | 'vrvf'
 
-type SingleExtractionWorkflowContextValue = {
+type ExtractionWorkflowContextValue = {
   results: ExtractionResultsByEye
   uploadedFiles: ExtractionFilesByEye
   reportType: ExtractionReportType
@@ -38,16 +38,16 @@ const emptyFiles: ExtractionFilesByEye = {
   RE: null,
 }
 
-const SingleExtractionWorkflowContext =
-  createContext<SingleExtractionWorkflowContextValue | null>(null)
+const ExtractionWorkflowContext =
+  createContext<ExtractionWorkflowContextValue | null>(null)
 
-type SingleExtractionWorkflowProviderProps = {
+type ExtractionWorkflowProviderProps = {
   children: ReactNode
 }
 
-export const SingleExtractionWorkflowProvider = ({
+export const ExtractionWorkflowProvider = ({
   children,
-}: SingleExtractionWorkflowProviderProps) => {
+}: ExtractionWorkflowProviderProps) => {
   const [results, setResultsState] = useState<ExtractionResultsByEye>(emptyResults)
   const [uploadedFiles, setUploadedFiles] = useState<ExtractionFilesByEye>(emptyFiles)
   const [reportType, setReportType] = useState<ExtractionReportType>('hvf')
@@ -89,17 +89,17 @@ export const SingleExtractionWorkflowProvider = ({
   )
 
   return (
-    <SingleExtractionWorkflowContext.Provider value={value}>
+    <ExtractionWorkflowContext.Provider value={value}>
       {children}
-    </SingleExtractionWorkflowContext.Provider>
+    </ExtractionWorkflowContext.Provider>
   )
 }
 
-export const useSingleExtractionWorkflow = () => {
-  const value = useContext(SingleExtractionWorkflowContext)
+export const useExtractionWorkflow = () => {
+  const value = useContext(ExtractionWorkflowContext)
 
   if (!value) {
-    throw new Error('useSingleExtractionWorkflow must be used within SingleExtractionWorkflowProvider')
+    throw new Error('useExtractionWorkflow must be used within ExtractionWorkflowProvider')
   }
 
   return value

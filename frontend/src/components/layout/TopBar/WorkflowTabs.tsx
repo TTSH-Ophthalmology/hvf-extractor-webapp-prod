@@ -6,12 +6,12 @@
  */
 
 import { useNavigate } from 'react-router-dom'
-import { useSingleExtractionWorkflow } from '../../../context/SingleExtractionWorkflowContext'
+import { useExtractionWorkflow } from '../../../context/ExtractionWorkflowContext'
 import './WorkflowTabs.css'
 
 export const WorkflowTabs = () => {
   const navigate = useNavigate()
-  const { hasResults } = useSingleExtractionWorkflow()
+  const { hasResults } = useExtractionWorkflow()
 
   const handleResultClick = () => {
     if (hasResults) {

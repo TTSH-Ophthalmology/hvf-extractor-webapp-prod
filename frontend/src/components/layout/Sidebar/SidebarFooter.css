@@ -60,9 +60,14 @@
   align-items: center;
   gap: 15px;
   min-height: 25px;
+  padding: 0;
+  border: 0;
   color: #4b5563;
+  background: transparent;
   font-size: 16px;
   font-weight: 500;
+  text-align: left;
+  cursor: pointer;
   transition:
     gap 180ms ease,
     padding 180ms ease,

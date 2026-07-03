@@ -5,16 +5,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react'
-import { Bell, LogOut, Settings, UserPen } from 'lucide-react'
+import { LogOut, Settings, UserPen } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import api from '../../../services/api'
 import { WorkflowTabs } from './WorkflowTabs'
 import './TopBar.css'
-
-type TopBarProps = {
-  isDebugMode: boolean
-  onToggleDebugMode: () => void
-}
 
 type CurrentUser = {
   username: string
@@ -39,7 +34,7 @@ const getInitials = (displayName: string) => {
   return initials || 'U'
 }
 
-export const TopBar = ({ isDebugMode, onToggleDebugMode }: TopBarProps) => {
+export const TopBar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const profileMenuRef = useRef<HTMLDivElement | null>(null)
@@ -98,24 +93,9 @@ export const TopBar = ({ isDebugMode, onToggleDebugMode }: TopBarProps) => {
       <div className="topbar-main">
         <h1>HVF Extractor</h1>
         <div className="topbar-actions">
-          <button
-            className={`debug-button${isDebugMode ? ' debug-button-active' : ''}`}
-            type="button"
-            role="switch"
-            aria-checked={isDebugMode}
-            onClick={onToggleDebugMode}
-          >
-            {/* <CgDebug size={17} /> */}
-            <span>Debug Mode</span>
-            <span className="debug-status-dot" aria-hidden="true" />
-          </button>
-
-          <button className="notification-button" type="button" aria-label="Notifications">
-            <Bell size={19} strokeWidth={2.2} />
-            <span aria-hidden="true" />
-          </button>
-
-          <span className="topbar-divider" aria-hidden="true" />
+          <div className="topbar-user-summary" aria-label={`Signed in as ${displayName}`}>
+            <span>{displayName}</span>
+          </div>
 
           <div className="profile-menu-root" ref={profileMenuRef}>
             <button
@@ -139,24 +119,24 @@ export const TopBar = ({ isDebugMode, onToggleDebugMode }: TopBarProps) => {
                   </div>
                 </div>
 
-                <NavLink
-                  to="/settings"
+                <button
+                  type="button"
                   className="profile-menu-item"
                   role="menuitem"
                   onClick={closeProfileMenu}
                 >
                   <UserPen size={16} strokeWidth={2} />
                   <span>Edit profile</span>
-                </NavLink>
-                <NavLink
-                  to="/settings"
+                </button>
+                <button
+                  type="button"
                   className="profile-menu-item"
                   role="menuitem"
                   onClick={closeProfileMenu}
                 >
                   <Settings size={16} strokeWidth={2} />
                   <span>Account settings</span>
-                </NavLink>
+                </button>
 
                 <div className="profile-menu-divider" />
 

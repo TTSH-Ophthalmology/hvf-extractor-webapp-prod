@@ -70,7 +70,7 @@ const downloadFile = (content: string, format: DownloadFormat, filenamePrefix: s
 export const DownloadDataButton = ({
   rows,
   fieldNames,
-  filenamePrefix = 'single-extraction-results',
+  filenamePrefix = 'extraction-results',
 }: DownloadDataButtonProps) => {
   const [menuOpen, setMenuOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement | null>(null)

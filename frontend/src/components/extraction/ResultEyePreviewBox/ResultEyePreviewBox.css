@@ -54,6 +54,13 @@
   max-width: 190px;
 }
 
+.result-preview-header-file .selected-file-stack {
+  width: 100%;
+  max-height: none;
+  margin: 0;
+  overflow: visible;
+}
+
 .result-preview-header-file .selected-file-card,
 .result-preview-header-file .selected-file-row {
   width: 100%;

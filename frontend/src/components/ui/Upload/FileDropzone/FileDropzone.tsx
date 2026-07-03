@@ -4,20 +4,20 @@ import { MdOutlineCloudUpload } from 'react-icons/md'
 type FileDropzoneProps = {
   inputId: string
   isUploading: boolean
-  onFileSelected: (file: File) => void
+  onFilesSelected: (files: File[]) => void
 }
 
 export const FileDropzone = ({
   inputId,
   isUploading,
-  onFileSelected,
+  onFilesSelected,
 }: FileDropzoneProps) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isDraggingFile, setIsDraggingFile] = useState(false)
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) onFileSelected(file)
+    const files = Array.from(e.target.files ?? [])
+    if (files.length > 0) onFilesSelected(files)
     e.target.value = ''
   }
 
@@ -36,8 +36,8 @@ export const FileDropzone = ({
     e.preventDefault()
     setIsDraggingFile(false)
 
-    const file = e.dataTransfer.files?.[0]
-    if (file) onFileSelected(file)
+    const files = Array.from(e.dataTransfer.files ?? [])
+    if (files.length > 0) onFilesSelected(files)
     e.dataTransfer.clearData()
   }
 
@@ -52,13 +52,14 @@ export const FileDropzone = ({
       <div className="upload-icon-box">
         <MdOutlineCloudUpload size={24} />
       </div>
-      <p>Drag and drop file here</p>
+      <p>Drag and drop files here</p>
       <span>Supported: PDF (Max 200 MB)</span>
       <input
         ref={fileInputRef}
         id={inputId}
         type="file"
         accept=".pdf"
+        multiple
         onChange={handleChange}
         disabled={isUploading}
         style={{ display: 'none' }}

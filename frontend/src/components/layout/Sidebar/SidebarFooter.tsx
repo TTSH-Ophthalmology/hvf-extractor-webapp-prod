@@ -18,7 +18,7 @@ export const SidebarFooter = ({ isCollapsed }: SidebarFooterProps) => {
     <div className="sidebar-footer">
       <div className="template-section">
         <NavLink
-          to="/reports"
+          to="/templates"
           className="template-link"
           aria-label="Templates"
           title={isCollapsed ? 'Templates' : undefined}
@@ -29,24 +29,24 @@ export const SidebarFooter = ({ isCollapsed }: SidebarFooterProps) => {
       </div>
 
       <nav className="utility-nav" aria-label="Utility navigation">
-        <NavLink
-          to="/patients"
+        <button
+          type="button"
           className="utility-link"
           aria-label="Help"
           title={isCollapsed ? 'Help' : undefined}
         >
           <CircleHelp size={18} strokeWidth={2} />
           <span className="nav-label">Help</span>
-        </NavLink>
-        <NavLink
-          to="/settings"
+        </button>
+        <button
+          type="button"
           className="utility-link"
           aria-label="Settings"
           title={isCollapsed ? 'Settings' : undefined}
         >
           <Settings size={18} strokeWidth={2} />
           <span className="nav-label">Settings</span>
-        </NavLink>
+        </button>
       </nav>
     </div>
   )

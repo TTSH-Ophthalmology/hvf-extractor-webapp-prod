@@ -1,4 +1,4 @@
-.single-extraction-page {
+.extraction-page {
   display: grid;
   grid-template-rows: auto minmax(220px, auto) auto auto auto;
   gap: 14px;
@@ -48,6 +48,17 @@
 .file-dropzone p,
 .file-dropzone span:not(.browse-button) {
   transform: translateY(4px);
+}
+
+.eye-file-count-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .file-dropzone p {
@@ -107,7 +118,7 @@
 }
 
 @media (max-width: 900px) {
-  .single-extraction-page {
+  .extraction-page {
     grid-template-rows: auto auto auto auto auto;
   }
 

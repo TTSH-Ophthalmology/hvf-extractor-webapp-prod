@@ -16,7 +16,6 @@ type AppShellProps = {
 
 export const AppShell = ({ children }: AppShellProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [isDebugMode, setIsDebugMode] = useState(false)
 
   useEffect(() => {
     const smallViewportQuery = window.matchMedia('(max-width: 860px)')
@@ -43,10 +42,7 @@ export const AppShell = ({ children }: AppShellProps) => {
       />
 
       <div className="workspace">
-        <TopBar
-          isDebugMode={isDebugMode}
-          onToggleDebugMode={() => setIsDebugMode((c) => !c)}
-        />
+        <TopBar />
         <main className="page-content">{children}</main>
       </div>
     </div>

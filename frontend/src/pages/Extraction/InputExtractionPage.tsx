@@ -1,5 +1,5 @@
 /**
- * pages/InputSingleExtractionPage.tsx — Upload HVF PDFs and run extraction.
+ * pages/InputExtractionPage.tsx — Upload HVF PDFs and run extraction.
  *
  * VIEW: renders the report type selector and dual-eye upload panels.
  * State is managed by usePDFUpload (upload lifecycle) and useExtraction
@@ -9,6 +9,7 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { RiSearchEyeLine } from 'react-icons/ri'
+import { FaEye } from 'react-icons/fa6'
 import { EyeBox } from '../../components/extraction/EyeBox/EyeBox'
 import { ExtractionProgressOverlay } from '../../components/extraction/ExtractionProgressOverlay/ExtractionProgressOverlay'
 import type { EyeCode } from '../../components/extraction/types'
@@ -17,9 +18,9 @@ import { FileDropzone } from '../../components/ui/Upload/FileDropzone/FileDropzo
 import { FilePreview } from '../../components/ui/Upload/FilePreview/FilePreview'
 import { usePDFUpload } from '../../hooks/usePDFUpload'
 import { useExtraction } from '../../hooks/useExtraction'
-import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
+import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
 import type { ExtractionResult } from '../../models/extraction'
-import './InputSingleExtractionPage.css'
+import './InputExtractionPage.css'
 
 const reportTypeOptions = [
   { value: 'hvf',  label: 'HVF (Humphrey Visual Field)',        abbreviation: 'HVF'  },
@@ -29,10 +30,10 @@ const reportTypeOptions = [
 type EyeUploadPanelProps = {
   abbreviation: EyeCode
   label: string
-  onFileSelected: (file: File) => void
-  onClearFile: () => void
+  onFilesSelected: (files: File[]) => void
+  onClearFile: (fileIndex: number) => void
   isUploading: boolean
-  selectedFile: File | null
+  selectedFiles: File[]
 }
 
 type ExtractionOverlayState = {
@@ -55,32 +56,42 @@ const DEBUG_OVERLAY_SUCCESS_DELAY_MS = 1400
 const EyeUploadPanel = ({
   abbreviation,
   label,
-  onFileSelected,
+  onFilesSelected,
   onClearFile,
   isUploading,
-  selectedFile,
+  selectedFiles,
 }: EyeUploadPanelProps) => {
+  const selectedFileCount = selectedFiles.length
+
   return (
     <EyeBox
       abbreviation={abbreviation}
       label={label}
-      hasSelectedFile={Boolean(selectedFile)}
+      hasSelectedFile={selectedFileCount > 0}
+      headerAction={
+        selectedFileCount > 0 ? (
+          <div className="eye-file-count-status" aria-label={`${selectedFileCount} file${selectedFileCount === 1 ? '' : 's'} selected`}>
+            <span>{selectedFileCount}</span>
+            <FaEye className="eye-status-mark" aria-hidden="true" />
+          </div>
+        ) : undefined
+      }
     >
       <FileDropzone
         inputId={`file-input-${abbreviation}`}
         isUploading={isUploading}
-        onFileSelected={onFileSelected}
+        onFilesSelected={onFilesSelected}
       />
-      <FilePreview selectedFile={selectedFile} onClearFile={onClearFile} />
+      <FilePreview selectedFiles={selectedFiles} onClearFile={onClearFile} />
     </EyeBox>
   )
 }
 
-export const InputSingleExtractionPage = () => {
+export const InputExtractionPage = () => {
   const navigate = useNavigate()
-  const { reportType, setReportType, setResults, clearResults } = useSingleExtractionWorkflow()
-  const [leftSelectedFile, setLeftSelectedFile] = useState<File | null>(null)
-  const [rightSelectedFile, setRightSelectedFile] = useState<File | null>(null)
+  const { reportType, setReportType, setResults, clearResults } = useExtractionWorkflow()
+  const [leftSelectedFiles, setLeftSelectedFiles] = useState<File[]>([])
+  const [rightSelectedFiles, setRightSelectedFiles] = useState<File[]>([])
   const [overlayState, setOverlayState] = useState<ExtractionOverlayState | null>(null)
 
   const leftEye  = usePDFUpload()
@@ -89,7 +100,9 @@ export const InputSingleExtractionPage = () => {
   const leftExtraction  = useExtraction()
   const rightExtraction = useExtraction()
 
-  const hasSelectedFile = Boolean(leftSelectedFile || rightSelectedFile)
+  const leftSelectedFile = leftSelectedFiles[leftSelectedFiles.length - 1] ?? null
+  const rightSelectedFile = rightSelectedFiles[rightSelectedFiles.length - 1] ?? null
+  const hasSelectedFile = leftSelectedFiles.length > 0 || rightSelectedFiles.length > 0
 
   const isExtracting =
     leftExtraction.status  === 'extracting' ||
@@ -101,29 +114,31 @@ export const InputSingleExtractionPage = () => {
 
   const canExtract = hasSelectedFile && !isUploading && !isExtracting
 
-  const handleLeftFileSelected = useCallback((file: File) => {
-    setLeftSelectedFile(file)
+  const handleLeftFilesSelected = useCallback((files: File[]) => {
+    const latestFile = files[files.length - 1]
+    setLeftSelectedFiles((currentFiles) => [...currentFiles, ...files])
     clearResults()
     leftExtraction.reset()
-    leftEye.upload(file)
+    leftEye.upload(latestFile)
   }, [clearResults, leftEye, leftExtraction])
 
-  const handleRightFileSelected = useCallback((file: File) => {
-    setRightSelectedFile(file)
+  const handleRightFilesSelected = useCallback((files: File[]) => {
+    const latestFile = files[files.length - 1]
+    setRightSelectedFiles((currentFiles) => [...currentFiles, ...files])
     clearResults()
     rightExtraction.reset()
-    rightEye.upload(file)
+    rightEye.upload(latestFile)
   }, [clearResults, rightEye, rightExtraction])
 
-  const handleClearLeftFile = useCallback(() => {
-    setLeftSelectedFile(null)
+  const handleClearLeftFile = useCallback((fileIndex: number) => {
+    setLeftSelectedFiles((currentFiles) => currentFiles.filter((_, index) => index !== fileIndex))
     clearResults()
     leftEye.reset()
     leftExtraction.reset()
   }, [clearResults, leftEye, leftExtraction])
 
-  const handleClearRightFile = useCallback(() => {
-    setRightSelectedFile(null)
+  const handleClearRightFile = useCallback((fileIndex: number) => {
+    setRightSelectedFiles((currentFiles) => currentFiles.filter((_, index) => index !== fileIndex))
     clearResults()
     rightEye.reset()
     rightExtraction.reset()
@@ -246,7 +261,7 @@ export const InputSingleExtractionPage = () => {
   const extractionError = leftExtraction.errorMessage ?? rightExtraction.errorMessage
 
   return (
-    <div className="single-extraction-page">
+    <div className="extraction-page">
       <ReportTypeSelector
         options={reportTypeOptions}
         value={reportType}
@@ -257,18 +272,18 @@ export const InputSingleExtractionPage = () => {
         <EyeUploadPanel
           abbreviation="LE"
           label="Left Eye"
-          onFileSelected={handleLeftFileSelected}
+          onFilesSelected={handleLeftFilesSelected}
           onClearFile={handleClearLeftFile}
           isUploading={leftEye.status === 'uploading'}
-          selectedFile={leftSelectedFile}
+          selectedFiles={leftSelectedFiles}
         />
         <EyeUploadPanel
           abbreviation="RE"
           label="Right Eye"
-          onFileSelected={handleRightFileSelected}
+          onFilesSelected={handleRightFilesSelected}
           onClearFile={handleClearRightFile}
           isUploading={rightEye.status === 'uploading'}
-          selectedFile={rightSelectedFile}
+          selectedFiles={rightSelectedFiles}
         />
       </div>
 

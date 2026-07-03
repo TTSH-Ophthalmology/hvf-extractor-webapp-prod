@@ -1,5 +1,5 @@
 /**
- * pages/ResultSingleExtractionPage.tsx — Displays completed single-extraction results.
+ * pages/ResultExtractionPage.tsx — Displays completed extraction results.
  */
 
 import {
@@ -20,9 +20,9 @@ import { ResultExtractionDataPreview } from '../../components/extraction/ResultE
 import type { PreviewMode } from '../../components/extraction/ResultExtractionDataPreview/ResultExtractionDataPreview'
 import { ReportTypePreview } from '../../components/ui/Reports/ReportTypePreview/ReportTypePreview'
 import type { ReportType } from '../../components/ui/Reports/ReportTypeSelector/ReportTypeSelector'
-import { useSingleExtractionWorkflow } from '../../context/SingleExtractionWorkflowContext'
-import type { ExtractionResultsByEye } from '../../context/SingleExtractionWorkflowContext'
-import './ResultSingleExtractionPage.css'
+import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
+import type { ExtractionResultsByEye } from '../../context/ExtractionWorkflowContext'
+import './ResultExtractionPage.css'
 
 type Eye = keyof ExtractionResultsByEye
 
@@ -64,7 +64,7 @@ const clamp = (value: number, min: number, max: number) =>
 const PANEL_RESIZE_STEP = 32
 const PANEL_RESIZE_REPEAT_MS = 85
 
-export const ResultSingleExtractionPage = () => {
+export const ResultExtractionPage = () => {
   const [previewMode, setPreviewMode] = useState<PreviewMode>('csv')
   const [previewPanelSizes, setPreviewPanelSizes] = useState<
     Partial<Record<PreviewMode, PreviewPanelSize>>
@@ -72,7 +72,7 @@ export const ResultSingleExtractionPage = () => {
   const previewPanelSizesRef = useRef<Partial<Record<PreviewMode, PreviewPanelSize>>>({})
   const previewPanelRef = useRef<HTMLElement | null>(null)
   const resizeRepeatRef = useRef<number | null>(null)
-  const { results, uploadedFiles, reportType, completedAt, hasResults } = useSingleExtractionWorkflow()
+  const { results, uploadedFiles, reportType, completedAt, hasResults } = useExtractionWorkflow()
 
   const getPreviewPanelMaxHeight = useCallback((panel: HTMLElement) => {
     const header = panel.querySelector(':scope > header')
@@ -349,7 +349,7 @@ export const ResultSingleExtractionPage = () => {
   }
 
   return (
-    <div className="result-single-extraction-page">
+    <div className="result-extraction-page">
       <header className="result-page-header">
         <div className="result-title-block">
           <h1>Extraction Results</h1>
@@ -407,7 +407,7 @@ export const ResultSingleExtractionPage = () => {
           <DownloadDataButton
             rows={resultRows}
             fieldNames={fieldNames}
-            filenamePrefix="single-extraction-results"
+            filenamePrefix="extraction-results"
           />
         </header>
 
