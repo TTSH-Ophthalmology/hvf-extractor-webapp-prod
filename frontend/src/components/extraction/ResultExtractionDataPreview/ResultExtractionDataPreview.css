@@ -40,6 +40,11 @@
   padding-right: 15px;
 }
 
+.result-data-table th:first-child,
+.result-data-table td:first-child {
+  padding-left: 14px;
+}
+
 .result-data-table thead th {
   color: #7b8491;
   background: #f3f6f9;

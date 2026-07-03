@@ -44,7 +44,7 @@ export const FilePreview = ({
   }
 
   return (
-    <div className="selected-file-stack">
+    <div className={`selected-file-stack${files.length > 5 ? ' selected-file-stack-scrollable' : ''}`}>
       {files.map((file, index) => {
         const fileSizeMb = `${(file.size / (1024 * 1024)).toFixed(1)} MB`
         const fileKey = `${file.name}-${file.size}-${file.lastModified}-${index}`

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 from pathlib import Path
 import secrets
 
@@ -30,12 +31,26 @@ class TinyDbStore:
     def __init__(self, path: str | None = None):
         db_path = Path(path or settings.database_path)
         db_path.parent.mkdir(parents=True, exist_ok=True)
+        self._recover_corrupt_database(db_path)
 
         self.db = TinyDB(db_path)
         self.users = self.db.table("users")
         self.refresh_tokens = self.db.table("refresh_tokens")
         self.app_settings = self.db.table("app_settings")
         self._seed_admin_user()
+
+    def _recover_corrupt_database(self, db_path: Path) -> None:
+        if not db_path.exists() or db_path.stat().st_size == 0:
+            return
+
+        try:
+            json.loads(db_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            backup_path = db_path.with_name(
+                f"{db_path.name}.corrupt-{_utc_now().strftime('%Y%m%d%H%M%S')}"
+            )
+            backup_path.write_bytes(db_path.read_bytes())
+            db_path.write_text("{}", encoding="utf-8")
 
     def _seed_admin_user(self) -> None:
         if len(self.users) > 0:

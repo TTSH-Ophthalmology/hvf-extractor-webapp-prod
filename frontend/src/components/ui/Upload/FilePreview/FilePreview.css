@@ -1,12 +1,14 @@
 .selected-file-stack {
   display: grid;
   gap: 8px;
-  max-height: 232px;
   margin: 0 16px 12px;
+}
+
+.selected-file-stack-scrollable {
+  max-height: 232px;
   padding-right: 2px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 .selected-file-card {
