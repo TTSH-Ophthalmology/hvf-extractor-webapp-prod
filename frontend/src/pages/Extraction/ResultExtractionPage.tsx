@@ -43,7 +43,7 @@ const formatCompletedAt = (completedAt: Date | null) => {
 }
 
 export const ResultExtractionPage = () => {
-  const { results, reportType, completedAt, hasResults } = useExtractionWorkflow()
+  const { results, extractionTotal, reportType, completedAt, hasResults } = useExtractionWorkflow()
 
   const resultRows: ResultRow[] = results.map(({ eye, originalFilename, result }, index) => ({
       id: `${result.job_id}-${index}`,
@@ -57,8 +57,8 @@ export const ResultExtractionPage = () => {
     new Set(resultRows.flatMap((row) => Object.keys(row.rawData)))
   )
 
-  const completedEyesText = resultRows.map((row) => row.eye).join(' and ')
-  const completedFilesText = `${resultRows.length} file${resultRows.length === 1 ? '' : 's'} processed`
+  const extractionAttemptTotal = extractionTotal || resultRows.length
+  const extractionSummaryText = `${resultRows.length} of ${extractionAttemptTotal} file${extractionAttemptTotal === 1 ? '' : 's'} extracted`
   const completedAtText = formatCompletedAt(completedAt)
 
   if (!hasResults) {
@@ -77,7 +77,7 @@ export const ResultExtractionPage = () => {
                 ? `Completed at ${completedAtText}`
                 : 'Completed'}
             </span>
-            <span className="result-eye-count">{completedFilesText} ({completedEyesText})</span>
+            <span className="result-eye-count">{extractionSummaryText}</span>
           </div>
         </div>
         <ReportTypePreview

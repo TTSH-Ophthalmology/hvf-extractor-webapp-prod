@@ -11,13 +11,15 @@ export type ExtractionReportType = 'hvf' | 'vrvf'
 
 type ExtractionWorkflowContextValue = {
   results: ExtractionResultEntry[]
+  extractionTotal: number
   reportType: ExtractionReportType
   completedAt: Date | null
   hasResults: boolean
   setReportType: (reportType: ExtractionReportType) => void
   setResults: (
     results: ExtractionResultEntry[],
-    reportType?: ExtractionReportType
+    reportType?: ExtractionReportType,
+    extractionTotal?: number
   ) => void
   clearResults: () => void
 }
@@ -35,14 +37,17 @@ export const ExtractionWorkflowProvider = ({
   children,
 }: ExtractionWorkflowProviderProps) => {
   const [results, setResultsState] = useState<ExtractionResultEntry[]>(emptyResults)
+  const [extractionTotal, setExtractionTotal] = useState(0)
   const [reportType, setReportType] = useState<ExtractionReportType>('hvf')
   const [completedAt, setCompletedAt] = useState<Date | null>(null)
 
   const setResults = useCallback((
     nextResults: ExtractionResultEntry[],
-    nextReportType?: ExtractionReportType
+    nextReportType?: ExtractionReportType,
+    nextExtractionTotal = nextResults.length
   ) => {
     setResultsState(nextResults)
+    setExtractionTotal(nextExtractionTotal)
     setCompletedAt(new Date())
     if (nextReportType) {
       setReportType(nextReportType)
@@ -51,12 +56,14 @@ export const ExtractionWorkflowProvider = ({
 
   const clearResults = useCallback(() => {
     setResultsState(emptyResults)
+    setExtractionTotal(0)
     setCompletedAt(null)
   }, [])
 
   const value = useMemo(
     () => ({
       results,
+      extractionTotal,
       reportType,
       completedAt,
       hasResults: results.length > 0,
@@ -64,7 +71,7 @@ export const ExtractionWorkflowProvider = ({
       setResults,
       clearResults,
     }),
-    [clearResults, completedAt, reportType, results, setResults]
+    [clearResults, completedAt, extractionTotal, reportType, results, setResults]
   )
 
   return (

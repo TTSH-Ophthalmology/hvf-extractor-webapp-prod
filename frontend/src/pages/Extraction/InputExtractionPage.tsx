@@ -188,7 +188,7 @@ export const InputExtractionPage = () => {
           message: 'Extraction successful. Opening the results page...',
           progress: 100,
         })
-        setResults(nextResults, reportType)
+        setResults(nextResults, reportType, selectedReports.length)
         await delay(DEBUG_OVERLAY_SUCCESS_DELAY_MS)
         navigate('/result')
         return
