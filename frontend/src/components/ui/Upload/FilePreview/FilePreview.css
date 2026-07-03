@@ -1,15 +1,19 @@
 .selected-file-stack {
   display: grid;
   gap: 8px;
-  max-height: 124px;
+  max-height: 232px;
   margin: 0 16px 12px;
+  padding-right: 2px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .selected-file-card {
   display: flex;
   align-items: center;
   gap: 10px;
+  height: 40px;
   min-height: 40px;
   padding: 0 10px;
   border: 1px solid #cbd4e0;
