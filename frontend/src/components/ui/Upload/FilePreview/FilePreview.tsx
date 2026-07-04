@@ -1,7 +1,8 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { X } from 'lucide-react'
-import { FaTimesCircle } from 'react-icons/fa'
+import { FaExclamationTriangle, FaTimesCircle } from 'react-icons/fa'
 import { FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
+import { RiFileWarningLine } from 'react-icons/ri'
 import './FilePreview.css'
 
 export type FilePreviewItem = {
@@ -28,6 +29,8 @@ export const FilePreview = ({
 }: FilePreviewProps) => {
   const files = previewFiles ?? selectedFiles ?? (selectedFile ? [selectedFile] : [])
   const isErrorVariant = variant === 'error'
+  const isPdfFile = (file: FilePreviewItem | File) =>
+    file.name.toLowerCase().endsWith('.pdf')
 
   if (files.length === 0) {
     return (
@@ -71,6 +74,7 @@ export const FilePreview = ({
         const fileKey = `${file.name}-${file.size}-${file.lastModified ?? 'preview'}-${index}`
         const isClickable = isBrowserFile(file) && !isErrorVariant
         const errorReason = 'errorReason' in file ? file.errorReason : undefined
+        const isWarningFile = !isErrorVariant && (!isPdfFile(file) || Boolean(errorReason))
 
         return (
           <div
@@ -82,8 +86,14 @@ export const FilePreview = ({
             onClick={isClickable ? () => openSelectedFile(file) : undefined}
             onKeyDown={isClickable ? (e) => handleKeyDown(e, file) : undefined}
           >
-            <div className="selected-file-icon" aria-hidden="true">
-              <FaRegFilePdf size={16} />
+            <div className={`selected-file-icon${isWarningFile ? ' selected-file-icon-warning' : ''}${isErrorVariant ? ' selected-file-icon-error' : ''}`} aria-hidden="true">
+              {isErrorVariant ? (
+                <RiFileWarningLine size={20} />
+              ) : isWarningFile ? (
+                <FaExclamationTriangle size={16} />
+              ) : (
+                <FaRegFilePdf size={16} />
+              )}
             </div>
             <div className="selected-file-details">
               <strong>{file.name}</strong>

@@ -45,7 +45,8 @@
   outline-offset: 2px;
 }
 
-.selected-file-card-error .selected-file-icon {
+.selected-file-card-error .selected-file-icon,
+.selected-file-icon-error {
   width: 36px;
   height: 36px;
   border-radius: 4px;
@@ -69,8 +70,17 @@
   background: rgba(220, 38, 38, 0.14);
 }
 
+.selected-file-icon-warning {
+  color: #c57b00;
+  background: #fff5d7;
+}
+
 .selected-file-icon svg {
   transform: translateX(1px);
+}
+
+.selected-file-icon-warning svg {
+  transform: translateX(0px);
 }
 
 .selected-file-details {

@@ -6,6 +6,18 @@ type ErrorFilePreviewProps = {
   reason: string
 }
 
+const getDisplayErrorReason = (reason: string) => {
+  const normalizedReason = reason.toLowerCase()
+  const isFileTypeError =
+    normalizedReason.includes('file type') ||
+    normalizedReason.includes('not allowed') ||
+    normalizedReason.includes('expected a pdf') ||
+    normalizedReason.includes('expected pdf') ||
+    normalizedReason.includes('unsupported file')
+
+  return isFileTypeError ? 'File type not supported' : reason
+}
+
 export const ErrorFilePreview = ({
   filename,
   size,
@@ -18,7 +30,7 @@ export const ErrorFilePreview = ({
         {
           name: filename,
           size,
-          errorReason: reason,
+          errorReason: getDisplayErrorReason(reason),
         },
       ]}
     />
