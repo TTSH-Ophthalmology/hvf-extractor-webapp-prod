@@ -6,6 +6,7 @@ import { Navigate } from 'react-router-dom'
 import { FaCheckCircle } from 'react-icons/fa'
 import { LuClipboardList } from 'react-icons/lu'
 import { DownloadDataButton } from '../../components/extraction/DownloadDataButton/DownloadDataButton'
+import { ErrorFileExtractionPanel } from '../../components/extraction/ErrorFileExtractionPanel/ErrorFileExtractionPanel'
 import { ResultExtractionDataPreview } from '../../components/extraction/ResultExtractionDataPreview/ResultExtractionDataPreview'
 import { ReportTypePreview } from '../../components/ui/Reports/ReportTypePreview/ReportTypePreview'
 import type { ReportType } from '../../components/ui/Reports/ReportTypeSelector/ReportTypeSelector'
@@ -43,7 +44,7 @@ const formatCompletedAt = (completedAt: Date | null) => {
 }
 
 export const ResultExtractionPage = () => {
-  const { results, extractionTotal, reportType, completedAt, hasResults } = useExtractionWorkflow()
+  const { results, skippedFiles, extractionTotal, reportType, completedAt, hasResults } = useExtractionWorkflow()
 
   const resultRows: ResultRow[] = results.map(({ eye, originalFilename, result }, index) => ({
       id: `${result.job_id}-${index}`,
@@ -86,29 +87,33 @@ export const ResultExtractionPage = () => {
         />
       </header>
 
-      <section
-        className="result-data-panel"
-        aria-label="Preview extraction data"
-      >
-        <header>
-          <div className="result-data-heading">
-            <div className="result-data-title">
-              <LuClipboardList size={21} aria-hidden="true" />
-              <h2>Preview Extraction Data</h2>
+      <ErrorFileExtractionPanel files={skippedFiles} />
+
+      {resultRows.length > 0 && (
+        <section
+          className="result-data-panel"
+          aria-label="Preview extraction data"
+        >
+          <header>
+            <div className="result-data-heading">
+              <div className="result-data-title">
+                <LuClipboardList size={21} aria-hidden="true" />
+                <h2>Preview Extraction Data</h2>
+              </div>
             </div>
-          </div>
-          <DownloadDataButton
+            <DownloadDataButton
+              rows={resultRows}
+              fieldNames={fieldNames}
+              filenamePrefix="extraction-results"
+            />
+          </header>
+
+          <ResultExtractionDataPreview
             rows={resultRows}
             fieldNames={fieldNames}
-            filenamePrefix="extraction-results"
           />
-        </header>
-
-        <ResultExtractionDataPreview
-          rows={resultRows}
-          fieldNames={fieldNames}
-        />
-      </section>
+        </section>
+      )}
     </div>
   )
 }

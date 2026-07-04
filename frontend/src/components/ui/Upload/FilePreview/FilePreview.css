@@ -4,6 +4,10 @@
   margin: 0 16px 12px;
 }
 
+.selected-file-stack-error {
+  margin: 0;
+}
+
 .selected-file-stack-scrollable {
   max-height: 232px;
   padding-right: 2px;
@@ -23,6 +27,15 @@
   background: #ffffff;
 }
 
+.selected-file-card-error {
+  gap: 14px;
+  height: auto;
+  min-height: 48px;
+  padding: 0 16px 0 12px;
+  border-color: #f1caca;
+  border-radius: 5px;
+}
+
 .selected-file-card-clickable {
   cursor: pointer;
 }
@@ -30,6 +43,18 @@
 .selected-file-card-clickable:focus-visible {
   outline: 2px solid #003f7d;
   outline-offset: 2px;
+}
+
+.selected-file-card-error .selected-file-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  color: #b30d18;
+  background: #ffdada;
+}
+
+.selected-file-card-error .selected-file-icon svg {
+  transform: none;
 }
 
 .selected-file-icon {
@@ -66,11 +91,47 @@
   white-space: nowrap;
 }
 
+.selected-file-card-error .selected-file-details {
+  gap: 4px;
+}
+
+.selected-file-card-error .selected-file-details strong {
+  color: #20242a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.selected-file-card-error .selected-file-details span {
+  color: #515a66;
+  font-size: 12px;
+  font-weight: 600;
+}
+
 .selected-file-details span {
   color: #68717e;
   font-size: 9px;
   font-weight: 500;
   line-height: 1;
+}
+
+.selected-file-error-reason {
+  flex: 0 1 auto;
+  min-width: 120px;
+  overflow: hidden;
+  color: #cf000f;
+  font-size: 13px;
+  font-style: italic;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.selected-file-error-icon {
+  flex: 0 0 auto;
+  color: #c51c25;
 }
 
 .selected-file-remove {
@@ -112,11 +173,33 @@
     margin: 0 12px 12px;
   }
 
+  .selected-file-stack-error {
+    margin: 0;
+  }
+
   .selected-file-row {
     margin: 0 12px 12px;
   }
 
   .selected-file-details strong {
     font-size: 12px;
+  }
+
+  .selected-file-card-error {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .selected-file-card-error .selected-file-details strong {
+    font-size: 14px;
+  }
+
+  .selected-file-error-reason {
+    flex: 1 1 100%;
+    min-width: 0;
+    text-align: left;
+    white-space: normal;
   }
 }

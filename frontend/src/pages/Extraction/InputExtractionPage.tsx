@@ -8,6 +8,7 @@
 
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { isAxiosError } from 'axios'
 import { RiSearchEyeLine } from 'react-icons/ri'
 import { FaEye } from 'react-icons/fa6'
 import { EyeBox } from '../../components/extraction/EyeBox/EyeBox'
@@ -19,7 +20,7 @@ import { FilePreview } from '../../components/ui/Upload/FilePreview/FilePreview'
 import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
 import { uploadFile } from '../../services/pdfService'
 import { triggerExtraction } from '../../services/extractionService'
-import type { ExtractionResultEntry } from '../../context/ExtractionWorkflowContext'
+import type { ExtractionResultEntry, SkippedExtractionFile } from '../../context/ExtractionWorkflowContext'
 import './InputExtractionPage.css'
 
 const reportTypeOptions = [
@@ -44,6 +45,11 @@ type ExtractionOverlayState = {
   actionLabel?: string
 }
 
+type SelectedReport = {
+  eye: EyeCode
+  file: File
+}
+
 const delay = (milliseconds: number) =>
   new Promise((resolve) => {
     window.setTimeout(resolve, milliseconds)
@@ -52,6 +58,87 @@ const delay = (milliseconds: number) =>
 // better to add delay to overlay steps so that the user can see the progress, even if the upload/extraction is very fast
 const DEBUG_OVERLAY_STEP_DELAY_MS = 100
 const DEBUG_OVERLAY_SUCCESS_DELAY_MS = 1400
+
+const getErrorReason = (err: unknown) => {
+  if (isAxiosError(err)) {
+    const detail = err.response?.data?.detail
+
+    if (typeof detail === 'string') {
+      return detail
+    }
+
+    if (Array.isArray(detail) && detail.length > 0) {
+      const firstDetail = detail[0]
+
+      if (typeof firstDetail?.msg === 'string') {
+        return firstDetail.msg
+      }
+    }
+
+    return err.message
+  }
+
+  return err instanceof Error ? err.message : 'Extraction failed.'
+}
+
+const createSkippedFile = (
+  file: File,
+  reason: string,
+  index: number
+): SkippedExtractionFile => ({
+  id: `${file.name}-${file.size}-${file.lastModified}-${index}`,
+  filename: file.name,
+  size: file.size,
+  reason,
+})
+
+const processSelectedReport = async (
+  { eye, file }: SelectedReport,
+  reportType: ReportType,
+  index: number
+) => {
+  try {
+    const upload = await uploadFile(file)
+    const result = await triggerExtraction(upload.job_id, eye, reportType)
+
+    if (result.status !== 'complete') {
+      return {
+        skippedFile: createSkippedFile(
+          file,
+          result.error_message || 'No completed extraction result was returned.',
+          index
+        ),
+      }
+    }
+
+    return {
+      resultEntry: {
+        eye,
+        originalFilename: file.name,
+        result,
+      } satisfies ExtractionResultEntry,
+    }
+  } catch (err) {
+    return {
+      skippedFile: createSkippedFile(file, getErrorReason(err), index),
+    }
+  }
+}
+
+const getExtractionCompleteMessage = (
+  completedCount: number,
+  skippedCount: number
+) => {
+  if (skippedCount === 0) {
+    return 'Extraction successful. Opening the results page...'
+  }
+
+  if (completedCount === 0) {
+    return 'No files were extracted. Opening the skipped files summary...'
+  }
+
+  return `${completedCount} file${completedCount === 1 ? '' : 's'} extracted and ${skippedCount} skipped. Opening the results page...`
+}
 
 const EyeUploadPanel = ({
   abbreviation,
@@ -153,14 +240,6 @@ export const InputExtractionPage = () => {
       })
       await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
 
-      const uploadedReports = await Promise.all(
-        selectedReports.map(async ({ eye, file }) => ({
-          eye,
-          file,
-          upload: await uploadFile(file),
-        }))
-      )
-
       setOverlayState({
         variant: 'loading',
         title: 'Extracting Report Data',
@@ -169,26 +248,28 @@ export const InputExtractionPage = () => {
       })
       await delay(DEBUG_OVERLAY_STEP_DELAY_MS)
 
-      const completedResults = await Promise.all(
-        uploadedReports.map(async ({ eye, file, upload }) => ({
-          eye,
-          originalFilename: file.name,
-          result: await triggerExtraction(upload.job_id, eye, reportType),
-        }))
+      const processedReports = await Promise.all(
+        selectedReports.map((selectedReport, index) =>
+          processSelectedReport(selectedReport, reportType, index)
+        )
       )
 
-      const nextResults: ExtractionResultEntry[] = completedResults
-        .filter(({ result }) => result.status === 'complete')
-        .map(({ eye, originalFilename, result }) => ({ eye, originalFilename, result }))
+      const nextResults: ExtractionResultEntry[] = processedReports
+        .map((processedReport) => processedReport.resultEntry)
+        .filter((resultEntry): resultEntry is ExtractionResultEntry => Boolean(resultEntry))
 
-      if (nextResults.length > 0) {
+      const skippedFiles: SkippedExtractionFile[] = processedReports
+        .map((processedReport) => processedReport.skippedFile)
+        .filter((skippedFile): skippedFile is SkippedExtractionFile => Boolean(skippedFile))
+
+      if (nextResults.length > 0 || skippedFiles.length > 0) {
         setOverlayState({
-          variant: 'success',
-          title: 'Extraction Complete',
-          message: 'Extraction successful. Opening the results page...',
+          variant: nextResults.length > 0 ? 'success' : 'warning',
+          title: nextResults.length > 0 ? 'Extraction Complete' : 'Extraction Finished',
+          message: getExtractionCompleteMessage(nextResults.length, skippedFiles.length),
           progress: 100,
         })
-        setResults(nextResults, reportType, selectedReports.length)
+        setResults(nextResults, reportType, selectedReports.length, skippedFiles)
         await delay(DEBUG_OVERLAY_SUCCESS_DELAY_MS)
         navigate('/result')
         return

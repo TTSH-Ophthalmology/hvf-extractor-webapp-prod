@@ -1,20 +1,33 @@
 import type { KeyboardEvent, MouseEvent } from 'react'
 import { X } from 'lucide-react'
+import { FaTimesCircle } from 'react-icons/fa'
 import { FaRegFileLines, FaRegFilePdf } from 'react-icons/fa6'
 import './FilePreview.css'
+
+export type FilePreviewItem = {
+  name: string
+  size: number
+  lastModified?: number
+  errorReason?: string
+}
 
 type FilePreviewProps = {
   selectedFile?: File | null
   selectedFiles?: File[]
+  files?: FilePreviewItem[]
   onClearFile?: (fileIndex: number) => void
+  variant?: 'default' | 'error'
 }
 
 export const FilePreview = ({
   selectedFile,
   selectedFiles,
+  files: previewFiles,
   onClearFile,
+  variant = 'default',
 }: FilePreviewProps) => {
-  const files = selectedFiles ?? (selectedFile ? [selectedFile] : [])
+  const files = previewFiles ?? selectedFiles ?? (selectedFile ? [selectedFile] : [])
+  const isErrorVariant = variant === 'error'
 
   if (files.length === 0) {
     return (
@@ -25,13 +38,21 @@ export const FilePreview = ({
     )
   }
 
-  const openSelectedFile = (file: File) => {
+  const isBrowserFile = (file: FilePreviewItem | File): file is File => {
+    return file instanceof File
+  }
+
+  const openSelectedFile = (file: FilePreviewItem | File) => {
+    if (!isBrowserFile(file)) {
+      return
+    }
+
     const fileUrl = URL.createObjectURL(file)
     window.open(fileUrl, '_blank', 'noopener,noreferrer')
     window.setTimeout(() => URL.revokeObjectURL(fileUrl), 60_000)
   }
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>, file: File) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>, file: FilePreviewItem | File) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
       openSelectedFile(file)
@@ -44,20 +65,22 @@ export const FilePreview = ({
   }
 
   return (
-    <div className={`selected-file-stack${files.length > 5 ? ' selected-file-stack-scrollable' : ''}`}>
+    <div className={`selected-file-stack${isErrorVariant ? ' selected-file-stack-error' : ''}${files.length > 5 ? ' selected-file-stack-scrollable' : ''}`}>
       {files.map((file, index) => {
         const fileSizeMb = `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        const fileKey = `${file.name}-${file.size}-${file.lastModified}-${index}`
+        const fileKey = `${file.name}-${file.size}-${file.lastModified ?? 'preview'}-${index}`
+        const isClickable = isBrowserFile(file) && !isErrorVariant
+        const errorReason = 'errorReason' in file ? file.errorReason : undefined
 
         return (
           <div
             key={fileKey}
-            className="selected-file-card selected-file-card-clickable"
-            role="button"
-            tabIndex={0}
-            aria-label={`Open ${file.name}`}
-            onClick={() => openSelectedFile(file)}
-            onKeyDown={(e) => handleKeyDown(e, file)}
+            className={`selected-file-card${isErrorVariant ? ' selected-file-card-error' : ''}${isClickable ? ' selected-file-card-clickable' : ''}`}
+            role={isClickable ? 'button' : undefined}
+            tabIndex={isClickable ? 0 : undefined}
+            aria-label={isClickable ? `Open ${file.name}` : undefined}
+            onClick={isClickable ? () => openSelectedFile(file) : undefined}
+            onKeyDown={isClickable ? (e) => handleKeyDown(e, file) : undefined}
           >
             <div className="selected-file-icon" aria-hidden="true">
               <FaRegFilePdf size={16} />
@@ -66,7 +89,16 @@ export const FilePreview = ({
               <strong>{file.name}</strong>
               <span>{fileSizeMb}</span>
             </div>
-            {onClearFile && (
+            {isErrorVariant && errorReason && (
+              <span className="selected-file-error-reason">{errorReason}</span>
+            )}
+            {isErrorVariant ? (
+              <FaTimesCircle
+                className="selected-file-error-icon"
+                size={24}
+                aria-hidden="true"
+              />
+            ) : onClearFile && (
               <button
                 className="selected-file-remove"
                 type="button"
