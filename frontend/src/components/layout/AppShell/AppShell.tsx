@@ -6,6 +6,7 @@
  */
 
 import { type ReactNode, useEffect, useState } from 'react'
+import { TemplatePage } from '../../../pages/Template/TemplatePage'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { TopBar } from '../TopBar/TopBar'
 import './AppShell.css'
@@ -16,6 +17,7 @@ type AppShellProps = {
 
 export const AppShell = ({ children }: AppShellProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false)
 
   useEffect(() => {
     const smallViewportQuery = window.matchMedia('(max-width: 860px)')
@@ -38,12 +40,15 @@ export const AppShell = ({ children }: AppShellProps) => {
     <div className={`app-shell${isSidebarCollapsed ? ' app-shell-collapsed' : ''}`}>
       <Sidebar
         isCollapsed={isSidebarCollapsed}
+        isTemplateOpen={isTemplateOpen}
         onToggleCollapsed={() => setIsSidebarCollapsed((c) => !c)}
+        onToggleTemplate={() => setIsTemplateOpen((isOpen) => !isOpen)}
       />
 
       <div className="workspace">
         <TopBar />
         <main className="page-content">{children}</main>
+        {isTemplateOpen && <TemplatePage onClose={() => setIsTemplateOpen(false)} />}
       </div>
     </div>
   )

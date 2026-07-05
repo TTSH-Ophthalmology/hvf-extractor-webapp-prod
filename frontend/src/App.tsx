@@ -14,7 +14,6 @@ import { ResultExtractionPage } from './pages/Extraction/ResultExtractionPage'
 import { ErrorPage } from './pages/Error/ErrorPage'
 import { LoginPage } from './pages/LogInOut/LoginPage'
 import { LogoutPage } from './pages/LogInOut/LogoutPage'
-import { TemplatePage } from './pages/TemplatePage'
 import { ProtectedLayout } from './route/ProtectedLayout'
 import { ProtectedRoute } from './route/ProtectedRoute'
 
@@ -29,7 +28,6 @@ export const App = () => {
         <Route element={<ProtectedLayout />}>
           <Route path="/"              element={<InputExtractionPage />} />
           <Route path="/result"        element={<ResultExtractionPage />} />
-          <Route path="/templates"     element={<TemplatePage />} />
         </Route>
       </Route>
 

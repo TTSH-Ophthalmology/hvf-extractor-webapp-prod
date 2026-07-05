@@ -13,10 +13,17 @@ import './Sidebar.css'
 
 type SidebarProps = {
   isCollapsed: boolean
+  isTemplateOpen: boolean
   onToggleCollapsed: () => void
+  onToggleTemplate: () => void
 }
 
-export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
+export const Sidebar = ({
+  isCollapsed,
+  isTemplateOpen,
+  onToggleCollapsed,
+  onToggleTemplate,
+}: SidebarProps) => {
   return (
     <aside className={`sidebar${isCollapsed ? ' sidebar-collapsed' : ''}`}>
       <button
@@ -39,7 +46,11 @@ export const Sidebar = ({ isCollapsed, onToggleCollapsed }: SidebarProps) => {
       </button>
 
       <SidebarNav isCollapsed={isCollapsed} />
-      <SidebarFooter isCollapsed={isCollapsed} />
+      <SidebarFooter
+        isCollapsed={isCollapsed}
+        isTemplateOpen={isTemplateOpen}
+        onToggleTemplate={onToggleTemplate}
+      />
     </aside>
   )
 }
