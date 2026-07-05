@@ -17,12 +17,13 @@
 .template-modal {
   position: relative;
   z-index: 1;
+  box-sizing: border-box;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   width: 100%;
-  max-height: min(92vh, 720px);
+  height: min(92vh, 720px);
   min-height: 0;
-  padding: 18px 10px 10px;
+  padding: 22px 18px 20px;
   overflow: hidden;
   border: 1px solid #d9e1eb;
   border-radius: 8px;
@@ -56,6 +57,7 @@
   margin: 0;
   color: #003b78;
   font-size: 29px;
+  font-family: "Hanken Grotesk", sans-serif;
   line-height: 1.05;
   letter-spacing: 0;
 }
@@ -71,12 +73,15 @@
 }
 
 .template-layout {
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 268px minmax(0, 1fr);
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 18px 14px;
-  margin-top: 12px;
+  margin-top: 0;
+  padding: 12px 0 8px;
   min-height: 0;
+  overflow: hidden;
 }
 
 .template-card {
@@ -136,8 +141,7 @@
   letter-spacing: 0;
 }
 
-.template-editing-status,
-.template-save-status {
+.template-editing-status {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -151,16 +155,6 @@
 
 .template-editing-status {
   padding: 9px 11px;
-}
-
-.template-save-status {
-  margin-top: 13px;
-  padding: 11px 12px;
-  background: #dffbfb;
-}
-
-.template-save-status svg {
-  flex: 0 0 auto;
 }
 
 .template-mapping-table {
@@ -191,117 +185,6 @@
   font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
-.template-editor-panel {
-  grid-column: 2;
-  grid-row: 1 / 4;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  border: 1px solid #cfdae7;
-  border-radius: 7px;
-  background: #ffffff;
-}
-
-.template-editor-header,
-.template-editor-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background: #f4f7fa;
-}
-
-.template-editor-header {
-  min-height: 52px;
-  padding: 0 16px;
-  border-bottom: 1px solid #d8e1ec;
-}
-
-.template-editor-header div {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  color: #003b78;
-}
-
-.template-editor-header h2 {
-  margin: 0;
-  font-size: 16px;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-
-.template-editor-header button {
-  display: inline-grid;
-  place-items: center;
-  width: 31px;
-  height: 31px;
-  border: 0;
-  border-radius: 5px;
-  color: #344256;
-  background: transparent;
-}
-
-.template-editor-header button:hover {
-  background: #e7eef7;
-}
-
-.template-code-window {
-  min-height: 0;
-  margin: 16px;
-  padding: 18px 22px;
-  overflow: auto;
-  border: 1px dashed #aebdcc;
-  border-radius: 5px;
-  color: #00828c;
-  background: #ffffff;
-  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
-  font-size: 12px;
-  line-height: 1.55;
-}
-
-.template-editor-footer {
-  min-height: 52px;
-  padding: 0 16px;
-  border-top: 1px solid #d8e1ec;
-  color: #344256;
-  font-size: 12px;
-}
-
-.template-editor-actions {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.template-secondary-button,
-.template-primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-height: 32px;
-  padding: 0 13px;
-  border-radius: 5px;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.template-secondary-button {
-  border: 1px solid #004f9f;
-  color: #003b78;
-  background: #ffffff;
-}
-
-.template-primary-button {
-  border: 1px solid #003b78;
-  color: #ffffff;
-  background: #003b78;
-}
-
 @media (max-width: 980px) {
   .template-modal {
     max-height: 94vh;
@@ -324,15 +207,9 @@
   }
 
   .template-select-card,
-  .template-mapping-card,
-  .template-save-status,
-  .template-editor-panel {
+  .template-mapping-card {
     grid-column: auto;
     grid-row: auto;
-  }
-
-  .template-editor-panel {
-    min-height: 470px;
   }
 }
 
@@ -350,14 +227,4 @@
     font-size: 24px;
   }
 
-  .template-editor-footer {
-    align-items: stretch;
-    flex-direction: column;
-    padding: 12px;
-  }
-
-  .template-editor-actions {
-    justify-content: flex-end;
-    flex-wrap: wrap;
-  }
 }

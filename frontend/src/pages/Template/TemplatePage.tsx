@@ -4,72 +4,260 @@
  * VIEW: overlays the workspace with a focused template editor panel.
  */
 
-import { Braces, CircleCheck, Copy, FileJson, Save, X } from 'lucide-react'
-import { useMemo } from 'react'
+import { Braces, X } from 'lucide-react'
+import axios from 'axios'
+import { useEffect, useMemo, useState } from 'react'
+import { TemplateEditor } from '../../components/template/TemplateEditor/TemplateEditor'
+import { getTemplate, listTemplates, saveTemplate } from '../../services/templateService'
+import type { TemplateJson } from '../../models/template'
 import './TemplatePage.css'
-
-const editorTemplate = {
-  LE: {
-    header: {
-      crop_region: [0, 524, 2485, 471],
-      type: 'text',
-      labels: [
-        'Fixation Monitor',
-        'Fixation Target',
-        'Fixation Losses',
-        'False POS Errors',
-        'False NEG Errors',
-        'Test Duration',
-        'Fovea',
-        'Stimulus',
-        'Background',
-        'Strategy',
-        'Pupil Diameter',
-        'Visual Acuity',
-        'Rx',
-        'Date',
-        'Time',
-        'Age',
-      ],
-    },
-    threshold_map: {
-      crop_region: [463, 932, 899, 688],
-      type: 'map',
-      labels: ['ST1', 'ST2', 'SN2', 'SN1', 'ST3', 'ST4', 'ST5', 'SN5'],
-    },
-    total_deviation: {
-      crop_region: [207, 1608, 630, 529],
-      type: 'map_signed',
-      labels: ['ST1', 'ST2', 'SN2', 'SN1', 'ST3', 'ST4'],
-    },
-    pattern_deviation: {
-      crop_region: [1006, 1593, 639, 584],
-      type: 'map_signed',
-      labels: ['ST1', 'ST2', 'SN2', 'SN1', 'ST3', 'ST4'],
-    },
-    ght_vfi: {
-      crop_region: [1685, 1935, 640, 280],
-      type: 'text',
-      labels: ['GHT', 'VFI24-2', 'MD24-2', 'PSD24-2'],
-    },
-  },
-}
-
-const mappingRows = [
-  { section: 'header', type: 'text', labels: '16' },
-  { section: 'threshold_map', type: 'map', labels: '54' },
-  { section: 'total_deviation', type: 'map_signed', labels: '52 (LE/RE)' },
-  { section: 'pattern_deviation', type: 'map_signed', labels: '52 (LE/RE)' },
-  { section: 'ght_vfi', type: 'text', labels: '4' },
-]
 
 type TemplatePageProps = {
   onClose: () => void
 }
 
+type MappingRow = {
+  section: string
+  type: string
+  labels: string
+}
+
+type SaveStatusTone = 'neutral' | 'success' | 'warning' | 'error'
+
+const DEFAULT_TEMPLATES = ['HVF.json', 'VRVF.json']
+
+function getRequestErrorMessage(error: unknown, fallback: string): string {
+  if (axios.isCancel(error)) {
+    return ''
+  }
+
+  if (axios.isAxiosError(error)) {
+    const detail = error.response?.data?.detail
+
+    if (typeof detail === 'string') {
+      return detail === 'Not authenticated' ? 'Login required' : detail
+    }
+  }
+
+  return error instanceof Error ? error.message : fallback
+}
+
+function getSaveErrorMessage(error: unknown): string {
+  if (error instanceof SyntaxError) {
+    return 'Invalid JSON'
+  }
+
+  const message = getRequestErrorMessage(error, 'Save failed')
+  return message.length > 18 ? 'Save failed' : message
+}
+
+function getFormattedSavedAt(): string {
+  return new Intl.DateTimeFormat(undefined, {
+    timeStyle: 'short',
+  }).format(new Date())
+}
+
+function parseTemplateJson(text: string): TemplateJson {
+  const parsedTemplate = JSON.parse(text)
+
+  if (!parsedTemplate || typeof parsedTemplate !== 'object' || Array.isArray(parsedTemplate)) {
+    throw new Error('Template JSON must be an object.')
+  }
+
+  return parsedTemplate as TemplateJson
+}
+
+function buildMappingRows(editorText: string): MappingRow[] {
+  try {
+    const content = JSON.parse(editorText) as Record<string, Record<string, { labels?: unknown[]; type?: string }>>
+    const firstEye = content.LE ?? content.RE ?? Object.values(content)[0]
+
+    if (!firstEye || typeof firstEye !== 'object') {
+      return []
+    }
+
+    return Object.entries(firstEye).map(([section, value]) => ({
+      section,
+      type: value?.type ?? '-',
+      labels: Array.isArray(value?.labels) ? String(value.labels.length) : '-',
+    }))
+  } catch {
+    return []
+  }
+}
+
 export const TemplatePage = ({ onClose }: TemplatePageProps) => {
-  const editorText = useMemo(() => JSON.stringify(editorTemplate, null, 2), [])
-  const lineCount = editorText.split('\n').length
+  const [templates, setTemplates] = useState<string[]>(DEFAULT_TEMPLATES)
+  const [selectedTemplate, setSelectedTemplate] = useState('HVF.json')
+  const [editorText, setEditorText] = useState('')
+  const [savedText, setSavedText] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveStatusMessage, setSaveStatusMessage] = useState('')
+  const [lastSavedMessage, setLastSavedMessage] = useState('')
+  const [saveStatusTone, setSaveStatusTone] = useState<SaveStatusTone>('neutral')
+
+  const selectedTemplateLabel = selectedTemplate.replace(/\.json$/i, '')
+  const isDirty = editorText !== savedText
+  const mappingRows = useMemo(() => buildMappingRows(editorText), [editorText])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadTemplateList() {
+      try {
+        const templateNames = await listTemplates(controller.signal)
+        if (templateNames.length > 0) {
+          setTemplates(templateNames)
+          setSelectedTemplate((currentTemplate) =>
+            templateNames.includes(currentTemplate) ? currentTemplate : templateNames[0],
+          )
+        }
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          const message = getRequestErrorMessage(
+            error,
+            'Load failed',
+          )
+
+          if (message) {
+            setSaveStatusMessage(message)
+            setSaveStatusTone('error')
+          }
+        }
+      }
+    }
+
+    loadTemplateList()
+
+    return () => controller.abort()
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadSelectedTemplate() {
+      setIsLoading(true)
+      setSaveStatusMessage('')
+      setLastSavedMessage('')
+      setSaveStatusTone('neutral')
+
+      try {
+        const template = await getTemplate(selectedTemplate, controller.signal)
+        const nextText = JSON.stringify(template.content, null, 2)
+        setEditorText(nextText)
+        setSavedText(nextText)
+      } catch (error) {
+        if (!controller.signal.aborted) {
+          setEditorText('')
+          setSavedText('')
+          const message = getRequestErrorMessage(error, 'Load failed')
+          setSaveStatusMessage(message || 'Load failed')
+          setSaveStatusTone('error')
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadSelectedTemplate()
+
+    return () => controller.abort()
+  }, [selectedTemplate])
+
+  function handleTemplateChange(value: string) {
+    setSelectedTemplate(value)
+  }
+
+  function handleEditorChange(value: string) {
+    setEditorText(value)
+
+    if (value !== savedText) {
+      setSaveStatusMessage('Unsaved changes')
+      setSaveStatusTone('warning')
+    } else {
+      setSaveStatusMessage(lastSavedMessage)
+      setSaveStatusTone(lastSavedMessage ? 'success' : 'neutral')
+    }
+  }
+
+  async function handleCopy() {
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(editorText)
+      } else {
+        const copyBuffer = document.createElement('textarea')
+        copyBuffer.value = editorText
+        copyBuffer.style.position = 'fixed'
+        copyBuffer.style.left = '-9999px'
+        document.body.appendChild(copyBuffer)
+        copyBuffer.select()
+        document.execCommand('copy')
+        document.body.removeChild(copyBuffer)
+      }
+      setSaveStatusMessage('Copied')
+      setSaveStatusTone('success')
+    } catch {
+      setSaveStatusMessage('Copy failed')
+      setSaveStatusTone('error')
+    }
+  }
+
+  async function handleImport(file: File) {
+    setIsSaving(true)
+    setSaveStatusMessage('Importing...')
+    setSaveStatusTone('neutral')
+
+    try {
+      const importedText = await file.text()
+      const parsedTemplate = parseTemplateJson(importedText)
+      const savedTemplate = await saveTemplate(selectedTemplate, parsedTemplate)
+      const nextText = JSON.stringify(savedTemplate.content, null, 2)
+      setEditorText(nextText)
+      setSavedText(nextText)
+
+      const nextSavedMessage = `Saved changes at ${getFormattedSavedAt()}`
+      setLastSavedMessage(nextSavedMessage)
+      setSaveStatusMessage(nextSavedMessage)
+      setSaveStatusTone('success')
+    } catch (error) {
+      setSaveStatusMessage(getSaveErrorMessage(error))
+      setSaveStatusTone('error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  async function handleSave() {
+    if (!isDirty) {
+      setSaveStatusMessage(lastSavedMessage)
+      setSaveStatusTone(lastSavedMessage ? 'success' : 'neutral')
+      return
+    }
+
+    setIsSaving(true)
+    setSaveStatusMessage('Saving...')
+    setSaveStatusTone('neutral')
+
+    try {
+      const parsedTemplate = parseTemplateJson(editorText)
+      const savedTemplate = await saveTemplate(selectedTemplate, parsedTemplate)
+      const nextText = JSON.stringify(savedTemplate.content, null, 2)
+      setEditorText(nextText)
+      setSavedText(nextText)
+      const nextSavedMessage = `Saved changes at ${getFormattedSavedAt()}`
+      setLastSavedMessage(nextSavedMessage)
+      setSaveStatusMessage(nextSavedMessage)
+      setSaveStatusTone('success')
+    } catch (error) {
+      setSaveStatusMessage(getSaveErrorMessage(error))
+      setSaveStatusTone('error')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="template-overlay" role="dialog" aria-modal="true" aria-labelledby="template-title">
@@ -98,18 +286,25 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
           <div className="template-card template-select-card">
             <label htmlFor="template-select">Select Template</label>
             <div className="template-select-row">
-              <select id="template-select" defaultValue="HVF.json">
-                <option>HVF.json</option>
-                <option>VRVF.json</option>
+              <select
+                id="template-select"
+                value={selectedTemplate}
+                onChange={(event) => handleTemplateChange(event.target.value)}
+              >
+                {templates.map((template) => (
+                  <option key={template} value={template}>
+                    {template}
+                  </option>
+                ))}
               </select>
-              <strong>HVF</strong>
+              <strong>{selectedTemplateLabel}</strong>
             </div>
             <div className="template-editing-status">
               <Braces size={14} strokeWidth={2.2} />
               <span>
                 Editing:
                 <br />
-                data/templates/HVF.json
+                data/templates/{selectedTemplate}
               </span>
             </div>
           </div>
@@ -134,44 +329,21 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
                 ))}
               </tbody>
             </table>
-
-            <div className="template-save-status">
-              <CircleCheck size={15} strokeWidth={2.3} aria-hidden="true" />
-              <span>Template saved completed at 14:30</span>
-            </div>
           </div>
 
-          <section className="template-editor-panel" aria-label="Template JSON editor">
-            <header className="template-editor-header">
-              <div>
-                <Braces size={20} strokeWidth={2.2} />
-                <h2>Template Editor (JSON)</h2>
-              </div>
-              <button type="button" aria-label="Copy template JSON" title="Copy template JSON">
-                <Copy size={18} strokeWidth={2} />
-              </button>
-            </header>
-
-            <pre className="template-code-window" aria-label="Template JSON preview">
-              <code>{editorText}</code>
-            </pre>
-
-            <footer className="template-editor-footer">
-              <span>
-                Characters: {editorText.length} | Lines: {lineCount}
-              </span>
-              <div className="template-editor-actions">
-                <button className="template-secondary-button" type="button">
-                  <FileJson size={15} strokeWidth={2} />
-                  <span>Import Template</span>
-                </button>
-                <button className="template-primary-button" type="button">
-                  <Save size={15} strokeWidth={2} />
-                  <span>Save</span>
-                </button>
-              </div>
-            </footer>
-          </section>
+          <TemplateEditor
+            editorText={editorText}
+            isDirty={isDirty}
+            isLoading={isLoading}
+            isSaving={isSaving}
+            statusMessage={saveStatusMessage}
+            statusTone={saveStatusTone}
+            selectedTemplate={selectedTemplate}
+            onChange={handleEditorChange}
+            onCopy={handleCopy}
+            onImport={handleImport}
+            onSave={handleSave}
+          />
         </div>
       </section>
     </div>

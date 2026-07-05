@@ -18,7 +18,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.logging_config import setup_logging
-from app.routers import extraction, pdf
+from app.routers import extraction, pdf, templates
 
 from app.auth.csrf import (
     create_csrf_token,
@@ -317,6 +317,8 @@ api_dependencies = [Depends(get_current_user)]
 app.include_router(pdf.router,        prefix="/api",
                    dependencies=api_dependencies)
 app.include_router(extraction.router, prefix="/api",
+                   dependencies=api_dependencies)
+app.include_router(templates.router,  prefix="/api",
                    dependencies=api_dependencies)
 
 
