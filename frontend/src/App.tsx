@@ -11,6 +11,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { InputExtractionPage } from './pages/Extraction/InputExtractionPage'
 import { ResultExtractionPage } from './pages/Extraction/ResultExtractionPage'
+import { ErrorPage } from './pages/Error/ErrorPage'
 import { LoginPage } from './pages/LogInOut/LoginPage'
 import { LogoutPage } from './pages/LogInOut/LogoutPage'
 import { TemplatePage } from './pages/TemplatePage'
@@ -20,6 +21,7 @@ import { ProtectedRoute } from './route/ProtectedRoute'
 export const App = () => {
   return (
     <Routes>
+      <Route path="/error"  element={<ErrorPage />} />
       <Route path="/token"  element={<LoginPage />} />
       <Route path="/logout" element={<LogoutPage />} />
 
