@@ -6,7 +6,7 @@
  * (extraction lifecycle) hooks — one instance per eye.
  */
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import { RiSearchEyeLine } from 'react-icons/ri'
@@ -81,6 +81,9 @@ const getErrorReason = (err: unknown) => {
   return err instanceof Error ? err.message : 'Extraction failed.'
 }
 
+const isRequestCanceled = (err: unknown) =>
+  isAxiosError(err) && err.code === 'ERR_CANCELED'
+
 const createSkippedFile = (
   file: File,
   reason: string,
@@ -95,11 +98,12 @@ const createSkippedFile = (
 const processSelectedReport = async (
   { eye, file }: SelectedReport,
   reportType: ReportType,
-  index: number
+  index: number,
+  signal?: AbortSignal
 ) => {
   try {
-    const upload = await uploadFile(file)
-    const result = await triggerExtraction(upload.job_id, eye, reportType)
+    const upload = await uploadFile(file, signal)
+    const result = await triggerExtraction(upload.job_id, eye, reportType, signal)
 
     if (result.status !== 'complete') {
       return {
@@ -119,6 +123,10 @@ const processSelectedReport = async (
       } satisfies ExtractionResultEntry,
     }
   } catch (err) {
+    if (isRequestCanceled(err)) {
+      throw err
+    }
+
     return {
       skippedFile: createSkippedFile(file, getErrorReason(err), index),
     }
@@ -181,6 +189,7 @@ export const InputExtractionPage = () => {
   const [rightSelectedFiles, setRightSelectedFiles] = useState<File[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
   const [overlayState, setOverlayState] = useState<ExtractionOverlayState | null>(null)
+  const extractionAbortControllerRef = useRef<AbortController | null>(null)
 
   const hasSelectedFile = leftSelectedFiles.length > 0 || rightSelectedFiles.length > 0
 
@@ -207,12 +216,16 @@ export const InputExtractionPage = () => {
   }, [clearResults])
 
   const handleExtract = async () => {
+    const abortController = new AbortController()
+    extractionAbortControllerRef.current = abortController
+
     const selectedReports = [
       ...leftSelectedFiles.map((file) => ({ eye: 'LE' as EyeCode, file })),
       ...rightSelectedFiles.map((file) => ({ eye: 'RE' as EyeCode, file })),
     ]
 
     if (selectedReports.length === 0) {
+      extractionAbortControllerRef.current = null
       setOverlayState({
         variant: 'warning',
         title: 'No Report Ready',
@@ -250,7 +263,7 @@ export const InputExtractionPage = () => {
 
       const processedReports = await Promise.all(
         selectedReports.map((selectedReport, index) =>
-          processSelectedReport(selectedReport, reportType, index)
+          processSelectedReport(selectedReport, reportType, index, abortController.signal)
         )
       )
 
@@ -282,6 +295,14 @@ export const InputExtractionPage = () => {
         actionLabel: 'Close',
       })
     } catch (err) {
+      if (isRequestCanceled(err) || abortController.signal.aborted) {
+        if (extractionAbortControllerRef.current === abortController) {
+          setOverlayState(null)
+        }
+
+        return
+      }
+
       setOverlayState({
         variant: 'error',
         title: 'Extraction Failed',
@@ -289,8 +310,23 @@ export const InputExtractionPage = () => {
         actionLabel: 'Close',
       })
     } finally {
-      setIsProcessing(false)
+      if (extractionAbortControllerRef.current === abortController) {
+        extractionAbortControllerRef.current = null
+        setIsProcessing(false)
+      }
     }
+  }
+
+  const handleOverlayAction = () => {
+    if (isProcessing) {
+      extractionAbortControllerRef.current?.abort()
+      extractionAbortControllerRef.current = null
+      setOverlayState(null)
+      setIsProcessing(false)
+      return
+    }
+
+    setOverlayState(null)
   }
 
   return (
@@ -339,8 +375,8 @@ export const InputExtractionPage = () => {
           title={overlayState.title}
           message={overlayState.message}
           progress={overlayState.progress}
-          actionLabel={overlayState.actionLabel}
-          onAction={() => setOverlayState(null)}
+          actionLabel={isProcessing ? 'Cancel' : overlayState.actionLabel}
+          onAction={isProcessing || overlayState.actionLabel ? handleOverlayAction : undefined}
         />
       )}
     </div>

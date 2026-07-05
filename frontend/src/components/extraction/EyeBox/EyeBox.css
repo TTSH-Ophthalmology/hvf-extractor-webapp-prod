@@ -21,11 +21,13 @@
   min-height: 44px;
   padding: 0 20px 0 16px;
   border-bottom: 1px solid #d7dde5;
+  border-radius: 5px 5px 0 0;
   background: #f2f5f8;
 }
 
 .eye-upload-panel-uploaded .eye-upload-header {
   border-bottom-color: #003f7d;
+  border-radius: 3px 3px 0 0;
   color: #ffffff;
   background: #003f7d;
 }
