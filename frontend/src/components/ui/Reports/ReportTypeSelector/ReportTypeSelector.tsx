@@ -5,6 +5,7 @@
  */
 
 import { SelectSummaryPanel } from '../../SelectSummaryPanel/SelectSummaryPanel'
+import './ReportTypeSelector.css'
 
 export type ReportType = 'hvf' | 'vrvf'
 
@@ -32,6 +33,7 @@ export const ReportTypeSelector = ({ options, value, onChange }: ReportTypeSelec
       value={value}
       summary={selectedOption.abbreviation}
       ariaLabel="Report type selection"
+      className="report-type-selector-panel"
       onChange={(nextValue) => onChange(nextValue as ReportType)}
     />
   )

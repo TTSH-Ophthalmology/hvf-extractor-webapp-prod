@@ -1,0 +1,25 @@
+.report-type-selector-panel {
+  gap: 0;
+}
+
+.report-type-selector-panel .select-summary-content {
+  grid-template-columns: minmax(0, 300px) max-content;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.report-type-selector-panel .select-field-dropdown {
+  min-width: 0;
+}
+
+.report-type-selector-panel .select-field-trigger span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-type-selector-panel .select-summary-content strong {
+  min-width: max-content;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
