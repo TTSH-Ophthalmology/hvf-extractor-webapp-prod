@@ -275,7 +275,7 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
           title="Close templates"
           onClick={onClose}
         >
-          <X size={22} strokeWidth={2} />
+          <X size={24} strokeWidth={2} />
         </button>
 
         <div className="template-intro">
@@ -283,32 +283,30 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
         </div>
 
         <div className="template-layout" aria-label="Template details">
-          <p className="template-description">
-            Define field extraction regions and metadata mapping for medical reports.
-          </p>
+          <div className="template-side-panel">
+            <SelectSummaryPanel
+              id="template-select"
+              label="Select Template"
+              name="template-select"
+              options={templateOptions}
+              value={selectedTemplate}
+              summary={selectedTemplateLabel}
+              ariaLabel="Template selection"
+              className="template-select-card"
+              onChange={handleTemplateChange}
+            >
+              <div className="template-editing-status">
+                <IoInformationCircleOutline size={17} aria-hidden="true" />
+                <span>
+                  <strong>Editing:</strong>
+                  <br />
+                  data/templates/{selectedTemplate}
+                </span>
+              </div>
+            </SelectSummaryPanel>
 
-          <SelectSummaryPanel
-            id="template-select"
-            label="Select Template"
-            name="template-select"
-            options={templateOptions}
-            value={selectedTemplate}
-            summary={selectedTemplateLabel}
-            ariaLabel="Template selection"
-            className="template-select-card"
-            onChange={handleTemplateChange}
-          >
-            <div className="template-editing-status">
-              <IoInformationCircleOutline size={17} aria-hidden="true" />
-              <span>
-                <strong>Editing:</strong>
-                <br />
-                data/templates/{selectedTemplate}
-              </span>
-            </div>
-          </SelectSummaryPanel>
-
-          <TemplateMappingDetails rows={mappingRows} />
+            <TemplateMappingDetails rows={mappingRows} />
+          </div>
 
           <TemplateEditor
             editorText={editorText}

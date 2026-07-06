@@ -23,7 +23,7 @@
   width: 100%;
   height: min(92vh, 720px);
   min-height: 0;
-  padding: 18px 20px 20px 20px;
+  padding: 20px 20px 20px 20px;
   overflow: hidden;
   border: 1px solid #d9e1eb;
   border-radius: 8px;
@@ -63,27 +63,23 @@
   letter-spacing: 0;
 }
 
-.template-description {
-  padding-left: 5px;
-  grid-column: 1;
-  grid-row: 1;
-  max-width: 390px;
-  margin: 0;
-  color: #4b5b6f;
-  font-size: 13px;
-  line-height: 1.45;
-}
-
 .template-layout {
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 268px minmax(0, 1fr);
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-columns: 340px minmax(0, 1fr);
   gap: 10px 14px;
-  margin-top: 0;
-  padding: 12px 0 8px;
+  margin-top: 10px;
+  padding: 10px 0 2px;
   min-height: 0;
   overflow: hidden;
+}
+
+.template-side-panel {
+  grid-column: 1;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  min-width: 0;
 }
 
 .template-card {
@@ -91,22 +87,21 @@
   border: 1px solid #d7e0eb;
   border-radius: 7px;
   background: #ffffff;
-  padding: 16px;
+  padding: 13px 16px 16px 16px;
 }
 
 .template-select-card,
 .template-mapping-card {
-  grid-column: 1;
+  grid-column: auto;
 }
 
 .template-select-card {
-  grid-row: 2;
   align-self: start;
   padding-bottom: 14px;
 }
 
 .template-select-card .select-summary-content {
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 180px) auto;
   gap: 18px;
   min-height: 56px;
 }
