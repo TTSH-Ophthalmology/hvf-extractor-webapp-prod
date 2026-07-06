@@ -33,13 +33,21 @@ const buildCsv = (rows: DownloadRow[], fieldNames: string[]) => {
   return csvRows.join('\n')
 }
 
+const formatDownloadDate = (date: Date) => {
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const year = String(date.getFullYear()).slice(-2)
+
+  return `${day}${month}${year}`
+}
+
 const downloadCsv = (content: string, filenamePrefix: string) => {
   const blob = new Blob([content], { type: 'text/csv;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
 
   link.href = url
-  link.download = `${filenamePrefix}.csv`
+  link.download = `${formatDownloadDate(new Date())}-${filenamePrefix}.csv`
   link.click()
   URL.revokeObjectURL(url)
 }
