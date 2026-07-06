@@ -24,6 +24,7 @@ from app.services.pipeline import (
     extract_ocr,
     extract_pdf,
 )
+from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,13 @@ class ExtractionService:
             HTTPException 400: PDF could not be parsed (wrong format, unsupported eye, etc.).
             HTTPException 422: Unsupported report_type.
         """
+        try:
+            UUID(job_id)
+        except:
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid job_id."
+            )
         try:
             report_type = ReportType(report_type)
         except ValueError as exc:
