@@ -4,22 +4,22 @@
  * VIEW: overlays the workspace with a focused template editor panel.
  */
 
-import { Braces, X } from 'lucide-react'
+import { X } from 'lucide-react'
+import { IoInformationCircleOutline } from 'react-icons/io5'
 import axios from 'axios'
 import { useEffect, useMemo, useState } from 'react'
 import { TemplateEditor } from '../../components/template/TemplateEditor/TemplateEditor'
+import {
+  TemplateMappingDetails,
+  type TemplateMappingRow,
+} from '../../components/template/TemplateMappingDetails/TemplateMappingDetails'
+import { SelectSummaryPanel } from '../../components/ui/SelectSummaryPanel/SelectSummaryPanel'
 import { getTemplate, listTemplates, saveTemplate } from '../../services/templateService'
 import type { TemplateJson } from '../../models/template'
 import './TemplatePage.css'
 
 type TemplatePageProps = {
   onClose: () => void
-}
-
-type MappingRow = {
-  section: string
-  type: string
-  labels: string
 }
 
 type SaveStatusTone = 'neutral' | 'success' | 'warning' | 'error'
@@ -67,7 +67,7 @@ function parseTemplateJson(text: string): TemplateJson {
   return parsedTemplate as TemplateJson
 }
 
-function buildMappingRows(editorText: string): MappingRow[] {
+function buildMappingRows(editorText: string): TemplateMappingRow[] {
   try {
     const content = JSON.parse(editorText) as Record<string, Record<string, { labels?: unknown[]; type?: string }>>
     const firstEye = content.LE ?? content.RE ?? Object.values(content)[0]
@@ -100,6 +100,10 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
   const selectedTemplateLabel = selectedTemplate.replace(/\.json$/i, '')
   const isDirty = editorText !== savedText
   const mappingRows = useMemo(() => buildMappingRows(editorText), [editorText])
+  const templateOptions = useMemo(
+    () => templates.map((template) => ({ value: template, label: template })),
+    [templates],
+  )
 
   useEffect(() => {
     const controller = new AbortController()
@@ -283,53 +287,28 @@ export const TemplatePage = ({ onClose }: TemplatePageProps) => {
             Define field extraction regions and metadata mapping for medical reports.
           </p>
 
-          <div className="template-card template-select-card">
-            <label htmlFor="template-select">Select Template</label>
-            <div className="template-select-row">
-              <select
-                id="template-select"
-                value={selectedTemplate}
-                onChange={(event) => handleTemplateChange(event.target.value)}
-              >
-                {templates.map((template) => (
-                  <option key={template} value={template}>
-                    {template}
-                  </option>
-                ))}
-              </select>
-              <strong>{selectedTemplateLabel}</strong>
-            </div>
+          <SelectSummaryPanel
+            id="template-select"
+            label="Select Template"
+            name="template-select"
+            options={templateOptions}
+            value={selectedTemplate}
+            summary={selectedTemplateLabel}
+            ariaLabel="Template selection"
+            className="template-select-card"
+            onChange={handleTemplateChange}
+          >
             <div className="template-editing-status">
-              <Braces size={14} strokeWidth={2.2} />
+              <IoInformationCircleOutline size={17} aria-hidden="true" />
               <span>
-                Editing:
+                <strong>Editing:</strong>
                 <br />
                 data/templates/{selectedTemplate}
               </span>
             </div>
-          </div>
+          </SelectSummaryPanel>
 
-          <div className="template-card template-mapping-card">
-            <h2>Mapping Details</h2>
-            <table className="template-mapping-table">
-              <thead>
-                <tr>
-                  <th>Section</th>
-                  <th>Type</th>
-                  <th>Labels</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mappingRows.map((row) => (
-                  <tr key={row.section}>
-                    <td>{row.section}</td>
-                    <td>{row.type}</td>
-                    <td>{row.labels}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <TemplateMappingDetails rows={mappingRows} />
 
           <TemplateEditor
             editorText={editorText}

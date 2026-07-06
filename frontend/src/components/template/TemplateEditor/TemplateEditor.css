@@ -2,8 +2,10 @@
   grid-column: 2;
   grid-row: 1 / 4;
   align-self: stretch;
+  justify-self: start;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(100%, 780px);
   min-width: 0;
   min-height: 0;
   height: 100%;
@@ -113,7 +115,7 @@
   overflow: hidden;
   color: #008a93;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -170,11 +172,11 @@
   padding: 0 13px;
   border-radius: 5px;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .template-secondary-button {
-  border: 1px solid #004f9f;
+  border: 1px solid #003b78;
   color: #003b78;
   background: #ffffff;
 }
@@ -189,6 +191,7 @@
   .template-editor-panel {
     grid-column: auto;
     grid-row: auto;
+    width: 100%;
     min-height: 470px;
   }
 }
