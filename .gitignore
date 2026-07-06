@@ -17,7 +17,8 @@ build/
 htmlcov/
 .coverage
 *.log
-data/
+logs/
+uploads/
 
 # Environment
 backend/.env
@@ -44,4 +45,4 @@ Thumbs.db
 .aider*
 .continue/
 *.ai-context
-backend/app/db/database.json
+backend/data/database.json
