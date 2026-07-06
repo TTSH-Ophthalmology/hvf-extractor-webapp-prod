@@ -30,11 +30,12 @@ class Settings(BaseSettings):
     # Directory where rotating log files are written
     log_dir: str = "./data/logs"
 
-    #jwt
-    admin_username: str
-    admin_password_hash: str
-    jwt_secret_key: str
-    cookie_secure: bool
+    database_path: str = "./data/database.json"
+
+    admin_username: str | None = None
+    admin_password_hash: str | None = None
+    jwt_secret_key: str | None = None
+    cookie_secure: bool = False
 
 
 settings = Settings()
