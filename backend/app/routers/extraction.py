@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.models.extraction import ExtractionResult
 from app.services.extraction_service import ExtractionService
+from app.models.report_type import ReportType
 
 router = APIRouter(prefix="/extract", tags=["Extraction"])
 
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/extract", tags=["Extraction"])
 async def extract_data(
     job_id: str = Query(..., description="Job ID returned by the upload endpoint"),
     eye: Literal["LE", "RE"] = Query(..., description="Which eye this report belongs to"),
-    report_type: str = Query("hvf", description="Report type: 'hvf' (only HVF supported currently)"),
+    report_type: ReportType = Query(ReportType.HVF, description="Report type: 'hvf', 'vrvf'"),
     service: ExtractionService = Depends(ExtractionService),
 ) -> ExtractionResult:
     """

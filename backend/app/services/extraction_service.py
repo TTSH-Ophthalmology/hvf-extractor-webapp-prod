@@ -3,10 +3,10 @@ services/extraction_service.py — CONTROLLER layer: HVF extraction business log
 
 Responsibilities:
   - Locate the uploaded file on disk using the job_id
-  - Call the HVF pipeline (PyMuPDF text-block extraction)
+  - Call the selected extraction pipeline
   - Return an ExtractionResult with the flat key-value dict from the pipeline
 
-Supported report types: hvf
+Supported report types: hvf, vrvf
 """
 
 import logging
@@ -16,9 +16,12 @@ from fastapi import HTTPException
 
 from app.config import settings
 from app.models.extraction import ExtractionResult
+from app.models.report_type import ReportType
 from app.services.pipeline import (
     DEFAULT_TEMPLATE_PATH,
+    DEFAULT_VRVF_TEMPLATE_PATH,
     HVFExtractionError,
+    extract_ocr,
     extract_pdf,
 )
 
@@ -30,7 +33,7 @@ class ExtractionService:
         self,
         job_id: str,
         eye: str,
-        report_type: str = "hvf",
+        report_type: ReportType = ReportType.HVF,
     ) -> ExtractionResult:
         """
         Run HVF extraction on a previously uploaded file.
@@ -38,7 +41,7 @@ class ExtractionService:
         Args:
             job_id:      UUID assigned at upload time — used to find the file on disk.
             eye:         'LE' or 'RE'.
-            report_type: 'hvf' (VRVF not yet implemented).
+            report_type: 'hvf' or 'vrvf'.
 
         Returns:
             ExtractionResult with status='complete' and raw_data populated.
@@ -48,11 +51,13 @@ class ExtractionService:
             HTTPException 400: PDF could not be parsed (wrong format, unsupported eye, etc.).
             HTTPException 422: Unsupported report_type.
         """
-        if report_type.lower() != "hvf":
+        try:
+            report_type = ReportType(report_type)
+        except ValueError as exc:
             raise HTTPException(
                 status_code=422,
-                detail=f"Report type '{report_type}' is not yet supported. Only 'hvf' is available.",
-            )
+                detail="Unsupported report_type. Expected 'hvf' or 'vrvf'.",
+            ) from exc
 
         upload_dir = Path(settings.upload_dir)
         matches = list(upload_dir.glob(f"{job_id}.*"))
@@ -67,22 +72,40 @@ class ExtractionService:
         file_path = matches[0]
         logger.info("Extracting %s from %s (eye=%s)", report_type.upper(), file_path.name, eye)
 
-        try:
-            result = extract_pdf(file_path, eye, template_path=DEFAULT_TEMPLATE_PATH)
-            raw_data: dict[str, str] = result[eye.upper()]
-        except (ValueError, FileNotFoundError, HVFExtractionError) as exc:
-            logger.error("Extraction failed for job_id=%s eye=%s: %s", job_id, eye, exc)
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
-        except Exception as exc:
-            logger.exception("Unexpected error during extraction job_id=%s", job_id)
-            raise HTTPException(status_code=500, detail="Internal extraction error.") from exc
+        if report_type == ReportType.HVF:
+            try:
+                result = extract_pdf(file_path, eye, template_path=DEFAULT_TEMPLATE_PATH)
+                raw_data: dict[str, str] = result[eye.upper()]
+            except (ValueError, FileNotFoundError, HVFExtractionError) as exc:
+                logger.error("Extraction failed for job_id=%s eye=%s: %s", job_id, eye, exc)
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except Exception as exc:
+                logger.exception("Unexpected error during extraction job_id=%s", job_id)
+                raise HTTPException(status_code=500, detail="Internal extraction error.") from exc
 
-        logger.info(
-            "Extraction complete: job_id=%s eye=%s fields=%d",
-            job_id,
-            eye,
-            len(raw_data),
-        )
+            logger.info(
+                "Extraction complete: job_id=%s eye=%s fields=%d",
+                job_id,
+                eye,
+                len(raw_data),
+            )
+        elif report_type == ReportType.VRVF:
+            try:
+                result = extract_ocr(file_path, eye, template_path=DEFAULT_VRVF_TEMPLATE_PATH)
+                raw_data = result[eye.upper()]
+            except (ValueError, FileNotFoundError, HVFExtractionError) as exc:
+                logger.error("OCR extraction failed for job_id=%s eye=%s: %s", job_id, eye, exc)
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except Exception as exc:
+                logger.exception("Unexpected OCR error during extraction job_id=%s", job_id)
+                raise HTTPException(status_code=500, detail="Internal OCR extraction error.") from exc
+
+            logger.info(
+                "OCR extraction complete: job_id=%s eye=%s fields=%d",
+                job_id,
+                eye,
+                len(raw_data),
+            )
 
         return ExtractionResult(
             job_id=job_id,
