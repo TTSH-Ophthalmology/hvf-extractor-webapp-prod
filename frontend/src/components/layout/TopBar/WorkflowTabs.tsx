@@ -7,6 +7,7 @@
 
 import { useNavigate } from 'react-router-dom'
 import { useExtractionWorkflow } from '../../../context/ExtractionWorkflowContext'
+import { scrollPageToTop } from '../../../utils/scrollPageToTop'
 import './WorkflowTabs.css'
 
 export const WorkflowTabs = () => {
@@ -16,6 +17,7 @@ export const WorkflowTabs = () => {
   const handleResultClick = () => {
     if (hasResults) {
       navigate('/result')
+      requestAnimationFrame(scrollPageToTop)
     }
   }
 
@@ -26,7 +28,10 @@ export const WorkflowTabs = () => {
         type="button"
         role="tab"
         aria-selected="true"
-        onClick={() => navigate('/')}
+        onClick={() => {
+          navigate('/')
+          requestAnimationFrame(scrollPageToTop)
+        }}
       >
         Input Page
       </button>

@@ -5,8 +5,10 @@
  * Manages sidebar collapse state and debug mode toggle.
  */
 
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useLayoutEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { TemplatePage } from '../../../pages/Template/TemplatePage'
+import { scrollPageToTop } from '../../../utils/scrollPageToTop'
 import { Sidebar } from '../Sidebar/Sidebar'
 import { TopBar } from '../TopBar/TopBar'
 import './AppShell.css'
@@ -18,6 +20,13 @@ type AppShellProps = {
 export const AppShell = ({ children }: AppShellProps) => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isTemplateOpen, setIsTemplateOpen] = useState(false)
+  const { pathname } = useLocation()
+
+  useLayoutEffect(() => {
+    if (pathname === '/' || pathname === '/result') {
+      scrollPageToTop()
+    }
+  }, [pathname])
 
   useEffect(() => {
     const smallViewportQuery = window.matchMedia('(max-width: 860px)')
