@@ -25,6 +25,7 @@ from app.services.pipeline import (
     extract_pdf,
 )
 from uuid import UUID
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +115,12 @@ class ExtractionService:
                 eye,
                 len(raw_data),
             )
+
+    #unlink pdf after extraction.
+        try:
+            file_path.unlink(missing_ok=True)
+        except OSError:
+            logger.warning("Failed to delete uploaded file after extraction: %s", file_path)
 
         return ExtractionResult(
             job_id=job_id,
