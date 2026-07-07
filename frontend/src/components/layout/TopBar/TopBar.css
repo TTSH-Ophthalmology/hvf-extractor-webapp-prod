@@ -36,72 +36,27 @@
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
-  gap: 14px;
+  gap: 10px;
 }
 
-.debug-button {
+.topbar-user-summary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  min-width: 136px;
   min-height: 34px;
-  padding: 0 14px;
-  border: 1.5px solid #d4d9df;
-  border-radius: 5px;
-  color: #3f4650;
-  background: #ffffff;
+  min-width: 0;
+  max-width: 220px;
+  padding: 0 4px 0 0;
+  color: #172033;
   font-size: 14px;
   font-weight: 700;
+  line-height: 1;
 }
 
-.debug-button-active {
-  border-color: #00336a;
-  color: #00336a;
-  background: #eef5fc;
-}
-
-.debug-status-dot {
-  width: 6px;
-  height: 6px;
-  margin-left: 4px;
-  border-radius: 50%;
-  background: #9aa3ad;
-  box-shadow: 0 0 0 0px #d7dde5;
-}
-
-.debug-button-active .debug-status-dot {
-  background: #23a26d;
-  box-shadow: 0 0 0 1px #bfe7d4;
-}
-
-.notification-button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 34px;
-  height: 34px;
-  border: 0;
-  color: #00336a;
-  background: transparent;
-}
-
-.notification-button span {
-  position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid #ffffff;
-  border-radius: 50%;
-  background: #f04f61;
-}
-
-.topbar-divider {
-  width: 1px;
-  height: 32px;
-  background: #d7dde5;
+.topbar-user-summary span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .profile-menu-root {
@@ -196,11 +151,15 @@
   gap: 10px;
   min-height: 36px;
   padding: 0 10px;
+  border: 0;
   border-radius: 6px;
   color: #374151;
+  background: transparent;
   font-size: 14px;
   font-weight: 650;
   line-height: 1;
+  text-align: left;
+  cursor: pointer;
 }
 
 .profile-menu-item:hover {
@@ -242,7 +201,7 @@
   }
 
   .topbar h1 {
-    font-size: 23px;
+    font-size: 25px;
   }
 }
 
@@ -254,26 +213,15 @@
   }
 
   .topbar h1 {
-    font-size: 19px;
+    font-size: 23px;
   }
 
   .topbar-actions {
     gap: 7px;
   }
 
-  .debug-button {
-    width: 34px;
-    min-width: 34px;
-    gap: 0;
-    padding: 0;
-  }
-
-  .debug-button span:first-child {
-    display: none;
-  }
-
-  .debug-status-dot {
-    margin-left: 0;
+  .topbar-user-summary {
+    max-width: 140px;
   }
 }
 
@@ -291,13 +239,9 @@
     gap: 4px;
   }
 
-  .notification-button {
-    width: 30px;
-    height: 30px;
-  }
-
-  .topbar-divider {
-    height: 24px;
+  .topbar-user-summary {
+    max-width: 96px;
+    font-size: 12px;
   }
 
   .profile-button {

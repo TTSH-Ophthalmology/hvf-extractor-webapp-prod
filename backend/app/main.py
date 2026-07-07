@@ -8,6 +8,8 @@ No business logic lives here.
 import logging
 import time
 from datetime import datetime
+from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,7 +18,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.logging_config import setup_logging
-from app.routers import extraction, pdf
+from app.routers import extraction, pdf, templates
 
 from app.auth.csrf import (
     create_csrf_token,
@@ -27,17 +29,32 @@ from app.auth.csrf import (
 )
 from app.auth.service import verify_admin
 from app.auth.jwt import create_access_token, create_refresh_token, verify_token
+from app.db.db import store
 from app.dependencies import get_current_user
+
+BASE_DIR = Path(__file__).resolve().parent
+FOLDER_PATH = BASE_DIR .parent/ "data/uploads"
 
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
 
 logger = logging.getLogger(__name__)
 
+REFRESH_COOKIE_PATH = "/api/refresh"
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    # clean up uploads folder before shutdown
+    for file in Path(FOLDER_PATH).iterdir():
+        if file.is_file():
+            file.unlink()
+
 app = FastAPI(
     title="NHGEI HVF Extractor API",
     description="Backend API for NHGEI HVF Extractor — extracts structured data from HVF/VRVF PDF reports.",
-    version="1.0.0",
+    version="1.1.0",
+    lifespan=lifespan
 )
 
 # ---------------------------------------------------------------------------
@@ -79,7 +96,7 @@ async def log_requests(request: Request, call_next) -> Response:
     response: Response = await call_next(request)
     duration_ms = (time.perf_counter() - start) * 1000
     logger.info(
-        "%s %s → %d  (%.1f ms)",
+        "%s %s -> %d  (%.1f ms)",
         request.method,
         request.url.path,
         response.status_code,
@@ -128,6 +145,12 @@ def login(
     refresh_token = create_refresh_token(
         user_id=username
     )
+    refresh_payload = verify_token(refresh_token, expect="refresh")
+    store.save_refresh_token(
+        token_id=refresh_payload["jti"],
+        username=username,
+        expires_at=refresh_payload["exp"],
+    )
 
     response.set_cookie(
         key="refresh_token",
@@ -136,7 +159,7 @@ def login(
         secure=cookie_secure(),
         samesite="Strict",
         max_age=60 * 60 * 10,
-        path="/api/refresh",
+        path=REFRESH_COOKIE_PATH,
     )
     set_csrf_cookie(response, create_csrf_token())
 
@@ -164,10 +187,28 @@ def refresh(request: Request, response: Response):
         raise HTTPException(status_code=401, detail="Invalid refresh-token")
     
     username = payload.get("sub")
+    token_id = payload.get("jti")
+
+    if not username or not token_id:
+        raise HTTPException(status_code=401, detail="Invalid refresh-token")
+
+    if not store.is_refresh_token_active(token_id, username):
+        raise HTTPException(status_code=401, detail="Revoked refresh-token")
+
+    store.revoke_refresh_token(token_id)
 
     new_access_token = create_access_token(
         user_id=username,
         role="admin"
+    )
+    new_refresh_token = create_refresh_token(
+        user_id=username
+    )
+    new_refresh_payload = verify_token(new_refresh_token, expect="refresh")
+    store.save_refresh_token(
+        token_id=new_refresh_payload["jti"],
+        username=username,
+        expires_at=new_refresh_payload["exp"],
     )
 
     response.set_cookie(
@@ -178,6 +219,15 @@ def refresh(request: Request, response: Response):
         samesite="lax",
         max_age=60 * 15,
         path="/",
+    )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=True,
+        secure=cookie_secure(),
+        samesite="Strict",
+        max_age=60 * 60 * 10,
+        path=REFRESH_COOKIE_PATH,
     )
     set_csrf_cookie(response, create_csrf_token())
 
@@ -192,12 +242,7 @@ def me(user=Depends(get_current_user)):
     }
 
 
-@app.post("/api/logout")
-def logout(
-    request: Request,
-    response: Response
-):
-
+def clear_auth_cookies(response: Response) -> None:
     response.delete_cookie(
         key="access_token",
         path="/",
@@ -208,12 +253,51 @@ def logout(
 
     response.delete_cookie(
         key="refresh_token",
-        path="/api/refresh",
+        path=REFRESH_COOKIE_PATH,
         httponly=True,
         secure=cookie_secure(),
         samesite="Strict",
     )
     delete_csrf_cookie(response)
+
+
+@app.post("/api/refresh/revoke")
+def revoke_refresh_token(
+    request: Request,
+    response: Response
+):
+    refresh_token = request.cookies.get("refresh_token")
+
+    if refresh_token:
+        try:
+            payload = verify_token(refresh_token, expect="refresh")
+            token_id = payload.get("jti")
+            if token_id:
+                store.revoke_refresh_token(token_id)
+        except ValueError:
+            logger.info(
+                "Refresh revoke requested with invalid token: ip=%s",
+                request.client.host,
+            )
+
+    clear_auth_cookies(response)
+
+    logger.info(
+        "Refresh token revoked: ip=%s",
+        request.client.host,
+    )
+
+    return {
+        "message": "Logout successfully"
+    }
+
+
+@app.post("/api/logout")
+def logout(
+    request: Request,
+    response: Response
+):
+    clear_auth_cookies(response)
 
     logger.info(
         "Logout: ip=%s",
@@ -233,6 +317,8 @@ api_dependencies = [Depends(get_current_user)]
 app.include_router(pdf.router,        prefix="/api",
                    dependencies=api_dependencies)
 app.include_router(extraction.router, prefix="/api",
+                   dependencies=api_dependencies)
+app.include_router(templates.router,  prefix="/api",
                    dependencies=api_dependencies)
 
 

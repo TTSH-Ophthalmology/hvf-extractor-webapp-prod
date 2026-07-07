@@ -19,6 +19,14 @@ const api: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
+function redirectToErrorPage(code: string | number): void {
+  const nextPath = `/error?code=${encodeURIComponent(String(code))}`;
+
+  if (window.location.pathname !== "/error") {
+    window.location.href = nextPath;
+  }
+}
+
 function getCookie(name: string): string | null {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
@@ -48,10 +56,17 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const original_request = error.config as any;
-    const isRefresh_request= original_request?.url?.includes("/api/refresh")
+    if (axios.isCancel(error) || error.code === "ERR_CANCELED") {
+      return Promise.reject(error);
+    }
 
-    if (error.response?.status == 401 && !original_request?._retry && !isRefresh_request) {
+    const original_request = error.config as any;
+    const requestUrl = original_request?.url ?? "";
+    const isAuthRequest =
+      requestUrl.includes("/api/token") || requestUrl.includes("/api/refresh");
+    const statusCode = error.response?.status;
+
+    if (error.response?.status == 401 && !original_request?._retry && !isAuthRequest) {
       original_request._retry = true;
 
       try {
@@ -62,6 +77,22 @@ api.interceptors.response.use(
         return Promise.reject(error);
       }
     }
+
+    if (error.code === "ECONNABORTED") {
+      redirectToErrorPage("TIMEOUT");
+      return Promise.reject(error);
+    }
+
+    if (!error.response) {
+      redirectToErrorPage("NETWORK");
+      return Promise.reject(error);
+    }
+
+    if (statusCode === 404 || (statusCode !== undefined && statusCode >= 500)) {
+      redirectToErrorPage(statusCode);
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   },
 );

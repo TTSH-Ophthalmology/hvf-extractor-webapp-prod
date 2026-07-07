@@ -8,12 +8,16 @@
 import api from './api'
 import type { FileUploadResponse } from '../models/pdf'
 
-export async function uploadFile(file: File): Promise<FileUploadResponse> {
+export async function uploadFile(
+  file: File,
+  signal?: AbortSignal
+): Promise<FileUploadResponse> {
   const formData = new FormData()
   formData.append('file', file)
 
   const response = await api.post<FileUploadResponse>('/api/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    signal,
   })
 
   return response.data

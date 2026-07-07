@@ -27,8 +27,7 @@
 
 .hospital-logo {
   display: block;
-  width: calc(100%);
-  max-width: 225px;
+  max-width: 250px;
   height: auto;
   object-fit: contain;
   flex: 0 0 auto;
@@ -41,9 +40,17 @@
     transform 180ms ease;
 }
 
+.hospital-logo-full {
+  width: 100%;
+}
+
+.hospital-logo-collapsed{
+  display: none;
+}
+
 .nav-label {
   display: inline-block;
-  max-width: 160px;
+  max-width: 180px;
   min-width: 0;
   overflow: hidden;
   opacity: 1;
@@ -61,7 +68,17 @@
   padding: 8px 0;
 }
 
-.sidebar-collapsed .hospital-logo {
+.sidebar-collapsed .hospital-logo-full {
+  display: none;
+  width: 48px;
+  height: 48px;
+  margin-left: 0;
+  flex-basis: 48px;
+  transform: translate(-2px, -5px);
+}
+
+.sidebar-collapsed .hospital-logo-collapsed {
+  display: block;
   width: 48px;
   height: 48px;
   margin-left: 0;
@@ -82,28 +99,5 @@
   .sidebar {
     height: 100vh;
     min-height: 100vh;
-  }
-
-  .sidebar-brand {
-    justify-content: center;
-    min-height: 82px;
-    padding: 8px 0;
-  }
-
-  .hospital-logo {
-    width: 48px;
-    height: 48px;
-    margin-left: 0;
-    flex-basis: 48px;
-    transform: translate(-3px, -5px);
-  }
-
-  .nav-label {
-    max-width: 0;
-    width: 0;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-4px);
-    transition-delay: 0ms;
   }
 }

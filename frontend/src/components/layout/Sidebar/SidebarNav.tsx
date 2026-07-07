@@ -1,11 +1,10 @@
 /**
  * components/layout/Sidebar/SidebarNav.tsx — Primary navigation links.
  *
- * VIEW: renders the main nav items (Single Extraction, Batch Extraction).
+ * VIEW: renders the main nav items.
  */
 
 import { MdOutlineFileOpen } from 'react-icons/md'
-import { PiStack } from 'react-icons/pi'
 import { NavLink, useLocation } from 'react-router-dom'
 import './SidebarNav.css'
 
@@ -14,8 +13,7 @@ type SidebarNavProps = {
 }
 
 const navigationItems = [
-  { label: 'Single Extraction', path: '/',             icon: MdOutlineFileOpen },
-  { label: 'Batch Extraction',  path: '/visual-fields', icon: PiStack },
+  { label: 'Extraction', path: '/', icon: MdOutlineFileOpen },
 ]
 
 export const SidebarNav = ({ isCollapsed }: SidebarNavProps) => {
