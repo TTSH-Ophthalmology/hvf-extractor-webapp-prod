@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
 import { AppShell } from "../components/layout/AppShell/AppShell";
-import { SingleExtractionWorkflowProvider } from "../context/SingleExtractionWorkflowContext";
+import { ExtractionWorkflowProvider } from "../context/ExtractionWorkflowContext";
 
 export function ProtectedLayout() {
   return (
-    <SingleExtractionWorkflowProvider>
+    <ExtractionWorkflowProvider>
       <AppShell>
         <Outlet />
       </AppShell>
-    </SingleExtractionWorkflowProvider>
+    </ExtractionWorkflowProvider>
   );
 }

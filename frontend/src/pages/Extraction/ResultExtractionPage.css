@@ -1,0 +1,128 @@
+.result-extraction-page {
+  display: grid;
+  gap: 16px;
+  margin-top: -16px;
+}
+
+.result-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.result-title-block {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.result-title-block h1 {
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding-top: 5px;
+  padding-left: 6px;
+  color: #424751;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.result-status-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 14px;
+  color: #68717e;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.result-status-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 7px;
+  min-height: 25px;
+  padding: 2px 12px;
+  border-radius:30px;
+  color: #00706a;
+  background: #c8f4ef;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.result-eye-count {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.result-data-panel {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #d7dde5;
+  border-radius: 5px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+}
+
+.result-data-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: 16px;
+  min-height: 65px;
+  padding: 0 18px;
+}
+
+.result-data-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.result-data-title {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 11px;
+  color: #181c1e;
+}
+
+.result-data-title svg {
+  flex-shrink: 0;
+  color: #00336a;
+}
+
+.result-data-title h2 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+@media (max-width: 560px) {
+
+  .result-data-panel > header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 14px;
+  }
+
+}

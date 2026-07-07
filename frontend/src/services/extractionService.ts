@@ -12,14 +12,21 @@ export async function triggerExtraction(
   jobId: string,
   eye: 'LE' | 'RE',
   reportType: string = 'hvf',
+  signal?: AbortSignal,
 ): Promise<ExtractionResult> {
   const response = await api.post<ExtractionResult>('/api/extract', null, {
     params: { job_id: jobId, eye, report_type: reportType },
+    signal,
   })
   return response.data
 }
 
-export async function getExtraction(jobId: string): Promise<ExtractionResult> {
-  const response = await api.get<ExtractionResult>(`/api/extract/${jobId}`)
+export async function getExtraction(
+  jobId: string,
+  signal?: AbortSignal
+): Promise<ExtractionResult> {
+  const response = await api.get<ExtractionResult>(`/api/extract/${jobId}`, {
+    signal,
+  })
   return response.data
 }

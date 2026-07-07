@@ -1,0 +1,72 @@
+.error-file-extraction-panel {
+  overflow: hidden;
+  border: 1px solid #efcaca;
+  border-radius: 8px;
+  background: #fff7f7;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 5%);
+}
+
+.error-file-extraction-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 50px;
+  padding: 0 22px;
+  border: 0;
+  color: #970611;
+  background: #fdebeb;
+  cursor: pointer;
+}
+
+.error-file-extraction-toggle[aria-expanded="true"] {
+  box-shadow: inset 0 -1px 0 #efcaca;
+}
+
+.error-file-extraction-title {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  gap: 10px;
+  color: #970611;
+  font-family: var(--font-hanken-grotesk);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.error-file-extraction-title svg {
+  flex: 0 0 auto;
+}
+
+.error-file-extraction-chevron {
+  flex: 0 0 auto;
+  color: #7a0610;
+  transition: transform 160ms ease;
+}
+
+.error-file-extraction-chevron-open {
+  transform: rotate(180deg);
+}
+
+.error-file-extraction-list {
+  display: grid;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+}
+
+@media (max-width: 720px) {
+  .error-file-extraction-toggle {
+    min-height: 50px;
+    padding: 0 14px;
+  }
+
+  .error-file-extraction-title {
+    gap: 12px;
+    font-size: 20px;
+  }
+
+  .error-file-extraction-list {
+    padding: 10px 12px;
+  }
+}

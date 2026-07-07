@@ -1,0 +1,20 @@
+.download-data-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  min-width: 138px;
+  min-height: 35px;
+  padding: 0 18px 0 18px;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  background: #0b4c8f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.download-data-trigger:hover,
+.download-data-trigger:focus-visible {
+  background: #003f7d;
+}
