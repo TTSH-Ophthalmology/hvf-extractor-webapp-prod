@@ -31,7 +31,7 @@ from app.db.db import store
 from app.dependencies import get_current_user
 
 # Initialise logging before anything else creates a logger.
-setup_logging(settings.log_level, settings.log_dir)
+setup_logging(settings.log_level, str(settings.resolved_log_dir))
 
 logger = logging.getLogger(__name__)
 

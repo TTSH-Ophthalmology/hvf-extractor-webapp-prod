@@ -17,8 +17,6 @@ import re
 import sys
 from pathlib import Path
 from typing import Any, Iterable
-import numpy as np
-import cv2
 
 from app.services.normalise_pdf import normalise_pdf_header
 
@@ -254,7 +252,7 @@ def _iter_crop_boxes(coordinates: list[Any]) -> Iterable[tuple[int, int, int, in
         yield x_min, y_min, x_max, y_max
 
 
-def _ocr_texts(ocr_engine: Any, image: np.ndarray, box: tuple[int, int, int, int]) -> list[str]:
+def _ocr_texts(ocr_engine: Any, image: Any, box: tuple[int, int, int, int]) -> list[str]:
     x_min, y_min, x_max, y_max = box
     crop = image[y_min:y_max, x_min:x_max]
     if crop.size == 0:
@@ -326,7 +324,7 @@ def _assign_ocr_section(
     section_name: str,
     labels: list[str],
     coordinates: list[Any],
-    image: np.ndarray,
+    image: Any,
     ocr_engine: Any,
     strict: bool,
     normaliser: Any,
@@ -411,6 +409,9 @@ def extract_ocr(
         raise ModuleNotFoundError(
             "PaddleOCR is required for VRVF extraction. Install backend OCR dependencies first."
         ) from exc
+
+    import cv2
+    import numpy as np
 
     with _open_pdf_from_path_or_bytes(file) as doc:
         if len(doc) == 0:

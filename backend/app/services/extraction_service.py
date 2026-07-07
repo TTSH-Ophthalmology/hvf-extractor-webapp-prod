@@ -68,7 +68,7 @@ class ExtractionService:
                 detail="Unsupported report_type. Expected 'hvf' or 'vrvf'.",
             ) from exc
 
-        upload_dir = Path(settings.upload_dir)
+        upload_dir = settings.resolved_upload_dir
         matches = list(upload_dir.glob(f"{job_id}.*"))
 
         if not matches:

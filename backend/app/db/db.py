@@ -28,7 +28,7 @@ def _parse_timestamp(value: str | int | float) -> datetime:
 
 class TinyDbStore:
     def __init__(self, path: str | None = None):
-        db_path = Path(path or settings.database_path)
+        db_path = Path(path) if path else settings.resolved_database_path
         db_path.parent.mkdir(parents=True, exist_ok=True)
 
         self.db = TinyDB(db_path)

@@ -5,11 +5,41 @@ Uses pydantic-settings so every value is typed and validated at startup.
 Values are read from the .env file or the real environment.
 """
 
+from pathlib import Path
+import sys
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def resource_base_dir() -> Path:
+    """Return the directory that contains bundled runtime resources."""
+    if getattr(sys, "frozen", False):
+        return Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)).resolve()
+
+    return Path(__file__).resolve().parents[1]
+
+
+def runtime_base_dir() -> Path:
+    """Return the directory where the app can write runtime state."""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+
+    return resource_base_dir()
+
+
+def resolve_runtime_path(path: str) -> Path:
+    candidate = Path(path).expanduser()
+    if candidate.is_absolute():
+        return candidate
+
+    return runtime_base_dir() / candidate
+
+
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=resource_base_dir() / ".env",
+        env_file_encoding="utf-8",
+    )
 
     app_env: str = "development"
     app_host: str = "127.0.0.1"
@@ -36,6 +66,18 @@ class Settings(BaseSettings):
     admin_password_hash: str | None = None
     jwt_secret_key: str | None = None
     cookie_secure: bool = False
+
+    @property
+    def resolved_upload_dir(self) -> Path:
+        return resolve_runtime_path(self.upload_dir)
+
+    @property
+    def resolved_log_dir(self) -> Path:
+        return resolve_runtime_path(self.log_dir)
+
+    @property
+    def resolved_database_path(self) -> Path:
+        return resolve_runtime_path(self.database_path)
 
 
 settings = Settings()

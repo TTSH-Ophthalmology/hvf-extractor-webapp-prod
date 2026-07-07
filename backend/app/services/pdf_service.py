@@ -58,7 +58,7 @@ class PDFService:
             )
 
         # Ensure upload directory exists
-        upload_dir = Path(settings.upload_dir)
+        upload_dir = settings.resolved_upload_dir
         upload_dir.mkdir(parents=True, exist_ok=True)
 
         job_id = str(uuid.uuid4())
