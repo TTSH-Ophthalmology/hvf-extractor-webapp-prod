@@ -50,3 +50,6 @@ Thumbs.db
 .continue/
 *.ai-context
 backend/app/db/database.json
+
+# === Build Output ===
+dist-bundle/

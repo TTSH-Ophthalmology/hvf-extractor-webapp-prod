@@ -9,8 +9,11 @@ Responsibilities:
 Supported report types: hvf, vrvf
 """
 
+import gc
 import logging
+import time
 from pathlib import Path
+from uuid import UUID
 
 from fastapi import HTTPException
 
@@ -24,8 +27,6 @@ from app.services.pipeline import (
     extract_ocr,
     extract_pdf,
 )
-from uuid import UUID
-import os
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ class ExtractionService:
         """
         try:
             UUID(job_id)
-        except:
+        except (ValueError, AttributeError):
             raise HTTPException(
                 status_code=422,
                 detail="Invalid job_id."
@@ -116,11 +117,18 @@ class ExtractionService:
                 len(raw_data),
             )
 
-    #unlink pdf after extraction.
+        # unlink pdf after extraction.
+        # gc.collect() forces PyMuPDF's C-level file handles to be released
+        # before deletion — necessary on Windows where open handles block unlink.
+        gc.collect()
         try:
             file_path.unlink(missing_ok=True)
         except OSError:
-            logger.warning("Failed to delete uploaded file after extraction: %s", file_path)
+            time.sleep(0.2)
+            try:
+                file_path.unlink(missing_ok=True)
+            except OSError:
+                logger.warning("Failed to delete uploaded file after extraction: %s", file_path)
 
         return ExtractionResult(
             job_id=job_id,

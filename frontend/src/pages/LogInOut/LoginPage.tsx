@@ -32,7 +32,7 @@ export const LoginPage = () => {
       <section className="login-shell" aria-label="HVF Extractor login">
         <div className="login-hero" aria-hidden="true">
           <div className="login-hero-content">
-            <p className="login-eyebrow">Tan Tock Seng Hospital</p>
+            <p className="login-eyebrow">NHG Eye Institute</p>
             <h1>HVF Extractor</h1>
           </div>
         </div>

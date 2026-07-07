@@ -9,7 +9,7 @@
       "type": "debugpy",
       "request": "launch",
       "module": "uvicorn",
-      "args": ["app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000"],
+      "args": ["app.main:app", "--reload", "--host", "127.0.0.1", "--port", "8000", "--workers","2"],
       "cwd": "${workspaceFolder}/backend",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/backend"
