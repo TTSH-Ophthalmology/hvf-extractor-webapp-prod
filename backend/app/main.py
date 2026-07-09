@@ -15,6 +15,25 @@ from fastapi import Depends, FastAPI, Request, Response, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+
+class SPAStaticFiles(StaticFiles):
+    """StaticFiles subclass that serves index.html for any unmatched path.
+
+    StaticFiles(html=True) only falls back to index.html for directory roots.
+    For a React SPA, every unknown path (e.g. /token, /results/123) must
+    serve index.html so the client-side router can take over.
+    """
+
+    async def get_response(self, path: str, scope):
+        try:
+            return await super().get_response(path, scope)
+        except StarletteHTTPException as exc:
+            if exc.status_code == 404:
+                return await super().get_response("index.html", scope)
+            raise
 
 from app.config import settings
 from app.logging_config import setup_logging
@@ -33,7 +52,6 @@ from app.db.db import store
 from app.dependencies import get_current_user
 
 BASE_DIR = Path(__file__).resolve().parent
-FOLDER_PATH = BASE_DIR .parent/ "data/uploads"
 
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
@@ -44,11 +62,24 @@ REFRESH_COOKIE_PATH = "/api/refresh"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Validate and load OCR models before accepting requests.
+    # Fails fast with a clear message if download_models.py has not been run.
+    try:
+        import importlib
+        importlib.import_module("app.core.ocr")
+        logger.info("OCR models loaded successfully.")
+    except FileNotFoundError as exc:
+        logger.error("Startup aborted — OCR model missing: %s", exc)
+        raise
+
     yield
-    # clean up uploads folder before shutdown
-    for file in Path(FOLDER_PATH).iterdir():
-        if file.is_file():
-            file.unlink()
+
+    # Clean up uploads folder on shutdown.
+    upload_dir = Path(settings.upload_dir)
+    if upload_dir.is_dir():
+        for file in upload_dir.iterdir():
+            if file.is_file():
+                file.unlink(missing_ok=True)
 
 app = FastAPI(
     title="NHGEI HVF Extractor API",
@@ -321,6 +352,16 @@ app.include_router(extraction.router, prefix="/api",
 app.include_router(templates.router,  prefix="/api",
                    dependencies=api_dependencies)
 
+# ---------------------------------------------------------------------------
+# SPA static file serving — production bundle only.
+# Mounted LAST so all /api/* routes take precedence.
+# SPAStaticFiles falls back to index.html for any path not matching a real
+# file, enabling React Router deep-links (e.g. /token, /results/123).
+# ---------------------------------------------------------------------------
+STATIC_DIR = BASE_DIR.parent / "static"
+if STATIC_DIR.is_dir():
+    app.mount("/", SPAStaticFiles(directory=STATIC_DIR, html=True), name="static")
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -329,4 +370,5 @@ if __name__ == "__main__":
         host=settings.app_host,
         port=settings.app_port,
         reload=settings.app_env == "development",
+        workers=2
     )

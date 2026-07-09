@@ -16,7 +16,7 @@ Level is driven by the LOG_LEVEL env var (default INFO).
 In development you can set LOG_LEVEL=DEBUG in backend/.env to get verbose output.
 """
 
-import logging
+import logging, datetime
 import logging.config
 from pathlib import Path
 
@@ -34,7 +34,7 @@ def setup_logging(log_level: str = "INFO", log_dir: str = "./data/logs") -> None
 
     log_path = Path(log_dir)
     log_path.mkdir(parents=True, exist_ok=True)
-    log_file = str(log_path / "app.log")
+    log_file = str(log_path / f"{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.log")
 
     config: dict = {
         "version": 1,

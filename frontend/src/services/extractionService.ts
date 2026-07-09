@@ -17,6 +17,7 @@ export async function triggerExtraction(
   const response = await api.post<ExtractionResult>('/api/extract', null, {
     params: { job_id: jobId, eye, report_type: reportType },
     signal,
+    timeout: 0,
   })
   return response.data
 }
