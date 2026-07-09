@@ -3,24 +3,21 @@
 # Usage: .\start.ps1  (run from inside the unzipped dist-bundle\ folder)
 #
 # Run install.ps1 first if you haven't already.
-#
-# If you get an execution policy error, run once as admin:
-#   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 # =============================================================================
 
 $ErrorActionPreference = "Stop"
 
 $BUNDLE_DIR  = $PSScriptRoot
 $BACKEND_DIR = "$BUNDLE_DIR\backend"
-$VENV_PY     = "$BACKEND_DIR\.venv\Scripts\python.exe"
+$PYTHON_EXE  = "$BUNDLE_DIR\python\python.exe"
 
 function Fail($msg) { Write-Host "[error] $msg" -ForegroundColor Red; exit 1 }
 
 # -----------------------------------------------------------------------------
 # Pre-flight checks
 # -----------------------------------------------------------------------------
-if (-not (Test-Path $VENV_PY)) {
-    Fail "Virtual environment not found. Run install.ps1 first."
+if (-not (Test-Path $PYTHON_EXE)) {
+    Fail "Bundled Python not found. Re-run bundle.ps1 on the developer machine."
 }
 
 if (-not (Test-Path "$BACKEND_DIR\.env")) {
@@ -44,4 +41,4 @@ Write-Host ""
 # - all data/ paths in settings are relative to CWD
 Set-Location $BACKEND_DIR
 
-& $VENV_PY -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+& $PYTHON_EXE -m uvicorn app.main:app --host 127.0.0.1 --port 8000

@@ -14,6 +14,7 @@ VENV_DIR="$BACKEND_DIR/.venv"
 VENV_PY="$VENV_DIR/bin/python3"
 VENV_PIP="$VENV_DIR/bin/pip"
 WHEELS_DIR="$BUNDLE_DIR/wheels"
+SETUP_CREDENTIALS="$BUNDLE_DIR/setup_credentials.py"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 
@@ -71,62 +72,14 @@ step "Installing dependencies from bundled wheels (offline)"
 echo "  Dependencies installed."
 
 # -----------------------------------------------------------------------------
-# 4. Prompt for admin credentials
+# 4. Configure credentials and write .env
 # -----------------------------------------------------------------------------
 step "Configuring admin credentials"
 
-read -rp "  Enter admin username [default: admin]: " admin_user
-admin_user="${admin_user:-admin}"
-
-read -rsp "  Enter admin password: " admin_pass
-echo ""
-
-echo "  Hashing password..."
-# Pipe password via stdin to avoid exposing it in the process argument list
-admin_hash=$(printf '%s' "$admin_pass" | "$VENV_PY" -c "
-import sys
-from argon2 import PasswordHasher
-ph = PasswordHasher()
-print(ph.hash(sys.stdin.read()))
-")
-unset admin_pass
+"$VENV_PY" "$SETUP_CREDENTIALS" "$BACKEND_DIR"
 
 # -----------------------------------------------------------------------------
-# 5. Generate JWT secret
-# -----------------------------------------------------------------------------
-step "Generating JWT secret"
-
-jwt_secret=$("$VENV_PY" -c "import secrets; print(secrets.token_urlsafe(48))")
-echo "  JWT secret generated."
-
-# -----------------------------------------------------------------------------
-# 6. Write .env
-# -----------------------------------------------------------------------------
-step "Writing backend/.env"
-
-# Use printf to write each line — safe against special characters in variables.
-printf '%s\n' \
-    "APP_ENV=production" \
-    "APP_HOST=127.0.0.1" \
-    "APP_PORT=8000" \
-    "" \
-    "UPLOAD_DIR=./data/uploads" \
-    "LOG_LEVEL=INFO" \
-    "LOG_DIR=./data/logs" \
-    "DATABASE_PATH=./data/database.json" \
-    "" \
-    'CORS_ORIGINS=["http://127.0.0.1:8000"]' \
-    "" \
-    "ADMIN_USERNAME=$admin_user" \
-    "ADMIN_PASSWORD_HASH=$admin_hash" \
-    "JWT_SECRET_KEY=$jwt_secret" \
-    "COOKIE_SECURE=false" \
-    > "$BACKEND_DIR/.env"
-
-echo "  Written: $BACKEND_DIR/.env"
-
-# -----------------------------------------------------------------------------
-# 7. Create required data directories
+# 5. Create required data directories
 # -----------------------------------------------------------------------------
 step "Creating data directories"
 

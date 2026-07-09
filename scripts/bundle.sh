@@ -47,9 +47,21 @@ command -v python3 >/dev/null 2>&1 || fail "python3 not found in PATH."
 command -v node    >/dev/null 2>&1 || fail "node not found in PATH."
 command -v npm     >/dev/null 2>&1 || fail "npm not found in PATH."
 
-echo "  Python : $(python3 --version)"
+PY_VER_STR=$(python3 --version 2>&1)
+echo "  Python : $PY_VER_STR"
 echo "  Node   : $(node --version)"
 echo "  npm    : $(npm --version)"
+
+# Extract major.minor and ABI tag from the detected Python version.
+if [[ "$PY_VER_STR" =~ Python\ ([0-9]+)\.([0-9]+)\.([0-9]+) ]]; then
+    PY_MAJOR="${BASH_REMATCH[1]}"
+    PY_MINOR="${BASH_REMATCH[2]}"
+    PY_VERSION="$PY_MAJOR.$PY_MINOR"
+    PY_ABI="cp$PY_MAJOR$PY_MINOR"
+else
+    fail "Could not parse Python version from: $PY_VER_STR"
+fi
+echo "  Target  : Python $PY_VERSION / ABI $PY_ABI (auto-detected from dev machine)"
 
 # -----------------------------------------------------------------------------
 # 2. Detect platform for wheel download
@@ -107,15 +119,15 @@ if [ "$SKIP_WHEELS" = true ]; then
     WHEEL_COUNT=$(find "$WHEELS_DIR" -name "*.whl" | wc -l | tr -d ' ')
     echo "  Reusing $WHEEL_COUNT existing wheel(s)."
 else
-    step "Downloading Python wheels (platform: $PLATFORM, python: 3.11)"
+    step "Downloading Python wheels (platform: $PLATFORM, python: $PY_VERSION)"
     mkdir -p "$WHEELS_DIR"
 
     python3 -m pip download \
         --dest "$WHEELS_DIR" \
         --only-binary :all: \
         --platform "$PLATFORM" \
-        --python-version 3.11 \
-        --abi cp311 \
+        --python-version "$PY_VERSION" \
+        --abi "$PY_ABI" \
         -r "$ROOT_DIR/backend/requirements.txt"
 
     WHEEL_COUNT=$(find "$WHEELS_DIR" -name "*.whl" | wc -l | tr -d ' ')
@@ -215,14 +227,16 @@ cp -r "$ROOT_DIR/backend/data/templates/." "$BUNDLE_DIR/backend/data/templates/"
 
 cp -r "$ROOT_DIR/frontend/dist" "$BUNDLE_DIR/backend/static"
 
-cp "$ROOT_DIR/scripts/install.sh" "$BUNDLE_DIR/install.sh"
-cp "$ROOT_DIR/scripts/start.sh"   "$BUNDLE_DIR/start.sh"
+cp "$ROOT_DIR/scripts/install.sh"          "$BUNDLE_DIR/install.sh"
+cp "$ROOT_DIR/scripts/start.sh"            "$BUNDLE_DIR/start.sh"
+cp "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
 chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh"
 
 echo "  Bundle layout:"
 echo "    dist-bundle/"
 echo "      install.sh"
 echo "      start.sh"
+echo "      setup_credentials.py"
 echo "      wheels/              ($WHEEL_COUNT wheels)"
 echo "      backend/"
 echo "        app/"

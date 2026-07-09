@@ -1,9 +1,12 @@
 # =============================================================================
 # bundle.ps1 - Build and package the app for air-gapped deployment (Windows)
-# Usage: .\scripts\bundle.ps1 [-SkipWheels] [-SkipModels]
+# Usage: .\scripts\bundle.ps1 [-SkipWheels] [-SkipModels] [-TargetPythonVersion <x.y.z>]
 #
-#   -SkipWheels   Reuse wheels from a previous bundle run (skip download).
-#   -SkipModels   Reuse PaddleOCR models from a previous bundle run.
+#   -SkipWheels              Reuse wheels from a previous bundle run (skip download).
+#   -SkipModels              Reuse PaddleOCR models from a previous bundle run.
+#   -TargetPythonVersion     Full Python version on the TARGET machine, e.g. "3.13.4".
+#                            Defaults to the dev machine's Python version.
+#                            Use this when dev and target have different Python versions.
 #
 # Runs on the DEVELOPER machine (requires internet, Node.js, Python).
 # Produces: dist-bundle\ at the project root - zip and transfer to target.
@@ -14,7 +17,8 @@
 
 param(
     [switch]$SkipWheels,
-    [switch]$SkipModels
+    [switch]$SkipModels,
+    [string]$TargetPythonVersion = ""
 )
 
 $ErrorActionPreference = "Stop"
@@ -22,6 +26,7 @@ $ErrorActionPreference = "Stop"
 $ROOT_DIR   = (Resolve-Path "$PSScriptRoot\..").Path
 $BUNDLE_DIR = "$ROOT_DIR\dist-bundle"
 $WHEELS_DIR = "$BUNDLE_DIR\wheels"
+$PYTHON_DIR = "$BUNDLE_DIR\python"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
@@ -46,14 +51,35 @@ Write-Host "  Python : $pyVerStr"
 Write-Host "  Node   : $(node --version)"
 Write-Host "  npm    : $(npm --version)"
 
-# Detect Python version for wheel download (must match the TARGET machine's Python).
-if ($pyVerStr -match "Python (\d+)\.(\d+)") {
-    $PY_MAJOR   = $Matches[1]
-    $PY_MINOR   = $Matches[2]
-    $PY_VERSION = "$PY_MAJOR.$PY_MINOR"       # e.g. "3.12"
-    $PY_ABI     = "cp$PY_MAJOR$PY_MINOR"      # e.g. "cp312"
+# Detect Python version (full X.Y.Z needed for embeddable package download URL).
+if ($pyVerStr -match "Python (\d+)\.(\d+)\.(\d+)") {
+    $PY_MAJOR    = $Matches[1]
+    $PY_MINOR    = $Matches[2]
+    $PY_PATCH    = $Matches[3]
+    $PY_VERSION  = "$PY_MAJOR.$PY_MINOR"
+    $PY_FULL_VER = "$PY_MAJOR.$PY_MINOR.$PY_PATCH"
+    $PY_ABI      = "cp$PY_MAJOR$PY_MINOR"
 } else {
     Fail "Could not parse Python version from: $pyVerStr"
+}
+
+# Allow overriding when dev and target Python versions differ.
+# Requires full X.Y.Z — the patch version is needed for the embeddable download URL.
+if ($TargetPythonVersion -ne "") {
+    if ($TargetPythonVersion -match '^(\d+)\.(\d+)\.(\d+)$') {
+        $parts       = $TargetPythonVersion -split '\.'
+        $PY_MAJOR    = $parts[0]
+        $PY_MINOR    = $parts[1]
+        $PY_PATCH    = $parts[2]
+        $PY_VERSION  = "$($parts[0]).$($parts[1])"
+        $PY_FULL_VER = $TargetPythonVersion
+        $PY_ABI      = "cp$($parts[0])$($parts[1])"
+        Write-Host "  Target  : Python $PY_FULL_VER (overridden via -TargetPythonVersion)"
+    } else {
+        Fail "Invalid -TargetPythonVersion '$TargetPythonVersion'. Expected full version: '3.13.4'"
+    }
+} else {
+    Write-Host "  Target  : Python $PY_FULL_VER (auto-detected from dev machine)"
 }
 
 # -----------------------------------------------------------------------------
@@ -120,7 +146,41 @@ if ($SkipWheels) {
 }
 
 # -----------------------------------------------------------------------------
-# 5. Pre-download PaddleOCR models
+# 5. Download Python embeddable package
+# -----------------------------------------------------------------------------
+Step "Downloading Python $PY_FULL_VER embeddable package"
+
+$embedUrl = "https://www.python.org/ftp/python/$PY_FULL_VER/python-$PY_FULL_VER-embed-amd64.zip"
+$embedZip = "$BUNDLE_DIR\python-embed.zip"
+
+Write-Host "  Downloading: $embedUrl"
+Invoke-WebRequest -Uri $embedUrl -OutFile $embedZip -UseBasicParsing
+
+Write-Host "  Extracting to $PYTHON_DIR..."
+New-Item -ItemType Directory -Path $PYTHON_DIR -Force | Out-Null
+Expand-Archive -Path $embedZip -DestinationPath $PYTHON_DIR -Force
+Remove-Item $embedZip -Force
+
+# Enable site-packages by uncommenting '#import site' in the ._pth file.
+# The embeddable package ships with this line commented out, which prevents
+# pip-installed packages from being importable.
+$pthFile = Get-ChildItem "$PYTHON_DIR\*._pth" | Select-Object -First 1
+if (-not $pthFile) { Fail "Could not find ._pth file in embeddable package." }
+$pthContent = (Get-Content $pthFile.FullName) -replace '#import site', 'import site'
+[System.IO.File]::WriteAllLines($pthFile.FullName, $pthContent, [System.Text.UTF8Encoding]::new($false))
+Write-Host "  Enabled site-packages in $($pthFile.Name)"
+
+# Bootstrap pip into the embeddable Python.
+Write-Host "  Bootstrapping pip..."
+$getPipScript = "$env:TEMP\hvf_get_pip.py"
+Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPipScript -UseBasicParsing
+& "$PYTHON_DIR\python.exe" $getPipScript --no-warn-script-location --quiet
+if ($LASTEXITCODE -ne 0) { Fail "Failed to bootstrap pip into embeddable Python." }
+Remove-Item $getPipScript -Force -ErrorAction SilentlyContinue
+Write-Host "  Bundled Python ready: python $PY_FULL_VER + pip"
+
+# -----------------------------------------------------------------------------
+# 6. Pre-download PaddleOCR models
 # -----------------------------------------------------------------------------
 $MODELS_DIR = "$BUNDLE_DIR\backend\data\models"
 
@@ -205,7 +265,7 @@ try {
 }
 
 # -----------------------------------------------------------------------------
-# 6. Assemble bundle
+# 7. Assemble bundle
 # -----------------------------------------------------------------------------
 Step "Assembling bundle"
 
@@ -223,14 +283,17 @@ Copy-Item "$ROOT_DIR\backend\data\templates\*" "$BUNDLE_DIR\backend\data\templat
 Copy-Item "$ROOT_DIR\frontend\dist" "$BUNDLE_DIR\backend\static" -Recurse
 
 # Installer and launcher scripts
-Copy-Item "$ROOT_DIR\scripts\install.ps1" "$BUNDLE_DIR\install.ps1"
-Copy-Item "$ROOT_DIR\scripts\start.ps1"   "$BUNDLE_DIR\start.ps1"
+Copy-Item "$ROOT_DIR\scripts\install.bat"          "$BUNDLE_DIR\install.bat"
+Copy-Item "$ROOT_DIR\scripts\setup_credentials.py" "$BUNDLE_DIR\setup_credentials.py"
+Copy-Item "$ROOT_DIR\scripts\start.bat"            "$BUNDLE_DIR\start.bat"
 
 Write-Host "  Bundle layout:"
 Write-Host "    dist-bundle\"
-Write-Host "      install.ps1"
-Write-Host "      start.ps1"
+Write-Host "      install.bat"
+Write-Host "      start.bat"
+Write-Host "      setup_credentials.py"
 Write-Host "      wheels\              ($wheelCount wheels)"
+Write-Host "      python\              (Python $PY_FULL_VER embeddable + pip)"
 Write-Host "      backend\"
 Write-Host "        app\"
 Write-Host "        data\"
@@ -249,8 +312,14 @@ Write-Host "====================================================================
 Write-Host "  Bundle ready at: $BUNDLE_DIR" -ForegroundColor Green
 Write-Host "=============================================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "  Next steps:"
-Write-Host "    1. Zip dist-bundle\ and transfer to the target machine."
-Write-Host "    2. Unzip, then run:  .\install.ps1"
-Write-Host "    3. To start the app: .\start.ps1"
+Write-Host "  Next steps (air-gapped install on target machine):"
+Write-Host "    1. Copy the entire dist-bundle\ folder to the target machine (USB or zip)."
+Write-Host "    2. On the target machine, open a Command Prompt inside dist-bundle\."
+Write-Host "    3. Run:  install.bat"
+Write-Host "       (sets up dependencies, prompts for admin credentials)"
+Write-Host "    4. Run:  start.bat"
+Write-Host "       (launches the app at http://127.0.0.1:8000)"
+Write-Host ""
+Write-Host "    NOTE: No Python required on the target - Python $PY_FULL_VER is bundled."
+Write-Host "    NOTE: Built for target Python $PY_FULL_VER / win_amd64."
 Write-Host ""
