@@ -3,11 +3,12 @@
 # bundle.sh - Build and package the app for air-gapped deployment (Unix)
 # Usage: ./scripts/bundle.sh [--skip-wheels] [--skip-models]
 #
-#   --skip-wheels   Reuse wheels from a previous bundle run (skip download).
-#   --skip-models   Reuse PaddleOCR models from a previous bundle run.
+#   --skip-wheels   Reuse wheels already present in this version's bundle dir (skip download).
+#   --skip-models   Reuse PaddleOCR models already present in this version's bundle dir.
 #
 # Runs on the DEVELOPER machine (requires internet, Node.js, Python).
-# Produces: dist-bundle/ at the project root - tar/zip and transfer to target.
+# Produces: dist-bundle-<version>/ at the project root - tar/zip and transfer to target.
+# The version comes from the VERSION file at the project root.
 # =============================================================================
 
 set -euo pipefail
@@ -24,7 +25,8 @@ for arg in "$@"; do
 done
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BUNDLE_DIR="$ROOT_DIR/dist-bundle"
+APP_VERSION="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
+BUNDLE_DIR="$ROOT_DIR/dist-bundle-$APP_VERSION"
 WHEELS_DIR="$BUNDLE_DIR/wheels"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -35,7 +37,7 @@ fail() { echo -e "${RED}[error] $1${NC}"; exit 1; }
 
 echo ""
 echo -e "${CYAN}=============================================================================${NC}"
-echo -e "${CYAN}  NHGEI HVF Extractor - Air-Gapped Bundle Builder${NC}"
+echo -e "${CYAN}  NHGEI HVF Extractor - Air-Gapped Bundle Builder (v$APP_VERSION)${NC}"
 echo -e "${CYAN}=============================================================================${NC}"
 
 # -----------------------------------------------------------------------------
@@ -88,7 +90,7 @@ step "Cleaning previous bundle"
 
 if [ -d "$BUNDLE_DIR" ]; then
     rm -rf "$BUNDLE_DIR"
-    echo "  Removed existing dist-bundle/"
+    echo "  Removed existing $(basename "$BUNDLE_DIR")/"
 fi
 mkdir -p "$BUNDLE_DIR"
 
@@ -233,7 +235,7 @@ cp "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
 chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh"
 
 echo "  Bundle layout:"
-echo "    dist-bundle/"
+echo "    $(basename "$BUNDLE_DIR")/"
 echo "      install.sh"
 echo "      start.sh"
 echo "      setup_credentials.py"
@@ -256,9 +258,10 @@ echo -e "${GREEN}===============================================================
 echo -e "${GREEN}  Bundle ready at: $BUNDLE_DIR${NC}"
 echo -e "${GREEN}=============================================================================${NC}"
 echo ""
+BUNDLE_NAME="$(basename "$BUNDLE_DIR")"
 echo "  Next steps:"
-echo "    1. Archive and transfer:  tar -czf hvf-bundle.tar.gz dist-bundle/"
-echo "    2. On target machine:     tar -xzf hvf-bundle.tar.gz && cd dist-bundle"
+echo "    1. Archive and transfer:  tar -czf hvf-bundle-$APP_VERSION.tar.gz $BUNDLE_NAME/"
+echo "    2. On target machine:     tar -xzf hvf-bundle-$APP_VERSION.tar.gz && cd $BUNDLE_NAME"
 echo "    3. Install:               ./install.sh"
 echo "    4. Start:                 ./start.sh"
 echo ""

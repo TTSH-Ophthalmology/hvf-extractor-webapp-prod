@@ -2,14 +2,15 @@
 # bundle.ps1 - Build and package the app for air-gapped deployment (Windows)
 # Usage: .\scripts\bundle.ps1 [-SkipWheels] [-SkipModels] [-TargetPythonVersion <x.y.z>]
 #
-#   -SkipWheels              Reuse wheels from a previous bundle run (skip download).
-#   -SkipModels              Reuse PaddleOCR models from a previous bundle run.
+#   -SkipWheels              Reuse wheels already present in this version's bundle dir (skip download).
+#   -SkipModels              Reuse PaddleOCR models already present in this version's bundle dir.
 #   -TargetPythonVersion     Full Python version on the TARGET machine, e.g. "3.13.4".
 #                            Defaults to the dev machine's Python version.
 #                            Use this when dev and target have different Python versions.
 #
 # Runs on the DEVELOPER machine (requires internet, Node.js, Python).
-# Produces: dist-bundle\ at the project root - zip and transfer to target.
+# Produces: dist-bundle-<version>\ at the project root - zip and transfer to target.
+# The version comes from the VERSION file at the project root.
 #
 # If you get an execution policy error, run once as admin:
 #   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -23,10 +24,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$ROOT_DIR   = (Resolve-Path "$PSScriptRoot\..").Path
-$BUNDLE_DIR = "$ROOT_DIR\dist-bundle"
-$WHEELS_DIR = "$BUNDLE_DIR\wheels"
-$PYTHON_DIR = "$BUNDLE_DIR\python"
+$ROOT_DIR    = (Resolve-Path "$PSScriptRoot\..").Path
+$APP_VERSION = (Get-Content "$ROOT_DIR\VERSION" -Raw).Trim()
+$BUNDLE_DIR  = "$ROOT_DIR\dist-bundle-$APP_VERSION"
+$WHEELS_DIR  = "$BUNDLE_DIR\wheels"
+$PYTHON_DIR  = "$BUNDLE_DIR\python"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
@@ -34,7 +36,7 @@ function Fail($msg) { Write-Host "[error] $msg" -ForegroundColor Red; exit 1 }
 
 Write-Host ""
 Write-Host "=============================================================================" -ForegroundColor Cyan
-Write-Host "  NHGEI HVF Extractor - Air-Gapped Bundle Builder" -ForegroundColor Cyan
+Write-Host "  NHGEI HVF Extractor - Air-Gapped Bundle Builder (v$APP_VERSION)" -ForegroundColor Cyan
 Write-Host "=============================================================================" -ForegroundColor Cyan
 
 # -----------------------------------------------------------------------------
@@ -89,7 +91,7 @@ Step "Cleaning previous bundle"
 
 if (Test-Path $BUNDLE_DIR) {
     Remove-Item $BUNDLE_DIR -Recurse -Force
-    Write-Host "  Removed existing dist-bundle\"
+    Write-Host "  Removed existing $(Split-Path $BUNDLE_DIR -Leaf)\"
 }
 New-Item -ItemType Directory -Path $BUNDLE_DIR | Out-Null
 
@@ -284,13 +286,17 @@ Copy-Item "$ROOT_DIR\frontend\dist" "$BUNDLE_DIR\backend\static" -Recurse
 
 # Installer and launcher scripts
 Copy-Item "$ROOT_DIR\scripts\install.bat"          "$BUNDLE_DIR\install.bat"
+Copy-Item "$ROOT_DIR\scripts\install.ps1"          "$BUNDLE_DIR\install.ps1"
 Copy-Item "$ROOT_DIR\scripts\setup_credentials.py" "$BUNDLE_DIR\setup_credentials.py"
 Copy-Item "$ROOT_DIR\scripts\start.bat"            "$BUNDLE_DIR\start.bat"
+Copy-Item "$ROOT_DIR\scripts\start.ps1"            "$BUNDLE_DIR\start.ps1"
 
 Write-Host "  Bundle layout:"
-Write-Host "    dist-bundle\"
+Write-Host "    $(Split-Path $BUNDLE_DIR -Leaf)\"
 Write-Host "      install.bat"
+Write-Host "      install.ps1"
 Write-Host "      start.bat"
+Write-Host "      start.ps1"
 Write-Host "      setup_credentials.py"
 Write-Host "      wheels\              ($wheelCount wheels)"
 Write-Host "      python\              (Python $PY_FULL_VER embeddable + pip)"
@@ -313,8 +319,8 @@ Write-Host "  Bundle ready at: $BUNDLE_DIR" -ForegroundColor Green
 Write-Host "=============================================================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Next steps (air-gapped install on target machine):"
-Write-Host "    1. Copy the entire dist-bundle\ folder to the target machine (USB or zip)."
-Write-Host "    2. On the target machine, open a Command Prompt inside dist-bundle\."
+Write-Host "    1. Copy the entire $(Split-Path $BUNDLE_DIR -Leaf)\ folder to the target machine (USB or zip)."
+Write-Host "    2. On the target machine, open a Command Prompt inside $(Split-Path $BUNDLE_DIR -Leaf)\."
 Write-Host "    3. Run:  install.bat"
 Write-Host "       (sets up dependencies, prompts for admin credentials)"
 Write-Host "    4. Run:  start.bat"
