@@ -6,6 +6,7 @@
 
 import { CircleHelp, Settings } from 'lucide-react'
 import { RiEdit2Fill } from 'react-icons/ri'
+import { version } from '../../../../package.json'
 import './SidebarFooter.css'
 
 type SidebarFooterProps = {
@@ -55,6 +56,8 @@ export const SidebarFooter = ({
           <span className="nav-label">Settings</span>
         </button>
       </nav>
+
+      <div className="app-version">v{version}</div>
     </div>
   )
 }
