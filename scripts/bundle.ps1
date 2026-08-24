@@ -24,11 +24,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$ROOT_DIR    = (Resolve-Path "$PSScriptRoot\..").Path
-$APP_VERSION = (Get-Content "$ROOT_DIR\VERSION" -Raw).Trim()
-$BUNDLE_DIR  = "$ROOT_DIR\dist-bundle-$APP_VERSION"
-$WHEELS_DIR  = "$BUNDLE_DIR\wheels"
-$PYTHON_DIR  = "$BUNDLE_DIR\python"
+$ROOT_DIR    = (Resolve-Path "$PSScriptRoot/..").Path
+$APP_VERSION = (Get-Content "$ROOT_DIR/VERSION" -Raw).Trim()
+$BUNDLE_DIR  = "$ROOT_DIR/dist-bundle-$APP_VERSION"
+$WHEELS_DIR  = "$BUNDLE_DIR/wheels"
+$PYTHON_DIR  = "$BUNDLE_DIR/python"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
@@ -100,7 +100,7 @@ New-Item -ItemType Directory -Path $BUNDLE_DIR | Out-Null
 # -----------------------------------------------------------------------------
 Step "Building frontend (VITE_API_URL='' for same-origin relative API calls)"
 
-Set-Location "$ROOT_DIR\frontend"
+Set-Location "$ROOT_DIR/frontend"
 
 # Set VITE_API_URL to empty so all /api/* calls are relative to the serving
 # origin. This avoids hardcoding localhost:8000 into the bundle.
@@ -112,8 +112,8 @@ npm ci --silent
 Write-Host "  Running npm run build..."
 npm run build
 
-if (-not (Test-Path "$ROOT_DIR\frontend\dist\index.html")) {
-    Fail "Frontend build failed - dist\index.html not found."
+if (-not (Test-Path "$ROOT_DIR/frontend/dist/index.html")) {
+    Fail "Frontend build failed - dist/index.html not found."
 }
 Write-Host "  Frontend build successful."
 
@@ -125,25 +125,78 @@ if ($SkipWheels) {
     if (-not (Test-Path $WHEELS_DIR)) {
         Fail "No wheels found at $WHEELS_DIR - cannot skip. Run without -SkipWheels first."
     }
-    $wheelCount = (Get-ChildItem "$WHEELS_DIR\*.whl").Count
+    $wheelCount = (Get-ChildItem "$WHEELS_DIR/*.whl").Count
     Write-Host "  Reusing $wheelCount existing wheel(s)."
 } else {
     Step "Downloading Python wheels (platform: win_amd64, python: $PY_VERSION)"
     New-Item -ItemType Directory -Path $WHEELS_DIR -Force | Out-Null
 
+    # pip evaluates environment markers (e.g. sys_platform != "win32") against
+    # the machine RUNNING pip, not the --platform target - so on a non-Windows
+    # dev machine, a marker meant to exclude Windows-only packages like uvloop
+    # does NOT get skipped and pip download fails outright. Filter requirements.txt
+    # down to only entries valid for a win32 target before downloading.
+    $filterScript = [System.IO.Path]::GetTempFileName() + ".py"
+    @'
+import sys
+from pathlib import Path
+from packaging.requirements import Requirement
+
+env = {"sys_platform": "win32", "os_name": "nt", "platform_system": "Windows"}
+src, dst = Path(sys.argv[1]), Path(sys.argv[2])
+lines = src.read_text().splitlines()
+kept = []
+for line in lines:
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#"):
+        kept.append(line)
+        continue
+    try:
+        req = Requirement(stripped)
+    except Exception:
+        kept.append(line)
+        continue
+    if req.marker is None or req.marker.evaluate(env):
+        kept.append(line)
+dst.write_text("\n".join(kept) + "\n")
+print(f"  Filtered requirements for win32: {len(kept)} of {len(lines)} lines kept.")
+'@ | Set-Content -Path $filterScript -Encoding UTF8
+
+    $filteredReqs = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_requirements_win32.txt"
+    try {
+        python $filterScript "$ROOT_DIR/backend/requirements.txt" $filteredReqs
+        if ($LASTEXITCODE -ne 0) { Fail "Failed to filter requirements.txt for the win32 target (is 'packaging' installed?)." }
+    } finally {
+        Remove-Item $filterScript -Force -ErrorAction SilentlyContinue
+    }
+
     # --only-binary :all:  refuses sdists that require a compiler on the target.
+    # --no-deps: requirements.txt is already a fully-pinned lockfile (every
+    # runtime dependency has its own line), so we don't need pip's resolver to
+    # walk dependency graphs - and it must not, because when it does, it also
+    # evaluates OTHER packages' own extras/markers (e.g. uvicorn[standard]'s
+    # optional uvloop dependency) against the current (dev machine) interpreter
+    # rather than the win32 target, which fails the same way the top-level
+    # filtering above works around.
     # Python version is auto-detected from the current machine - the TARGET machine
     # must have the same Python major.minor version.
-    # Note: uvloop has marker sys_platform != "win32" so it is correctly skipped.
     python -m pip download `
         --dest "$WHEELS_DIR" `
         --only-binary :all: `
+        --no-deps `
         --platform win_amd64 `
         --python-version $PY_VERSION `
         --abi $PY_ABI `
-        -r "$ROOT_DIR\backend\requirements.txt"
+        -r $filteredReqs
+    $pipDownloadExit = $LASTEXITCODE
+    Remove-Item $filteredReqs -Force -ErrorAction SilentlyContinue
 
-    $wheelCount = (Get-ChildItem "$WHEELS_DIR\*.whl").Count
+    if ($pipDownloadExit -ne 0) {
+        Fail "pip download failed (exit $pipDownloadExit). See the output above for which package(s) have no win_amd64/$PY_ABI wheel available."
+    }
+
+    $wheelCount = (Get-ChildItem "$WHEELS_DIR/*.whl").Count
+    if ($wheelCount -eq 0) { Fail "pip download reported success but produced 0 wheels - something is wrong." }
     Write-Host "  Downloaded $wheelCount wheel(s)."
 }
 
@@ -153,10 +206,14 @@ if ($SkipWheels) {
 Step "Downloading Python $PY_FULL_VER embeddable package"
 
 $embedUrl = "https://www.python.org/ftp/python/$PY_FULL_VER/python-$PY_FULL_VER-embed-amd64.zip"
-$embedZip = "$BUNDLE_DIR\python-embed.zip"
+$embedZip = "$BUNDLE_DIR/python-embed.zip"
 
 Write-Host "  Downloading: $embedUrl"
-Invoke-WebRequest -Uri $embedUrl -OutFile $embedZip -UseBasicParsing
+try {
+    Invoke-WebRequest -Uri $embedUrl -OutFile $embedZip -UseBasicParsing
+} catch {
+    Fail "Could not download $embedUrl (Python.org does not publish Windows binaries for every patch release - try an older patch version via -TargetPythonVersion, e.g. the last one that has a python-X.Y.Z-embed-amd64.zip listed at https://www.python.org/ftp/python/)."
+}
 
 Write-Host "  Extracting to $PYTHON_DIR..."
 New-Item -ItemType Directory -Path $PYTHON_DIR -Force | Out-Null
@@ -166,38 +223,51 @@ Remove-Item $embedZip -Force
 # Enable site-packages by uncommenting '#import site' in the ._pth file.
 # The embeddable package ships with this line commented out, which prevents
 # pip-installed packages from being importable.
-$pthFile = Get-ChildItem "$PYTHON_DIR\*._pth" | Select-Object -First 1
+$pthFile = Get-ChildItem "$PYTHON_DIR/*._pth" | Select-Object -First 1
 if (-not $pthFile) { Fail "Could not find ._pth file in embeddable package." }
 $pthContent = (Get-Content $pthFile.FullName) -replace '#import site', 'import site'
 [System.IO.File]::WriteAllLines($pthFile.FullName, $pthContent, [System.Text.UTF8Encoding]::new($false))
 Write-Host "  Enabled site-packages in $($pthFile.Name)"
 
-# Bootstrap pip into the embeddable Python.
+# Bootstrap pip by unpacking pip's own wheel directly into site-packages,
+# using the DEV machine's Python to download it. pip is a pure-Python,
+# platform-independent package, so this works without ever executing the
+# bundled (Windows) python.exe - which the dev machine may not even be
+# able to run (e.g. when bundling from macOS/Linux for a Windows target).
 Write-Host "  Bootstrapping pip..."
-$getPipScript = "$env:TEMP\hvf_get_pip.py"
-Invoke-WebRequest -Uri "https://bootstrap.pypa.io/get-pip.py" -OutFile $getPipScript -UseBasicParsing
-& "$PYTHON_DIR\python.exe" $getPipScript --no-warn-script-location --quiet
-if ($LASTEXITCODE -ne 0) { Fail "Failed to bootstrap pip into embeddable Python." }
-Remove-Item $getPipScript -Force -ErrorAction SilentlyContinue
+$pipDownloadDir = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_pip_download"
+if (Test-Path $pipDownloadDir) { Remove-Item $pipDownloadDir -Recurse -Force }
+New-Item -ItemType Directory -Path $pipDownloadDir -Force | Out-Null
+
+python -m pip download pip --no-deps --dest $pipDownloadDir --quiet
+if ($LASTEXITCODE -ne 0) { Fail "Failed to download the pip wheel." }
+
+$pipWheel = Get-ChildItem "$pipDownloadDir/pip-*.whl" | Select-Object -First 1
+if (-not $pipWheel) { Fail "Could not find downloaded pip wheel." }
+
+$sitePackagesDir = "$PYTHON_DIR/Lib/site-packages"
+New-Item -ItemType Directory -Path $sitePackagesDir -Force | Out-Null
+Expand-Archive -Path $pipWheel.FullName -DestinationPath $sitePackagesDir -Force
+Remove-Item $pipDownloadDir -Recurse -Force
 Write-Host "  Bundled Python ready: python $PY_FULL_VER + pip"
 
 # -----------------------------------------------------------------------------
 # 6. Pre-download PaddleOCR models
 # -----------------------------------------------------------------------------
-$MODELS_DIR = "$BUNDLE_DIR\backend\data\models"
+$MODELS_DIR = "$BUNDLE_DIR/backend/data/models"
 
 if ($SkipModels) {
     Step "Skipping PaddleOCR model download (-SkipModels)"
-    if (-not (Test-Path "$MODELS_DIR\det") -or -not (Test-Path "$MODELS_DIR\rec")) {
+    if (-not (Test-Path "$MODELS_DIR/det") -or -not (Test-Path "$MODELS_DIR/rec")) {
         Fail "No models found at $MODELS_DIR - cannot skip. Run without -SkipModels first."
     }
-    $detFiles = (Get-ChildItem "$MODELS_DIR\det" -Recurse -File).Count
-    $recFiles = (Get-ChildItem "$MODELS_DIR\rec" -Recurse -File).Count
+    $detFiles = (Get-ChildItem "$MODELS_DIR/det" -Recurse -File).Count
+    $recFiles = (Get-ChildItem "$MODELS_DIR/rec" -Recurse -File).Count
     Write-Host "  Reusing existing models: det ($detFiles files), rec ($recFiles files)."
 } else {
     Step "Pre-downloading PaddleOCR models (det + rec, lang=en)"
-    New-Item -ItemType Directory -Path "$MODELS_DIR\det" -Force | Out-Null
-    New-Item -ItemType Directory -Path "$MODELS_DIR\rec" -Force | Out-Null
+    New-Item -ItemType Directory -Path "$MODELS_DIR/det" -Force | Out-Null
+    New-Item -ItemType Directory -Path "$MODELS_DIR/rec" -Force | Out-Null
 
     Write-Host "  Initialising PaddleOCR - this may take a few minutes on first run..."
 
@@ -258,8 +328,8 @@ try {
     Remove-Item $tempScript -Force -ErrorAction SilentlyContinue
 }
 
-    $detFiles = (Get-ChildItem "$MODELS_DIR\det" -Recurse -File).Count
-    $recFiles = (Get-ChildItem "$MODELS_DIR\rec" -Recurse -File).Count
+    $detFiles = (Get-ChildItem "$MODELS_DIR/det" -Recurse -File).Count
+    $recFiles = (Get-ChildItem "$MODELS_DIR/rec" -Recurse -File).Count
     if ($detFiles -eq 0 -or $recFiles -eq 0) {
         Fail "PaddleOCR model download appears incomplete (det=$detFiles files, rec=$recFiles files)."
     }
@@ -272,24 +342,24 @@ try {
 Step "Assembling bundle"
 
 # Backend source
-New-Item -ItemType Directory -Path "$BUNDLE_DIR\backend" -Force | Out-Null
-Copy-Item "$ROOT_DIR\backend\app"               "$BUNDLE_DIR\backend\app"  -Recurse -Force
-Copy-Item "$ROOT_DIR\backend\requirements.txt"  "$BUNDLE_DIR\backend\requirements.txt"
-Copy-Item "$ROOT_DIR\backend\.env.example"      "$BUNDLE_DIR\backend\.env.example"
+New-Item -ItemType Directory -Path "$BUNDLE_DIR/backend" -Force | Out-Null
+Copy-Item "$ROOT_DIR/backend/app"               "$BUNDLE_DIR/backend/app"  -Recurse -Force
+Copy-Item "$ROOT_DIR/backend/requirements.txt"  "$BUNDLE_DIR/backend/requirements.txt"
+Copy-Item "$ROOT_DIR/backend/.env.example"      "$BUNDLE_DIR/backend/.env.example"
 
 # Templates (required at runtime by the extraction pipeline)
-New-Item -ItemType Directory -Path "$BUNDLE_DIR\backend\data\templates" -Force | Out-Null
-Copy-Item "$ROOT_DIR\backend\data\templates\*" "$BUNDLE_DIR\backend\data\templates\" -Recurse
+New-Item -ItemType Directory -Path "$BUNDLE_DIR/backend/data/templates" -Force | Out-Null
+Copy-Item "$ROOT_DIR/backend/data/templates/*" "$BUNDLE_DIR/backend/data/templates/" -Recurse
 
 # Frontend build -> backend/static/ (served by FastAPI StaticFiles mount)
-Copy-Item "$ROOT_DIR\frontend\dist" "$BUNDLE_DIR\backend\static" -Recurse
+Copy-Item "$ROOT_DIR/frontend/dist" "$BUNDLE_DIR/backend/static" -Recurse
 
 # Installer and launcher scripts
-Copy-Item "$ROOT_DIR\scripts\install.bat"          "$BUNDLE_DIR\install.bat"
-Copy-Item "$ROOT_DIR\scripts\install.ps1"          "$BUNDLE_DIR\install.ps1"
-Copy-Item "$ROOT_DIR\scripts\setup_credentials.py" "$BUNDLE_DIR\setup_credentials.py"
-Copy-Item "$ROOT_DIR\scripts\start.bat"            "$BUNDLE_DIR\start.bat"
-Copy-Item "$ROOT_DIR\scripts\start.ps1"            "$BUNDLE_DIR\start.ps1"
+Copy-Item "$ROOT_DIR/scripts/install.bat"          "$BUNDLE_DIR/install.bat"
+Copy-Item "$ROOT_DIR/scripts/install.ps1"          "$BUNDLE_DIR/install.ps1"
+Copy-Item "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
+Copy-Item "$ROOT_DIR/scripts/start.bat"            "$BUNDLE_DIR/start.bat"
+Copy-Item "$ROOT_DIR/scripts/start.ps1"            "$BUNDLE_DIR/start.ps1"
 
 Write-Host "  Bundle layout:"
 Write-Host "    $(Split-Path $BUNDLE_DIR -Leaf)\"
