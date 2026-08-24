@@ -52,8 +52,18 @@ if (-not (Get-Command npm    -ErrorAction SilentlyContinue)) { Fail "npm not fou
 # directly on the dev machine to trigger the OCR model download (there is no
 # other way to obtain the model files). This is independent of the win_amd64
 # wheels downloaded later for the target; it never ships in the bundle itself.
-python -c "import paddleocr" 2>$null
-if ($LASTEXITCODE -ne 0) {
+#
+# Import can print harmless warnings to stderr. Windows PowerShell 5.1 (unlike
+# pwsh 7+) wraps ANY native-command stderr output as a RemoteException, which
+# $ErrorActionPreference = "Stop" then treats as fatal even when redirected to
+# $null - so temporarily relax it around this one call and rely on the exit
+# code instead.
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+python -c "import paddleocr" *> $null
+$paddleocrExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
+if ($paddleocrExit -ne 0) {
     Fail "paddleocr is not installed for 'python' on this machine. Install it first: pip install paddleocr==3.7.0 paddlepaddle==3.3.1 paddlex==3.7.1 (pins match backend/requirements.txt)."
 }
 
@@ -115,11 +125,20 @@ Set-Location "$ROOT_DIR/frontend"
 # origin. This avoids hardcoding localhost:8000 into the bundle.
 $env:VITE_API_URL = ""
 
+# npm prints warnings (deprecations, funding notices, etc.) to stderr routinely.
+# On Windows PowerShell 5.1, $ErrorActionPreference = "Stop" turns ANY native-
+# command stderr output into a fatal RemoteException, so relax it for these
+# calls and rely on the Test-Path check below instead.
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+
 Write-Host "  Running npm ci..."
 npm ci --silent
 
 Write-Host "  Running npm run build..."
 npm run build
+
+$ErrorActionPreference = $prevEAP
 
 if (-not (Test-Path "$ROOT_DIR/frontend/dist/index.html")) {
     Fail "Frontend build failed - dist/index.html not found."
@@ -139,6 +158,13 @@ if ($SkipWheels) {
 } else {
     Step "Downloading Python wheels (platform: win_amd64, python: $PY_VERSION)"
     New-Item -ItemType Directory -Path $WHEELS_DIR -Force | Out-Null
+
+    # pip/python can print warnings or tracebacks to stderr. On Windows
+    # PowerShell 5.1, $ErrorActionPreference = "Stop" turns ANY native-command
+    # stderr output into a fatal RemoteException before our own exit-code
+    # checks below ever run, so relax it for this block.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
 
     # pip evaluates environment markers (e.g. sys_platform != "win32") against
     # the machine RUNNING pip, not the --platform target - so on a non-Windows
@@ -199,6 +225,7 @@ print(f"  Filtered requirements for win32: {len(kept)} of {len(lines)} lines kep
         -r $filteredReqs
     $pipDownloadExit = $LASTEXITCODE
     Remove-Item $filteredReqs -Force -ErrorAction SilentlyContinue
+    $ErrorActionPreference = $prevEAP
 
     if ($pipDownloadExit -ne 0) {
         Fail "pip download failed (exit $pipDownloadExit). See the output above for which package(s) have no win_amd64/$PY_ABI wheel available."
@@ -248,8 +275,14 @@ $pipDownloadDir = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_pip_download"
 if (Test-Path $pipDownloadDir) { Remove-Item $pipDownloadDir -Recurse -Force }
 New-Item -ItemType Directory -Path $pipDownloadDir -Force | Out-Null
 
+# Relax $ErrorActionPreference for this native call too - see the note above
+# the wheel download step for why (Windows PowerShell 5.1 + native stderr).
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 python -m pip download pip --no-deps --dest $pipDownloadDir --quiet
-if ($LASTEXITCODE -ne 0) { Fail "Failed to download the pip wheel." }
+$pipSelfDownloadExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
+if ($pipSelfDownloadExit -ne 0) { Fail "Failed to download the pip wheel." }
 
 $pipWheel = Get-ChildItem "$pipDownloadDir/pip-*.whl" | Select-Object -First 1
 if (-not $pipWheel) { Fail "Could not find downloaded pip wheel." }
@@ -331,11 +364,20 @@ shutil.copytree(str(rec_src), str(models_dir / "rec"), dirs_exist_ok=True)
 print("PaddleOCR models ready.")
 '@ | Set-Content -Path $tempScript -Encoding UTF8
 
+# PaddlePaddle/PaddleOCR print harmless warnings (e.g. "no ccache found") to
+# stderr during init. On Windows PowerShell 5.1, $ErrorActionPreference = "Stop"
+# turns ANY native-command stderr output into a fatal RemoteException, so
+# relax it for this call and check the exit code explicitly instead.
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
 try {
     python $tempScript "$MODELS_DIR"
+    $modelScriptExit = $LASTEXITCODE
 } finally {
+    $ErrorActionPreference = $prevEAP
     Remove-Item $tempScript -Force -ErrorAction SilentlyContinue
 }
+if ($modelScriptExit -ne 0) { Fail "PaddleOCR model download failed (exit $modelScriptExit)." }
 
     $detFiles = (Get-ChildItem "$MODELS_DIR/det" -Recurse -File).Count
     $recFiles = (Get-ChildItem "$MODELS_DIR/rec" -Recurse -File).Count
