@@ -3,6 +3,8 @@
 A web application for extracting structured data from Humphrey Visual Field (HVF)
 test PDF reports and exporting the values as CSV files.
 
+**Version:** see [VERSION](./VERSION) · **Changes:** see [CHANGELOG.md](./CHANGELOG.md)
+
 ## What It Does
 
 1. **Upload** — Clinician uploads one or more HVF PDF reports
@@ -110,3 +112,4 @@ transfer options, and configuration notes.
 - [docs/SETUP.md](./docs/SETUP.md) — full environment setup and tools required
 - [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — branching strategy, code conventions, MVC rules
 - [docs/AIRGAPPED-DEPLOY.md](./docs/AIRGAPPED-DEPLOY.md) — air-gapped deployment guide
+- [CHANGELOG.md](./CHANGELOG.md) — release history
