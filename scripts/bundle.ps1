@@ -133,15 +133,26 @@ $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 
 Write-Host "  Running npm ci..."
-npm ci --silent
+npm ci
+$npmCiExit = $LASTEXITCODE
+
+if ($npmCiExit -ne 0) {
+    $ErrorActionPreference = $prevEAP
+    Fail "npm ci failed (exit $npmCiExit). See the npm output above for the actual error."
+}
 
 Write-Host "  Running npm run build..."
 npm run build
+$npmBuildExit = $LASTEXITCODE
 
 $ErrorActionPreference = $prevEAP
 
+if ($npmBuildExit -ne 0) {
+    Fail "npm run build failed (exit $npmBuildExit). See the output above for the actual error."
+}
+
 if (-not (Test-Path "$ROOT_DIR/frontend/dist/index.html")) {
-    Fail "Frontend build failed - dist/index.html not found."
+    Fail "npm run build reported success but dist/index.html was not found."
 }
 Write-Host "  Frontend build successful."
 
