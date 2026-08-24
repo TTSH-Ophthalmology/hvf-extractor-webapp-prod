@@ -299,8 +299,16 @@ $pipWheel = Get-ChildItem "$pipDownloadDir/pip-*.whl" | Select-Object -First 1
 if (-not $pipWheel) { Fail "Could not find downloaded pip wheel." }
 
 $sitePackagesDir = "$PYTHON_DIR/Lib/site-packages"
+if (Test-Path $sitePackagesDir) { Remove-Item $sitePackagesDir -Recurse -Force }
 New-Item -ItemType Directory -Path $sitePackagesDir -Force | Out-Null
-Expand-Archive -Path $pipWheel.FullName -DestinationPath $sitePackagesDir -Force
+
+# Expand-Archive validates the file EXTENSION and refuses anything that isn't
+# literally named .zip - a .whl is a zip file under a different extension, so
+# extract by content via .NET instead (extension-agnostic, works on both
+# Windows PowerShell 5.1 and pwsh 7+).
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[System.IO.Compression.ZipFile]::ExtractToDirectory($pipWheel.FullName, $sitePackagesDir)
+
 Remove-Item $pipDownloadDir -Recurse -Force
 Write-Host "  Bundled Python ready: python $PY_FULL_VER + pip"
 
