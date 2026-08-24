@@ -1,6 +1,6 @@
 # =============================================================================
 # install.ps1 - Set up the HVF Extractor on an air-gapped Windows machine
-# Usage: .\install.ps1  (run from inside the unzipped dist-bundle\ folder)
+# Usage: .\install.ps1  (run from inside the unzipped dist-bundle-<version>\ folder)
 #
 # No Python installation required - a Python runtime is bundled in python\
 #
@@ -87,5 +87,5 @@ Write-Host ""
 Write-Host "  To start the application, run:"
 Write-Host "    .\start.ps1"
 Write-Host ""
-Write-Host "  Then open your browser at: http://127.0.0.1:8000"
+Write-Host "  Your browser will open automatically at: http://127.0.0.1:8000"
 Write-Host ""

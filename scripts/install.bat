@@ -1,7 +1,7 @@
 @echo off
 :: =============================================================================
 :: install.bat - Set up the HVF Extractor on an air-gapped Windows machine
-:: Usage: install.bat  (run from inside the dist-bundle\ folder)
+:: Usage: install.bat  (run from inside the dist-bundle-<version>\ folder)
 ::
 :: No Python installation required - a Python runtime is bundled in python\
 :: =============================================================================
@@ -99,7 +99,7 @@ echo.
 echo   To start the application, run:
 echo     start.bat
 echo.
-echo   Then open your browser at: http://127.0.0.1:8000
+echo   Your browser will open automatically at: http://127.0.0.1:8000
 echo.
 
 endlocal
