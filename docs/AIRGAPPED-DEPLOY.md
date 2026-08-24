@@ -32,14 +32,14 @@ From the project root:
 .\scripts\bundle.ps1
 ```
 
-This produces `dist-bundle\` at the project root. Copy the entire folder to the target machine (USB drive, network share, or zip it first).
+This produces `dist-bundle-<version>\` at the project root, where `<version>` is read from the [VERSION](../VERSION) file (e.g. `dist-bundle-1.2.0\`). Copy the entire folder to the target machine (USB drive, network share, or zip it first).
 
 **Optional flags:**
 
 | Flag | Description |
 |---|---|
-| `-SkipWheels` | Reuse wheels from a previous bundle run |
-| `-SkipModels` | Reuse PaddleOCR models from a previous bundle run |
+| `-SkipWheels` | Reuse wheels already present in this version's bundle dir |
+| `-SkipModels` | Reuse PaddleOCR models already present in this version's bundle dir |
 | `-TargetPythonVersion X.Y.Z` | Override the Python version when dev and target differ |
 
 Example — target machine has Python 3.12.9 but dev machine has a different version:
@@ -47,18 +47,18 @@ Example — target machine has Python 3.12.9 but dev machine has a different ver
 .\scripts\bundle.ps1 -TargetPythonVersion 3.12.9
 ```
 
-> **Python version matching:** Binary wheels (PyMuPDF, PaddlePaddle, aiohttp, etc.) are ABI-specific. The bundle auto-detects the dev machine's Python version and downloads matching wheels. If your target machine uses the bundled Python (default), the ABI always matches. If you use `install_312.bat` with your own Python, ensure the bundle was built targeting that version.
+> **Python version matching:** Binary wheels (PyMuPDF, PaddlePaddle, aiohttp, etc.) are ABI-specific. The bundle auto-detects the dev machine's Python version and downloads matching wheels. Since the bundled Python runtime always ships alongside the wheels, the ABI always matches — use `-TargetPythonVersion` when the target machine needs a different Python version than your dev machine.
 
 **To zip before transfer:**
 ```powershell
-Compress-Archive -Path dist-bundle -DestinationPath hvf-bundle.zip
+Compress-Archive -Path dist-bundle-1.2.0 -DestinationPath hvf-bundle-1.2.0.zip
 ```
 
 ---
 
 ### Step 2 — Install (target machine)
 
-Open a Command Prompt inside the unzipped `dist-bundle\` folder and run:
+Open a Command Prompt inside the unzipped `dist-bundle-<version>\` folder and run:
 
 ```cmd
 install.bat
@@ -93,26 +93,7 @@ Or with PowerShell:
 .\start.ps1
 ```
 
-Open your browser at `http://127.0.0.1:8000`.
-
----
-
-### Using an existing Python 3.12 installation
-
-If the target machine already has Python 3.12 installed at a known path (e.g. an embeddable package), use the `_312` variants instead.
-
-1. Open `install_312.bat` and `start_312.bat` in a text editor.
-2. Change the `PYTHON_EXE` line at the top to match the path on the target machine:
-   ```batch
-   set PYTHON_EXE=C:\Python312\python.exe
-   ```
-3. Run:
-   ```cmd
-   install_312.bat
-   start_312.bat
-   ```
-
-> Make sure the bundle was built with `-TargetPythonVersion` matching that Python version (e.g. `3.12.9`).
+Your browser opens automatically at `http://127.0.0.1:8000` once the app is ready.
 
 ---
 
@@ -136,7 +117,7 @@ The script auto-detects your platform and Python version. Supported targets:
 
 **To archive before transfer:**
 ```bash
-tar -czf hvf-bundle.tar.gz dist-bundle/
+tar -czf hvf-bundle-1.2.0.tar.gz dist-bundle-1.2.0/
 ```
 
 **Optional flags:** `--skip-wheels`, `--skip-models`
@@ -166,20 +147,18 @@ This will:
 ./start.sh
 ```
 
-Open your browser at `http://127.0.0.1:8000`.
+Your browser opens automatically at `http://127.0.0.1:8000` once the app is ready.
 
 ---
 
 ## Bundle layout
 
 ```
-dist-bundle\
+dist-bundle-<version>\
   install.bat              ← Windows installer (Command Prompt)
   install.ps1              ← Windows installer (PowerShell)
-  install_312.bat          ← Windows installer using existing Python 3.12
   start.bat                ← Windows launcher (Command Prompt)
   start.ps1                ← Windows launcher (PowerShell)
-  start_312.bat            ← Windows launcher using existing Python 3.12
   setup_credentials.py     ← Called by install scripts to set credentials
   install.sh               ← Linux/macOS installer
   start.sh                 ← Linux/macOS launcher
@@ -202,7 +181,7 @@ dist-bundle\
 
 After the initial install, only `start.bat` / `start.ps1` / `start.sh` is needed. The `.env` persists between runs.
 
-Open your browser at `http://127.0.0.1:8000` after starting.
+Your browser opens automatically at `http://127.0.0.1:8000` after starting.
 
 ---
 
@@ -235,4 +214,4 @@ The bundle includes pre-downloaded PaddleOCR models (`data\models\det\` and `dat
 
 **Re-bundling after code changes**
 
-Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist-bundle\` first. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed.
+Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist-bundle-<version>\` first. If you also bumped `VERSION`, the previous version's bundle dir is left untouched on disk — remove it manually if you don't need it. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed (only works when re-running against the same, not-yet-deleted version's bundle dir).
