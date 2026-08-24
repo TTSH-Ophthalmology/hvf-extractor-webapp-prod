@@ -9,6 +9,8 @@ Deploy the HVF Extractor to a machine with no internet access, no Node.js, and n
 ### Developer machine (builds the bundle)
 - Python 3.11+ (3.12+ recommended)
 - Node.js 20+ and npm
+- `paddleocr`, `paddlepaddle`, `paddlex` installed for that Python (pins match `backend/requirements.txt`: `pip install paddleocr==3.7.0 paddlepaddle==3.3.1 paddlex==3.7.1`). The bundle script runs `paddleocr` locally to trigger the OCR model download, this is separate from the wheels that go into the bundle itself.
+- On macOS/Linux, PowerShell Core (`pwsh`) is needed to run `bundle.ps1` (`brew install powershell`); on Windows, the built-in PowerShell is enough
 - Internet access
 
 ### Target machine (Windows)

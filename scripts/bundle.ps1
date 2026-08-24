@@ -48,6 +48,15 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) { Fail "Python not 
 if (-not (Get-Command node   -ErrorAction SilentlyContinue)) { Fail "Node.js not found in PATH." }
 if (-not (Get-Command npm    -ErrorAction SilentlyContinue)) { Fail "npm not found in PATH." }
 
+# paddleocr must be importable by the LOCAL 'python' - step 6 below runs it
+# directly on the dev machine to trigger the OCR model download (there is no
+# other way to obtain the model files). This is independent of the win_amd64
+# wheels downloaded later for the target; it never ships in the bundle itself.
+python -c "import paddleocr" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    Fail "paddleocr is not installed for 'python' on this machine. Install it first: pip install paddleocr==3.7.0 paddlepaddle==3.3.1 paddlex==3.7.1 (pins match backend/requirements.txt)."
+}
+
 $pyVerStr = python --version 2>&1
 Write-Host "  Python : $pyVerStr"
 Write-Host "  Node   : $(node --version)"
@@ -66,7 +75,7 @@ if ($pyVerStr -match "Python (\d+)\.(\d+)\.(\d+)") {
 }
 
 # Allow overriding when dev and target Python versions differ.
-# Requires full X.Y.Z — the patch version is needed for the embeddable download URL.
+# Requires full X.Y.Z, the patch version is needed for the embeddable download URL.
 if ($TargetPythonVersion -ne "") {
     if ($TargetPythonVersion -match '^(\d+)\.(\d+)\.(\d+)$') {
         $parts       = $TargetPythonVersion -split '\.'
