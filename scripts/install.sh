@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # install.sh - Set up the HVF Extractor on an air-gapped Unix machine
-# Usage: ./install.sh  (run from inside the unzipped dist-bundle/ folder)
+# Usage: ./install.sh  (run from inside the unzipped dist-bundle-<version>/ folder)
 #
 # Requirements: Python 3.11+ installed and on PATH. No internet needed.
 # =============================================================================
@@ -67,7 +67,10 @@ step "Installing dependencies from bundled wheels (offline)"
 "$VENV_PIP" install \
     --no-index \
     --find-links "$WHEELS_DIR" \
-    -r "$BACKEND_DIR/requirements.txt"
+    -r "$BACKEND_DIR/requirements.txt" \
+    --no-warn-script-location \
+    --quiet \
+    || fail "pip install failed. The wheels may not match the venv's Python version."
 
 echo "  Dependencies installed."
 
@@ -76,7 +79,7 @@ echo "  Dependencies installed."
 # -----------------------------------------------------------------------------
 step "Configuring admin credentials"
 
-"$VENV_PY" "$SETUP_CREDENTIALS" "$BACKEND_DIR"
+"$VENV_PY" "$SETUP_CREDENTIALS" "$BACKEND_DIR" || fail "Credential setup failed."
 
 # -----------------------------------------------------------------------------
 # 5. Create required data directories
@@ -104,5 +107,5 @@ echo ""
 echo "  To start the application, run:"
 echo "    ./start.sh"
 echo ""
-echo "  Then open your browser at: http://127.0.0.1:8000"
+echo "  Your browser will open automatically at: http://127.0.0.1:8000"
 echo ""
