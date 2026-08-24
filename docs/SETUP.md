@@ -6,7 +6,7 @@
 |------|---------|---------|
 | Python | 3.11+ | https://python.org or `pyenv` |
 | Node.js | 20+ (LTS) | https://nodejs.org or `nvm` |
-| npm | 10+ (bundled with Node 20) | — |
+| npm | 10+ (bundled with Node 20) | n/a |
 | Git | 2.40+ | https://git-scm.com |
 
 ### Optional but recommended
@@ -165,8 +165,8 @@ VITE_API_URL=http://localhost:8000
 ```
 hvf-extractor-webapp-prod/
 ├── docs/       Developer documentation
-├── backend/    FastAPI app (Python)  — MVC: models/, routers/, services/
-└── frontend/   React app (Vite)      — MVC: models/, components|pages/, hooks|services/
+├── backend/    FastAPI app (Python)  - MVC: models/, routers/, services/
+└── frontend/   React app (Vite)      - MVC: models/, components|pages/, hooks|services/
 ```
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for a full explanation of the MVC conventions.

@@ -3,11 +3,11 @@
 ## Branching Strategy
 
 ```
-main        — production-ready code only; merges via PR from dev
-dev         — integration branch; all feature/fix branches target this
-feature/*   — new features          (branch from dev)
-fix/*       — bug fixes             (branch from dev)
-chore/*     — tooling, deps, docs   (branch from dev)
+main        - production-ready code only; merges via PR from dev
+dev         - integration branch; all feature/fix branches target this
+feature/*   - new features          (branch from dev)
+fix/*       - bug fixes             (branch from dev)
+chore/*     - tooling, deps, docs   (branch from dev)
 ```
 
 ## Workflow
@@ -60,7 +60,7 @@ pytest
 
 - **Formatter:** Prettier
 - **Linter:** ESLint with TypeScript plugin
-- All React components must be typed — no implicit `any`
+- All React components must be typed, no implicit `any`
 - Custom hooks must start with `use`
 
 ```bash
@@ -96,11 +96,11 @@ npm run test
 
 Follow these steps in order so both layers stay in sync:
 
-1. **Backend model** — add the field to `backend/app/models/extraction.py`
-2. **Backend service** — implement parsing logic in `backend/app/services/extraction_service.py`
-3. **Backend test** — add a test case in `backend/tests/test_extraction_service.py`
-4. **Frontend model** — mirror the new field in `frontend/src/models/extraction.ts`
-5. **Frontend view** — display it in `frontend/src/components/extraction/ExtractionTable.tsx`
+1. **Backend model**: add the field to `backend/app/models/extraction.py`
+2. **Backend service**: implement parsing logic in `backend/app/services/extraction_service.py`
+3. **Backend test**: add a test case in `backend/tests/test_extraction_service.py`
+4. **Frontend model**: mirror the new field in `frontend/src/models/extraction.ts`
+5. **Frontend view**: display it in `frontend/src/components/extraction/ResultExtractionDataPreview/ResultExtractionDataPreview.tsx`
 
 ---
 

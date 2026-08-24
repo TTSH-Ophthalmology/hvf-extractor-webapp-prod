@@ -7,16 +7,16 @@ test PDF reports and exporting the values as CSV files.
 
 ## What It Does
 
-1. **Upload** — Clinician uploads one or more HVF PDF reports
-2. **Extract** — Backend parses the PDF and extracts key visual field values
-3. **Review** — User reviews and optionally edits the extracted data in-browser
-4. **Export** — Download the final data as a CSV file
+1. **Upload**: Clinician uploads one or more HVF PDF reports
+2. **Extract**: Backend parses the PDF and extracts key visual field values
+3. **Review**: User reviews and optionally edits the extracted data in-browser
+4. **Export**: Download the final data as a CSV file
 
 ## Architecture
 
 ```
-frontend/   React + TypeScript (Vite)   — user interface
-backend/    FastAPI (Python 3.11+)       — PDF processing API
+frontend/   React + TypeScript (Vite)   - user interface
+backend/    FastAPI (Python 3.11+)       - PDF processing API
 scripts/    Build and deployment scripts
 docs/       Documentation
 ```
@@ -68,7 +68,7 @@ bash scripts/setup.sh
 
 For deployment on machines with no internet access. The bundle includes a pre-built
 frontend, all Python dependencies, PaddleOCR models, and a self-contained Python
-runtime — the target machine needs nothing pre-installed (Windows).
+runtime, so the target machine needs nothing pre-installed (Windows).
 
 ### Build the bundle (developer machine)
 
@@ -83,13 +83,13 @@ runtime — the target machine needs nothing pre-installed (Windows).
 ### Install and run (target machine)
 
 ```cmd
-# Windows — Command Prompt
+# Windows (Command Prompt)
 install.bat
 start.bat
 ```
 
 ```powershell
-# Windows — PowerShell
+# Windows (PowerShell)
 .\install.ps1
 .\start.ps1
 ```
@@ -100,7 +100,7 @@ start.bat
 ./start.sh
 ```
 
-Open your browser at `http://127.0.0.1:8000`.
+Your browser opens automatically at `http://127.0.0.1:8000` once the app is ready.
 
 See [docs/AIRGAPPED-DEPLOY.md](./docs/AIRGAPPED-DEPLOY.md) for full instructions,
 transfer options, and configuration notes.
@@ -109,7 +109,7 @@ transfer options, and configuration notes.
 
 ## Docs
 
-- [docs/SETUP.md](./docs/SETUP.md) — full environment setup and tools required
-- [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — branching strategy, code conventions, MVC rules
-- [docs/AIRGAPPED-DEPLOY.md](./docs/AIRGAPPED-DEPLOY.md) — air-gapped deployment guide
-- [CHANGELOG.md](./CHANGELOG.md) — release history
+- [docs/SETUP.md](./docs/SETUP.md): full environment setup and tools required
+- [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md): branching strategy, code conventions, MVC rules
+- [docs/AIRGAPPED-DEPLOY.md](./docs/AIRGAPPED-DEPLOY.md): air-gapped deployment guide
+- [CHANGELOG.md](./CHANGELOG.md): release history

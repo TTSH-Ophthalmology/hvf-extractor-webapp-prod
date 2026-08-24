@@ -11,12 +11,12 @@ Deploy the HVF Extractor to a machine with no internet access, no Node.js, and n
 - Node.js 20+ and npm
 - Internet access
 
-### Target machine — Windows
+### Target machine (Windows)
 - Windows 10 / 11 (64-bit)
-- **No Python required** — a Python runtime is bundled inside `python\`
+- **No Python required**: a Python runtime is bundled inside `python\`
 - No internet required
 
-### Target machine — Linux / macOS
+### Target machine (Linux / macOS)
 - Python 3.11+ installed and on `PATH`
 - No internet required
 
@@ -24,7 +24,7 @@ Deploy the HVF Extractor to a machine with no internet access, no Node.js, and n
 
 ## Windows
 
-### Step 1 — Build the Bundle (developer machine)
+### Step 1: Build the Bundle (developer machine)
 
 From the project root:
 
@@ -42,12 +42,12 @@ This produces `dist-bundle-<version>\` at the project root, where `<version>` is
 | `-SkipModels` | Reuse PaddleOCR models already present in this version's bundle dir |
 | `-TargetPythonVersion X.Y.Z` | Override the Python version when dev and target differ |
 
-Example — target machine has Python 3.12.9 but dev machine has a different version:
+Example: target machine has Python 3.12.9 but dev machine has a different version:
 ```powershell
 .\scripts\bundle.ps1 -TargetPythonVersion 3.12.9
 ```
 
-> **Python version matching:** Binary wheels (PyMuPDF, PaddlePaddle, aiohttp, etc.) are ABI-specific. The bundle auto-detects the dev machine's Python version and downloads matching wheels. Since the bundled Python runtime always ships alongside the wheels, the ABI always matches — use `-TargetPythonVersion` when the target machine needs a different Python version than your dev machine.
+> **Python version matching:** Binary wheels (PyMuPDF, PaddlePaddle, aiohttp, etc.) are ABI-specific. The bundle auto-detects the dev machine's Python version and downloads matching wheels. Since the bundled Python runtime always ships alongside the wheels, the ABI always matches, so use `-TargetPythonVersion` when the target machine needs a different Python version than your dev machine.
 
 **To zip before transfer:**
 ```powershell
@@ -56,7 +56,7 @@ Compress-Archive -Path dist-bundle-1.2.0 -DestinationPath hvf-bundle-1.2.0.zip
 
 ---
 
-### Step 2 — Install (target machine)
+### Step 2: Install (target machine)
 
 Open a Command Prompt inside the unzipped `dist-bundle-<version>\` folder and run:
 
@@ -66,7 +66,7 @@ install.bat
 
 This will:
 1. Verify the bundled Python runtime (`python\python.exe`)
-2. Install all dependencies from bundled wheels — no internet needed
+2. Install all dependencies from bundled wheels (no internet needed)
 3. Prompt for an admin username and password
 4. Write `backend\.env` with all configuration
 5. Create required data directories (`data\uploads\`, `data\logs\`)
@@ -82,7 +82,7 @@ This will:
 
 ---
 
-### Step 3 — Run (target machine)
+### Step 3: Run (target machine)
 
 ```cmd
 start.bat
@@ -99,7 +99,7 @@ Your browser opens automatically at `http://127.0.0.1:8000` once the app is read
 
 ## Linux / macOS
 
-### Step 1 — Build the Bundle (developer machine)
+### Step 1: Build the Bundle (developer machine)
 
 ```bash
 chmod +x scripts/bundle.sh
@@ -124,7 +124,7 @@ tar -czf hvf-bundle-1.2.0.tar.gz dist-bundle-1.2.0/
 
 ---
 
-### Step 2 — Install (target machine)
+### Step 2: Install (target machine)
 
 ```bash
 chmod +x install.sh
@@ -134,14 +134,14 @@ chmod +x install.sh
 This will:
 1. Verify Python 3.11+ is on `PATH`
 2. Create a virtual environment at `backend/.venv/`
-3. Install all dependencies from bundled wheels — no internet needed
+3. Install all dependencies from bundled wheels (no internet needed)
 4. Prompt for an admin username and password
 5. Write `backend/.env` with all configuration
 6. Create required data directories
 
 ---
 
-### Step 3 — Run (target machine)
+### Step 3: Run (target machine)
 
 ```bash
 ./start.sh
@@ -198,7 +198,7 @@ By default the server binds to `127.0.0.1:8000`. To allow LAN access, change `AP
 **Changing credentials**
 
 Admin credentials are set once during `install.bat` / `install.ps1` / `install.sh`. To change them:
-1. Re-run the install script — it overwrites `.env` with new credentials.
+1. Re-run the install script, it overwrites `.env` with new credentials.
 2. Delete `backend\data\database.json` so the database re-seeds with the new password hash on next start.
 3. Run the start script.
 
@@ -214,4 +214,4 @@ The bundle includes pre-downloaded PaddleOCR models (`data\models\det\` and `dat
 
 **Re-bundling after code changes**
 
-Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist-bundle-<version>\` first. If you also bumped `VERSION`, the previous version's bundle dir is left untouched on disk — remove it manually if you don't need it. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed (only works when re-running against the same, not-yet-deleted version's bundle dir).
+Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist-bundle-<version>\` first. If you also bumped `VERSION`, the previous version's bundle dir is left untouched on disk, so remove it manually if you don't need it. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed (only works when re-running against the same, not-yet-deleted version's bundle dir).
