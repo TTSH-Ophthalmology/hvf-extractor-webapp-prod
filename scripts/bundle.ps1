@@ -178,12 +178,31 @@ if ($SkipWheels) {
     $ErrorActionPreference = "Continue"
 
     # pip evaluates environment markers (e.g. sys_platform != "win32") against
-    # the machine RUNNING pip, not the --platform target - so on a non-Windows
-    # dev machine, a marker meant to exclude Windows-only packages like uvloop
-    # does NOT get skipped and pip download fails outright. Filter requirements.txt
-    # down to only entries valid for a win32 target before downloading.
-    $filterScript = [System.IO.Path]::GetTempFileName() + ".py"
-    @'
+    # the machine RUNNING pip, not the --platform target. On a REAL Windows
+    # dev machine this is harmless (the host already IS win32, so markers
+    # evaluate correctly and a normal, fully-resolved download correctly
+    # includes Windows-only transitive deps like colorama and excludes
+    # Unix-only ones like uvloop). On a non-Windows dev machine it is not:
+    # a marker meant to exclude Windows-only packages does NOT get skipped,
+    # so pip tries to fetch a win_amd64 wheel for something that has none
+    # and fails outright. Work around that only when actually needed.
+    $isWindowsHost = ($env:OS -eq "Windows_NT")
+
+    if ($isWindowsHost) {
+        python -m pip download `
+            --dest "$WHEELS_DIR" `
+            --only-binary :all: `
+            --platform win_amd64 `
+            --python-version $PY_VERSION `
+            --abi $PY_ABI `
+            -r "$ROOT_DIR/backend/requirements.txt"
+        $pipDownloadExit = $LASTEXITCODE
+    } else {
+        # Filter requirements.txt down to only entries valid for a win32
+        # target before downloading, since marker evaluation below would
+        # otherwise run against this (non-Windows) host's own platform.
+        $filterScript = [System.IO.Path]::GetTempFileName() + ".py"
+        @'
 import sys
 from pathlib import Path
 from packaging.requirements import Requirement
@@ -208,34 +227,36 @@ dst.write_text("\n".join(kept) + "\n")
 print(f"  Filtered requirements for win32: {len(kept)} of {len(lines)} lines kept.")
 '@ | Set-Content -Path $filterScript -Encoding UTF8
 
-    $filteredReqs = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_requirements_win32.txt"
-    try {
-        python $filterScript "$ROOT_DIR/backend/requirements.txt" $filteredReqs
-        if ($LASTEXITCODE -ne 0) { Fail "Failed to filter requirements.txt for the win32 target (is 'packaging' installed?)." }
-    } finally {
-        Remove-Item $filterScript -Force -ErrorAction SilentlyContinue
+        $filteredReqs = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_requirements_win32.txt"
+        try {
+            python $filterScript "$ROOT_DIR/backend/requirements.txt" $filteredReqs
+            if ($LASTEXITCODE -ne 0) { Fail "Failed to filter requirements.txt for the win32 target (is 'packaging' installed?)." }
+        } finally {
+            Remove-Item $filterScript -Force -ErrorAction SilentlyContinue
+        }
+
+        # --no-deps: since marker evaluation on this non-Windows host can't be
+        # trusted (see above), we also can't let pip's resolver walk further
+        # dependency graphs - it would evaluate OTHER packages' own extras/
+        # markers (e.g. uvicorn[standard]'s optional uvloop dependency) against
+        # this host too. requirements.txt is already a fully-pinned lockfile,
+        # so this only works because every actually-needed package already has
+        # its own top-level line - EXCEPT Windows-only transitive deps (like
+        # colorama) that were never captured because the lockfile was frozen
+        # on a non-Windows machine. Bundling from an actual Windows machine
+        # (the $isWindowsHost branch above) avoids this gap entirely.
+        python -m pip download `
+            --dest "$WHEELS_DIR" `
+            --only-binary :all: `
+            --no-deps `
+            --platform win_amd64 `
+            --python-version $PY_VERSION `
+            --abi $PY_ABI `
+            -r $filteredReqs
+        $pipDownloadExit = $LASTEXITCODE
+        Remove-Item $filteredReqs -Force -ErrorAction SilentlyContinue
     }
 
-    # --only-binary :all:  refuses sdists that require a compiler on the target.
-    # --no-deps: requirements.txt is already a fully-pinned lockfile (every
-    # runtime dependency has its own line), so we don't need pip's resolver to
-    # walk dependency graphs - and it must not, because when it does, it also
-    # evaluates OTHER packages' own extras/markers (e.g. uvicorn[standard]'s
-    # optional uvloop dependency) against the current (dev machine) interpreter
-    # rather than the win32 target, which fails the same way the top-level
-    # filtering above works around.
-    # Python version is auto-detected from the current machine - the TARGET machine
-    # must have the same Python major.minor version.
-    python -m pip download `
-        --dest "$WHEELS_DIR" `
-        --only-binary :all: `
-        --no-deps `
-        --platform win_amd64 `
-        --python-version $PY_VERSION `
-        --abi $PY_ABI `
-        -r $filteredReqs
-    $pipDownloadExit = $LASTEXITCODE
-    Remove-Item $filteredReqs -Force -ErrorAction SilentlyContinue
     $ErrorActionPreference = $prevEAP
 
     if ($pipDownloadExit -ne 0) {
