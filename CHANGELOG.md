@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.6] - 2026-08-25
+
+### Fixed
+
+- `-SkipWheels` / `-SkipModels` (`bundle.ps1` / `bundle.sh --skip-wheels` / `--skip-models`) now actually work. The "clean previous bundle" step used to wipe the whole bundle directory unconditionally, deleting `wheels/` and `backend/data/models/` before either flag's "does it already exist" check ever ran. They're now preserved across the clean step when the corresponding flag is set.
+- Reinstalling to a second folder no longer silently steals the desktop shortcut with no explanation. `install.bat` / `install.ps1` now warn (with the old target path) if a shortcut already exists and points somewhere else, before overwriting it.
+
 ## [1.2.5] - 2026-08-25
 
 ### Fixed
