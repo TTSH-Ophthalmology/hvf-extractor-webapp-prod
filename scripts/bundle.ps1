@@ -34,6 +34,11 @@ function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
 function Fail($msg) {
     Write-Host "[error] $msg" -ForegroundColor Red
+    # Restore frontend/.env if step 3 moved it aside and a failure happened
+    # before it could be restored normally (see the frontend build step).
+    if ($frontendEnvBackup -and (Test-Path $frontendEnvBackup)) {
+        Move-Item $frontendEnvBackup "$ROOT_DIR/frontend/.env" -Force -ErrorAction SilentlyContinue
+    }
     Set-Location $ROOT_DIR -ErrorAction SilentlyContinue
     exit 1
 }
@@ -154,8 +159,30 @@ Step "Building frontend (VITE_API_URL='' for same-origin relative API calls)"
 
 Set-Location "$ROOT_DIR/frontend"
 
-# Set VITE_API_URL to empty so all /api/* calls are relative to the serving
-# origin. This avoids hardcoding localhost:8000 into the bundle.
+# All /api/* calls must be relative (same-origin) so cookies work. If the page
+# loads at http://127.0.0.1:8000 (as start.bat opens it) but the frontend was
+# built with VITE_API_URL pointing at an absolute http://localhost:8000, the
+# API calls land on a DIFFERENT site than the page - 127.0.0.1 and localhost
+# are treated as completely different sites by browsers - which silently
+# blocks every SameSite cookie the backend tries to set (login appears to
+# succeed but nothing actually persists).
+#
+# Setting $env:VITE_API_URL = "" is not reliable protection on its own: a
+# local frontend/.env (e.g. left over from setup.ps1/setup.sh, which copies
+# .env.example's VITE_API_URL=http://localhost:8000) can still take over,
+# because on Windows setting an environment variable to an empty string can
+# behave like unsetting it entirely - and dotenv-style loading only skips a
+# .env value when the variable is genuinely already set. Move any existing
+# frontend/.env out of the way for the duration of this build so there is
+# nothing for Vite to pick up regardless of that platform quirk, and restore
+# it afterward (including on failure, see Fail() below).
+$frontendEnvFile   = "$ROOT_DIR/frontend/.env"
+$frontendEnvBackup = "$ROOT_DIR/frontend/.env.bundle-backup"
+if (Test-Path $frontendEnvFile) {
+    Move-Item $frontendEnvFile $frontendEnvBackup -Force
+    Write-Host "  Temporarily moved frontend/.env aside for this build."
+}
+
 $env:VITE_API_URL = ""
 
 # npm prints warnings (deprecations, funding notices, etc.) to stderr routinely.
@@ -187,6 +214,12 @@ if ($npmBuildExit -ne 0) {
 if (-not (Test-Path "$ROOT_DIR/frontend/dist/index.html")) {
     Fail "npm run build reported success but dist/index.html was not found."
 }
+
+if (Test-Path $frontendEnvBackup) {
+    Move-Item $frontendEnvBackup $frontendEnvFile -Force
+    Write-Host "  Restored frontend/.env."
+}
+
 Write-Host "  Frontend build successful."
 
 # -----------------------------------------------------------------------------
