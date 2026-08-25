@@ -99,14 +99,25 @@ if (-not (Test-Path $ICON_PATH)) {
 } else {
     try {
         $desktop = [Environment]::GetFolderPath("Desktop")
+        $lnkPath = "$desktop\NHGEI HVF Extractor.lnk"
+        $newTarget = "$BUNDLE_DIR\start.bat"
         $ws = New-Object -ComObject WScript.Shell
-        $lnk = $ws.CreateShortcut("$desktop\NHGEI HVF Extractor.lnk")
-        $lnk.TargetPath = "$BUNDLE_DIR\start.bat"
+
+        if (Test-Path $lnkPath) {
+            $existing = $ws.CreateShortcut($lnkPath)
+            if ($existing.TargetPath -and ($existing.TargetPath -ne $newTarget)) {
+                Warn "An existing shortcut pointed to a different install: $($existing.TargetPath)"
+                Warn "It will now point here instead. The older install still works if launched directly."
+            }
+        }
+
+        $lnk = $ws.CreateShortcut($lnkPath)
+        $lnk.TargetPath = $newTarget
         $lnk.WorkingDirectory = $BUNDLE_DIR
         $lnk.IconLocation = $ICON_PATH
         $lnk.Description = "NHGEI HVF Extractor"
         $lnk.Save()
-        Write-Host "  Created: $desktop\NHGEI HVF Extractor.lnk"
+        Write-Host "  Created: $lnkPath"
     } catch {
         Warn "Could not create desktop shortcut - access denied to Desktop? $($_.Exception.Message)"
         Warn "You can create one manually: right-click start.bat -> Create shortcut, then set the icon to icon.ico in Properties."

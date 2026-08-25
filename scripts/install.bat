@@ -130,7 +130,7 @@ if not exist "%ICON_PATH%" (
     goto :skip_shortcut
 )
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut($env:USERPROFILE + '\Desktop\NHGEI HVF Extractor.lnk'); $lnk.TargetPath = '%BUNDLE_DIR%\start.bat'; $lnk.WorkingDirectory = '%BUNDLE_DIR%'; $lnk.IconLocation = '%ICON_PATH%'; $lnk.Description = 'NHGEI HVF Extractor'; $lnk.Save() } catch { Write-Host $_.Exception.Message; exit 1 }"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$lnkPath = $env:USERPROFILE + '\Desktop\NHGEI HVF Extractor.lnk'; $newTarget = '%BUNDLE_DIR%\start.bat'; try { $ws = New-Object -ComObject WScript.Shell; if (Test-Path $lnkPath) { $existing = $ws.CreateShortcut($lnkPath); if ($existing.TargetPath -and ($existing.TargetPath -ne $newTarget)) { Write-Host ('  [warn] An existing shortcut pointed to a different install: ' + $existing.TargetPath); Write-Host '  [warn] It will now point here instead. The older install still works if launched directly.' } }; $lnk = $ws.CreateShortcut($lnkPath); $lnk.TargetPath = $newTarget; $lnk.WorkingDirectory = '%BUNDLE_DIR%'; $lnk.IconLocation = '%ICON_PATH%'; $lnk.Description = 'NHGEI HVF Extractor'; $lnk.Save() } catch { Write-Host $_.Exception.Message; exit 1 }"
 
 if errorlevel 1 (
     echo [warn] Could not create desktop shortcut - access denied to Desktop?
