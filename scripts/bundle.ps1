@@ -32,7 +32,11 @@ $PYTHON_DIR  = "$BUNDLE_DIR/python"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
-function Fail($msg) { Write-Host "[error] $msg" -ForegroundColor Red; exit 1 }
+function Fail($msg) {
+    Write-Host "[error] $msg" -ForegroundColor Red
+    Set-Location $ROOT_DIR -ErrorAction SilentlyContinue
+    exit 1
+}
 
 Write-Host ""
 Write-Host "=============================================================================" -ForegroundColor Cyan
@@ -48,26 +52,51 @@ if (-not (Get-Command python -ErrorAction SilentlyContinue)) { Fail "Python not 
 if (-not (Get-Command node   -ErrorAction SilentlyContinue)) { Fail "Node.js not found in PATH." }
 if (-not (Get-Command npm    -ErrorAction SilentlyContinue)) { Fail "npm not found in PATH." }
 
-# paddleocr must be importable by the LOCAL 'python' - step 6 below runs it
-# directly on the dev machine to trigger the OCR model download (there is no
-# other way to obtain the model files). This is independent of the win_amd64
-# wheels downloaded later for the target; it never ships in the bundle itself.
-#
-# Import can print harmless warnings to stderr. Windows PowerShell 5.1 (unlike
-# pwsh 7+) wraps ANY native-command stderr output as a RemoteException, which
-# $ErrorActionPreference = "Stop" then treats as fatal even when redirected to
-# $null - so temporarily relax it around this one call and rely on the exit
-# code instead.
-$prevEAP = $ErrorActionPreference
-$ErrorActionPreference = "Continue"
-python -c "import paddleocr" *> $null
-$paddleocrExit = $LASTEXITCODE
-$ErrorActionPreference = $prevEAP
-if ($paddleocrExit -ne 0) {
-    Fail "paddleocr is not installed for 'python' on this machine. Install it first: pip install paddleocr==3.7.0 paddlepaddle==3.3.1 paddlex==3.7.1 (pins match backend/requirements.txt)."
+$isWindowsHost = ($env:OS -eq "Windows_NT")
+
+# -----------------------------------------------------------------------------
+# 1b. Set up an isolated venv for the bundler's own dependencies
+# -----------------------------------------------------------------------------
+# The bundler needs paddleocr/paddlepaddle/paddlex locally (step 6 runs it
+# directly on the dev machine to trigger the OCR model download - there is no
+# other way to obtain the model files) and packaging (step 4, to filter
+# requirements.txt on non-Windows hosts). Rather than requiring those on
+# whatever Python is already on PATH, create/reuse a dedicated venv just for
+# the bundler so it neither depends on, nor pollutes, the system Python.
+$BUNDLE_VENV_DIR = "$ROOT_DIR/.bundle-venv"
+if ($isWindowsHost) {
+    $BUNDLE_PYTHON = "$BUNDLE_VENV_DIR/Scripts/python.exe"
+} else {
+    $BUNDLE_PYTHON = "$BUNDLE_VENV_DIR/bin/python"
 }
 
-$pyVerStr = python --version 2>&1
+if (-not (Test-Path $BUNDLE_PYTHON)) {
+    Step "Creating bundler virtual environment ($(Split-Path $BUNDLE_VENV_DIR -Leaf))"
+    python -m venv $BUNDLE_VENV_DIR
+    if ($LASTEXITCODE -ne 0) { Fail "Failed to create the bundler venv at $BUNDLE_VENV_DIR." }
+}
+
+Step "Checking bundler dependencies (paddleocr, paddlepaddle, paddlex)"
+
+# pip install with exact pins is a fast no-op when already satisfied, so this
+# doubles as the "does the dev machine have what's needed" check - it installs
+# whatever's missing and confirms the rest.
+#
+# pip prints routine messages to stderr. On Windows PowerShell 5.1 (unlike
+# pwsh 7+), that gets wrapped as a fatal RemoteException under
+# $ErrorActionPreference = "Stop" even when nothing actually went wrong, so
+# relax it for this call and rely on the exit code instead.
+$prevEAP = $ErrorActionPreference
+$ErrorActionPreference = "Continue"
+& $BUNDLE_PYTHON -m pip install --quiet paddleocr==3.7.0 paddlepaddle==3.3.1 paddlex==3.7.1 packaging
+$bundlerDepsExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEAP
+if ($bundlerDepsExit -ne 0) {
+    Fail "Failed to install bundler dependencies into $BUNDLE_VENV_DIR (exit $bundlerDepsExit). These come from PyPI over the internet, separately from the offline wheels bundled for the target machine - check connectivity."
+}
+Write-Host "  Bundler dependencies ready."
+
+$pyVerStr = & $BUNDLE_PYTHON --version 2>&1
 Write-Host "  Python : $pyVerStr"
 Write-Host "  Node   : $(node --version)"
 Write-Host "  npm    : $(npm --version)"
@@ -186,10 +215,8 @@ if ($SkipWheels) {
     # a marker meant to exclude Windows-only packages does NOT get skipped,
     # so pip tries to fetch a win_amd64 wheel for something that has none
     # and fails outright. Work around that only when actually needed.
-    $isWindowsHost = ($env:OS -eq "Windows_NT")
-
     if ($isWindowsHost) {
-        python -m pip download `
+        & $BUNDLE_PYTHON -m pip download `
             --dest "$WHEELS_DIR" `
             --only-binary :all: `
             --platform win_amd64 `
@@ -229,8 +256,8 @@ print(f"  Filtered requirements for win32: {len(kept)} of {len(lines)} lines kep
 
         $filteredReqs = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_requirements_win32.txt"
         try {
-            python $filterScript "$ROOT_DIR/backend/requirements.txt" $filteredReqs
-            if ($LASTEXITCODE -ne 0) { Fail "Failed to filter requirements.txt for the win32 target (is 'packaging' installed?)." }
+            & $BUNDLE_PYTHON $filterScript "$ROOT_DIR/backend/requirements.txt" $filteredReqs
+            if ($LASTEXITCODE -ne 0) { Fail "Failed to filter requirements.txt for the win32 target." }
         } finally {
             Remove-Item $filterScript -Force -ErrorAction SilentlyContinue
         }
@@ -245,7 +272,7 @@ print(f"  Filtered requirements for win32: {len(kept)} of {len(lines)} lines kep
         # colorama) that were never captured because the lockfile was frozen
         # on a non-Windows machine. Bundling from an actual Windows machine
         # (the $isWindowsHost branch above) avoids this gap entirely.
-        python -m pip download `
+        & $BUNDLE_PYTHON -m pip download `
             --dest "$WHEELS_DIR" `
             --only-binary :all: `
             --no-deps `
@@ -311,7 +338,7 @@ New-Item -ItemType Directory -Path $pipDownloadDir -Force | Out-Null
 # the wheel download step for why (Windows PowerShell 5.1 + native stderr).
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
-python -m pip download pip --no-deps --dest $pipDownloadDir --quiet
+& $BUNDLE_PYTHON -m pip download pip --no-deps --dest $pipDownloadDir --quiet
 $pipSelfDownloadExit = $LASTEXITCODE
 $ErrorActionPreference = $prevEAP
 if ($pipSelfDownloadExit -ne 0) { Fail "Failed to download the pip wheel." }
@@ -411,7 +438,7 @@ print("PaddleOCR models ready.")
 $prevEAP = $ErrorActionPreference
 $ErrorActionPreference = "Continue"
 try {
-    python $tempScript "$MODELS_DIR"
+    & $BUNDLE_PYTHON $tempScript "$MODELS_DIR"
     $modelScriptExit = $LASTEXITCODE
 } finally {
     $ErrorActionPreference = $prevEAP
@@ -451,6 +478,7 @@ Copy-Item "$ROOT_DIR/scripts/install.ps1"          "$BUNDLE_DIR/install.ps1"
 Copy-Item "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
 Copy-Item "$ROOT_DIR/scripts/start.bat"            "$BUNDLE_DIR/start.bat"
 Copy-Item "$ROOT_DIR/scripts/start.ps1"            "$BUNDLE_DIR/start.ps1"
+Copy-Item "$ROOT_DIR/scripts/assets/icon.ico"      "$BUNDLE_DIR/icon.ico"
 
 Write-Host "  Bundle layout:"
 Write-Host "    $(Split-Path $BUNDLE_DIR -Leaf)\"
@@ -459,6 +487,7 @@ Write-Host "      install.ps1"
 Write-Host "      start.bat"
 Write-Host "      start.ps1"
 Write-Host "      setup_credentials.py"
+Write-Host "      icon.ico"
 Write-Host "      wheels\              ($wheelCount wheels)"
 Write-Host "      python\              (Python $PY_FULL_VER embeddable + pip)"
 Write-Host "      backend\"
@@ -474,6 +503,10 @@ Write-Host "        .env.example"
 # -----------------------------------------------------------------------------
 # Done
 # -----------------------------------------------------------------------------
+# Step 3 changed directory into frontend/ to run npm - return to the project
+# root so the shell is left somewhere sensible once bundling finishes.
+Set-Location $ROOT_DIR
+
 Write-Host ""
 Write-Host "=============================================================================" -ForegroundColor Green
 Write-Host "  Bundle ready at: $BUNDLE_DIR" -ForegroundColor Green
