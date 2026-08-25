@@ -15,6 +15,7 @@ if "%BUNDLE_DIR:~-1%"=="\" set BUNDLE_DIR=%BUNDLE_DIR:~0,-1%
 set BACKEND_DIR=%BUNDLE_DIR%\backend
 set PYTHON_EXE=%BUNDLE_DIR%\python\python.exe
 set WHEELS_DIR=%BUNDLE_DIR%\wheels
+set ICON_PATH=%BUNDLE_DIR%\icon.ico
 
 echo.
 echo =============================================================================
@@ -50,7 +51,9 @@ echo ==^> Installing dependencies from bundled wheels (offline)
     --quiet
 
 if errorlevel 1 (
-    echo [error] pip install failed. The wheels may not match the bundled Python.
+    echo [error] pip install failed. This can also happen if antivirus or a
+    echo         security policy denied access to a wheel or the python\ folder.
+    echo         The wheels may not match the bundled Python.
     echo         Re-run bundle.ps1 on the developer machine.
     exit /b 1
 )
@@ -64,7 +67,9 @@ echo ==^> Configuring admin credentials
 
 "%PYTHON_EXE%" "%BUNDLE_DIR%\setup_credentials.py" "%BACKEND_DIR%"
 if errorlevel 1 (
-    echo [error] Credential setup failed.
+    echo [error] Credential setup failed. If this says "Access is denied",
+    echo         the bundle folder may be read-only or blocked by policy -
+    echo         try copying it to a local folder like C:\HVF-Extractor first.
     exit /b 1
 )
 
@@ -74,19 +79,68 @@ if errorlevel 1 (
 echo.
 echo ==^> Creating data directories
 
+set DIR_ERROR=0
+
 if not exist "%BACKEND_DIR%\data\uploads" (
-    mkdir "%BACKEND_DIR%\data\uploads"
-    echo   Created: %BACKEND_DIR%\data\uploads
+    mkdir "%BACKEND_DIR%\data\uploads" 2>nul
+    if not exist "%BACKEND_DIR%\data\uploads" (
+        echo [warn] Could not create %BACKEND_DIR%\data\uploads - access denied?
+        set DIR_ERROR=1
+    ) else (
+        echo   Created: %BACKEND_DIR%\data\uploads
+    )
 ) else (
     echo   Already exists: %BACKEND_DIR%\data\uploads
 )
 
 if not exist "%BACKEND_DIR%\data\logs" (
-    mkdir "%BACKEND_DIR%\data\logs"
-    echo   Created: %BACKEND_DIR%\data\logs
+    mkdir "%BACKEND_DIR%\data\logs" 2>nul
+    if not exist "%BACKEND_DIR%\data\logs" (
+        echo [warn] Could not create %BACKEND_DIR%\data\logs - access denied?
+        set DIR_ERROR=1
+    ) else (
+        echo   Created: %BACKEND_DIR%\data\logs
+    )
 ) else (
     echo   Already exists: %BACKEND_DIR%\data\logs
 )
+
+if "%DIR_ERROR%"=="1" (
+    echo.
+    echo [warn] One or more data folders could not be created. The app may
+    echo        fail to start. Check folder permissions or move the bundle
+    echo        to a local folder you own, e.g. C:\HVF-Extractor\
+)
+
+:: -----------------------------------------------------------------------------
+:: 5. Create a desktop shortcut with a custom icon (best-effort, non-fatal)
+:: -----------------------------------------------------------------------------
+echo.
+echo ==^> Creating desktop shortcut
+
+where powershell >nul 2>nul
+if errorlevel 1 (
+    echo [warn] PowerShell not found - skipping desktop shortcut.
+    echo        You can still launch the app via start.bat directly.
+    goto :skip_shortcut
+)
+
+if not exist "%ICON_PATH%" (
+    echo [warn] icon.ico not found in bundle - skipping desktop shortcut.
+    goto :skip_shortcut
+)
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $ws = New-Object -ComObject WScript.Shell; $lnk = $ws.CreateShortcut($env:USERPROFILE + '\Desktop\NHGEI HVF Extractor.lnk'); $lnk.TargetPath = '%BUNDLE_DIR%\start.bat'; $lnk.WorkingDirectory = '%BUNDLE_DIR%'; $lnk.IconLocation = '%ICON_PATH%'; $lnk.Description = 'NHGEI HVF Extractor'; $lnk.Save() } catch { Write-Host $_.Exception.Message; exit 1 }"
+
+if errorlevel 1 (
+    echo [warn] Could not create desktop shortcut - access denied to Desktop?
+    echo        You can create one manually: right-click start.bat -^>
+    echo        Create shortcut, then set the icon to icon.ico in Properties.
+) else (
+    echo   Created: Desktop\NHGEI HVF Extractor.lnk
+)
+
+:skip_shortcut
 
 :: -----------------------------------------------------------------------------
 :: Done

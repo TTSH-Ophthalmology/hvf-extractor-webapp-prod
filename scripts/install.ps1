@@ -14,6 +14,7 @@ $BUNDLE_DIR  = $PSScriptRoot
 $BACKEND_DIR = "$BUNDLE_DIR\backend"
 $PYTHON_EXE  = "$BUNDLE_DIR\python\python.exe"
 $WHEELS_DIR  = "$BUNDLE_DIR\wheels"
+$ICON_PATH   = "$BUNDLE_DIR\icon.ico"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
@@ -49,7 +50,7 @@ Step "Installing dependencies from bundled wheels (offline)"
     --quiet
 
 if ($LASTEXITCODE -ne 0) {
-    Fail "pip install failed (exit $LASTEXITCODE). Re-run bundle.ps1 on the developer machine."
+    Fail "pip install failed (exit $LASTEXITCODE). This can also happen if antivirus or a security policy denied access to a wheel or the python\ folder. Re-run bundle.ps1 on the developer machine."
 }
 Write-Host "  Dependencies installed."
 
@@ -59,20 +60,56 @@ Write-Host "  Dependencies installed."
 Step "Configuring admin credentials"
 
 & $PYTHON_EXE "$BUNDLE_DIR\setup_credentials.py" "$BACKEND_DIR"
-if ($LASTEXITCODE -ne 0) { Fail "Credential setup failed." }
+if ($LASTEXITCODE -ne 0) {
+    Fail "Credential setup failed. If this says 'Access is denied', the bundle folder may be read-only or blocked by policy - try copying it to a local folder like C:\HVF-Extractor first."
+}
 
 # -----------------------------------------------------------------------------
 # 4. Create required data directories
 # -----------------------------------------------------------------------------
 Step "Creating data directories"
 
+$dirError = $false
 foreach ($dir in @("data\uploads", "data\logs")) {
     $fullPath = "$BACKEND_DIR\$dir"
     if (-not (Test-Path $fullPath)) {
-        New-Item -ItemType Directory -Path $fullPath -Force | Out-Null
-        Write-Host "  Created: $fullPath"
+        try {
+            New-Item -ItemType Directory -Path $fullPath -Force -ErrorAction Stop | Out-Null
+            Write-Host "  Created: $fullPath"
+        } catch {
+            Warn "Could not create $fullPath - $($_.Exception.Message)"
+            $dirError = $true
+        }
     } else {
         Write-Host "  Already exists: $fullPath"
+    }
+}
+
+if ($dirError) {
+    Warn "One or more data folders could not be created. The app may fail to start. Check folder permissions or move the bundle to a local folder you own, e.g. C:\HVF-Extractor\"
+}
+
+# -----------------------------------------------------------------------------
+# 5. Create a desktop shortcut with a custom icon (best-effort, non-fatal)
+# -----------------------------------------------------------------------------
+Step "Creating desktop shortcut"
+
+if (-not (Test-Path $ICON_PATH)) {
+    Warn "icon.ico not found in bundle - skipping desktop shortcut."
+} else {
+    try {
+        $desktop = [Environment]::GetFolderPath("Desktop")
+        $ws = New-Object -ComObject WScript.Shell
+        $lnk = $ws.CreateShortcut("$desktop\NHGEI HVF Extractor.lnk")
+        $lnk.TargetPath = "$BUNDLE_DIR\start.bat"
+        $lnk.WorkingDirectory = $BUNDLE_DIR
+        $lnk.IconLocation = $ICON_PATH
+        $lnk.Description = "NHGEI HVF Extractor"
+        $lnk.Save()
+        Write-Host "  Created: $desktop\NHGEI HVF Extractor.lnk"
+    } catch {
+        Warn "Could not create desktop shortcut - access denied to Desktop? $($_.Exception.Message)"
+        Warn "You can create one manually: right-click start.bat -> Create shortcut, then set the icon to icon.ico in Properties."
     }
 }
 
