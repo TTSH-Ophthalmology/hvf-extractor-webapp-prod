@@ -40,17 +40,24 @@ echo ""
 # model loading on startup can take a while before the app is ready.
 if command -v curl >/dev/null 2>&1; then
     (
-        for _ in $(seq 1 90); do
+        opened=false
+        for _ in $(seq 1 180); do
             if curl -sf -o /dev/null "$APP_URL"; then
                 if command -v open >/dev/null 2>&1; then
                     open "$APP_URL"                 # macOS
                 elif command -v xdg-open >/dev/null 2>&1; then
                     xdg-open "$APP_URL"              # Linux
                 fi
+                opened=true
                 break
             fi
             sleep 1
         done
+        if [ "$opened" = false ]; then
+            echo ""
+            echo -e "${YELLOW}[warn] The app is taking longer than 3 minutes to start.${NC}"
+            echo -e "${YELLOW}       It may still be loading - open ${APP_URL} manually once ready.${NC}"
+        fi
     ) &
 fi
 

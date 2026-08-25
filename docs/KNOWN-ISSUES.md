@@ -95,16 +95,21 @@ session, not something introduced this round, it's just never worked.
 clean step when the corresponding skip flag is set (move aside, clean,
 move back), instead of wiping them unconditionally.
 
-## 4. `start.bat`'s browser auto-open gives up silently after 90 seconds
+## 4. FIXED: `start.bat`'s browser auto-open gives up silently after 90 seconds
 
 **Where:** `scripts/start.bat`, `scripts/start.ps1`, `scripts/start.sh`
 
 The background polling loop that opens the browser once the server responds
-has a hard ceiling (90 one-second attempts). If OCR/model loading takes
+had a hard ceiling (90 one-second attempts). If OCR/model loading took
 longer than that (slower hardware, first-run cache building, antivirus
-scanning every file as it loads), the loop just exits, no browser opens, and
-there's no message explaining why. It looks exactly like the app failed to
-start when it might just be slow.
+scanning every file as it loads), the loop just exited, no browser opened,
+and there was no message explaining why. It looked exactly like the app
+failed to start when it might just have been slow.
+
+**Fix (shipped):** window lengthened to 3 minutes, and if the app still
+isn't up by then, it now says so, a message box on Windows (the polling runs
+in a hidden window / background job with no visible console otherwise), a
+terminal message on macOS/Linux.
 
 **Suggested fix:** lengthen the window, and/or print a message after the loop
 gives up ("still starting, once ready open http://127.0.0.1:8000 manually").

@@ -32,8 +32,11 @@ echo.
 
 :: Wait for the server to accept connections, then open it in the default
 :: browser. Runs detached so it doesn't block uvicorn below - OCR model
-:: loading on startup can take a while before the app is ready.
-start "" powershell -NoProfile -WindowStyle Hidden -Command "for ($i=0; $i -lt 90; $i++) { try { Invoke-WebRequest -Uri '%APP_URL%' -UseBasicParsing -TimeoutSec 1 | Out-Null; Start-Process '%APP_URL%'; break } catch { Start-Sleep -Seconds 1 } }"
+:: loading on startup can take a while before the app is ready. If it never
+:: comes up within the window, pop up a message instead of failing silently
+:: (this runs in a hidden window, so a console message alone would never be
+:: seen).
+start "" powershell -NoProfile -WindowStyle Hidden -Command "$ok = $false; for ($i=0; $i -lt 180; $i++) { try { Invoke-WebRequest -Uri '%APP_URL%' -UseBasicParsing -TimeoutSec 1 | Out-Null; Start-Process '%APP_URL%'; $ok = $true; break } catch { Start-Sleep -Seconds 1 } }; if (-not $ok) { Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('The app is taking longer than 3 minutes to start. It may still be loading (this can happen on slower machines) - open %APP_URL% manually once ready, or check the start.bat window for errors.', 'NHGEI HVF Extractor') | Out-Null }"
 
 cd /d "%BACKEND_DIR%"
 set PYTHONPATH=%BACKEND_DIR%
