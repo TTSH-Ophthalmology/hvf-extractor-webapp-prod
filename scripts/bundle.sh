@@ -232,8 +232,9 @@ cp -r "$ROOT_DIR/frontend/dist" "$BUNDLE_DIR/backend/static"
 
 cp "$ROOT_DIR/scripts/install.sh"          "$BUNDLE_DIR/install.sh"
 cp "$ROOT_DIR/scripts/start.sh"            "$BUNDLE_DIR/start.sh"
+cp "$ROOT_DIR/scripts/uninstall.sh"        "$BUNDLE_DIR/uninstall.sh"
 cp "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
-chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh"
+chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh" "$BUNDLE_DIR/uninstall.sh"
 
 # VERSION at the bundle root, mirroring the project root in dev - main.py
 # reads it via a path relative to its own location (backend/app -> backend
@@ -244,6 +245,7 @@ echo "  Bundle layout:"
 echo "    $(basename "$BUNDLE_DIR")/"
 echo "      install.sh"
 echo "      start.sh"
+echo "      uninstall.sh"
 echo "      setup_credentials.py"
 echo "      VERSION"
 echo "      wheels/              ($WHEEL_COUNT wheels)"

@@ -161,9 +161,12 @@ dist\hvf-extractor-v<version>\
   install.ps1              ← Windows installer (PowerShell)
   start.bat                ← Windows launcher (Command Prompt)
   start.ps1                ← Windows launcher (PowerShell)
+  uninstall.bat            ← Windows uninstaller (Command Prompt)
+  uninstall.ps1            ← Windows uninstaller (PowerShell)
   setup_credentials.py     ← Called by install scripts to set credentials
   install.sh               ← Linux/macOS installer
   start.sh                 ← Linux/macOS launcher
+  uninstall.sh             ← Linux/macOS uninstaller
   VERSION                  ← app version, read by the backend at startup
   wheels\                  ← Python wheel files (platform-specific)
   python\                  ← Bundled Python runtime (Windows only)
@@ -198,12 +201,16 @@ The Windows bundle includes a self-contained Python embeddable package (`python\
 
 By default the server binds to `127.0.0.1:8000`. To allow LAN access, change `APP_HOST=0.0.0.0` in `backend\.env` and update `CORS_ORIGINS` to include the machine's IP, then restart.
 
-**Changing credentials**
+**Changing credentials, or re-installing on a machine this bundle was copied to**
 
-Admin credentials are set once during `install.bat` / `install.ps1` / `install.sh`. To change them:
-1. Re-run the install script, it overwrites `.env` with new credentials.
-2. Delete `backend\data\database.json` so the database re-seeds with the new password hash on next start.
-3. Run the start script.
+Admin credentials are only actually applied the first time `install.bat` / `install.ps1` / `install.sh` runs. Simply re-running install does **not** reset them, the database only seeds an admin user once, so a stale password from an earlier install (e.g. one that happened on a staging machine before this folder was copied here) stays in effect even after install writes a new `.env`. This is the single most common cause of "I set new credentials but the old ones still work, or nothing works."
+
+To get a genuinely fresh install (new credentials, empty database, no leftover uploads/logs):
+1. Stop the app if it's running.
+2. Run `uninstall.bat` / `uninstall.ps1` / `uninstall.sh` and confirm.
+3. Run the install script, then the start script as usual.
+
+Uninstalling does not remove the Python runtime, dependencies, or application code, so this is fast and does not require re-copying or re-bundling anything.
 
 **Data persistence**
 

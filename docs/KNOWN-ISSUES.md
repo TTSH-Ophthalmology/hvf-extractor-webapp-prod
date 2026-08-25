@@ -36,7 +36,7 @@ entirely, since this app is never actually deployed with the frontend and
 backend on different origins. That would make this bug class structurally
 impossible rather than just guarded against in the build script.
 
-## 2. Re-running `install.bat` doesn't actually reset the admin password
+## 2. MITIGATED: re-running `install.bat` doesn't actually reset the admin password
 
 **Where:** `backend/app/db/db.py`, `_seed_admin_user()`
 
@@ -56,10 +56,14 @@ etc.), the new credentials in `.env` are silently ignored. The old password
 from the first run is still what's actually checked against. Nothing in the
 install output warns about this.
 
-The current "fix" is a manual step documented in `docs/AIRGAPPED-DEPLOY.md`
-("Changing credentials": re-run install, then delete
-`backend\data\database.json`), which is really a workaround for the bug, not
-a designed recovery flow.
+**Mitigation (shipped):** `scripts/uninstall.bat` / `uninstall.ps1` /
+`uninstall.sh` now give an official way to reset (delete `.env`, the
+database, uploads, and logs, then re-run install), which is exactly the
+scenario this issue was found from: a bundle installed once on a staging
+machine, then copied to a target machine, where re-running install alone
+silently kept the staging credentials in effect. This is a workaround, not a
+fix, the underlying bug below is still there if someone re-installs without
+uninstalling first.
 
 **Suggested fix:** make `_seed_admin_user()` always upsert the admin user's
 password hash from `.env`, instead of only seeding when the table is empty.
@@ -163,6 +167,7 @@ just a code change).
 
 ---
 
-Of the open items, #2 is the one worth actually fixing next. It's a clean,
-well-understood bug with a clean fix, and it's the thing that caused the most
-confusion after #1 was resolved. The rest are minor or documentation-level.
+#2 now has a workaround (`uninstall.bat`/`.ps1`/`.sh`), but the underlying
+`_seed_admin_user()` fix is still worth doing properly at some point, it's a
+clean, well-understood bug with a clean fix. The rest are minor or
+documentation-level.
