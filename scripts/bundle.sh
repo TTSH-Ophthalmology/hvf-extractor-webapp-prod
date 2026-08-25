@@ -234,11 +234,17 @@ cp "$ROOT_DIR/scripts/start.sh"            "$BUNDLE_DIR/start.sh"
 cp "$ROOT_DIR/scripts/setup_credentials.py" "$BUNDLE_DIR/setup_credentials.py"
 chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh"
 
+# VERSION at the bundle root, mirroring the project root in dev - main.py
+# reads it via a path relative to its own location (backend/app -> backend
+# -> root), so this keeps that resolving correctly once bundled too.
+cp "$ROOT_DIR/VERSION"                     "$BUNDLE_DIR/VERSION"
+
 echo "  Bundle layout:"
 echo "    $(basename "$BUNDLE_DIR")/"
 echo "      install.sh"
 echo "      start.sh"
 echo "      setup_credentials.py"
+echo "      VERSION"
 echo "      wheels/              ($WHEEL_COUNT wheels)"
 echo "      backend/"
 echo "        app/"

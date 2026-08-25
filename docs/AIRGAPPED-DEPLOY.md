@@ -164,6 +164,7 @@ dist-bundle-<version>\
   setup_credentials.py     ← Called by install scripts to set credentials
   install.sh               ← Linux/macOS installer
   start.sh                 ← Linux/macOS launcher
+  VERSION                  ← app version, read by the backend at startup
   wheels\                  ← Python wheel files (platform-specific)
   python\                  ← Bundled Python runtime (Windows only)
   backend\

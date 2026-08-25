@@ -484,6 +484,11 @@ Copy-Item "$ROOT_DIR/scripts/start.bat"            "$BUNDLE_DIR/start.bat"
 Copy-Item "$ROOT_DIR/scripts/start.ps1"            "$BUNDLE_DIR/start.ps1"
 Copy-Item "$ROOT_DIR/scripts/assets/icon.ico"      "$BUNDLE_DIR/icon.ico"
 
+# VERSION at the bundle root, mirroring the project root in dev - main.py
+# reads it via a path relative to its own location (backend/app -> backend
+# -> root), so this keeps that resolving correctly once bundled too.
+Copy-Item "$ROOT_DIR/VERSION"                      "$BUNDLE_DIR/VERSION"
+
 Write-Host "  Bundle layout:"
 Write-Host "    $(Split-Path $BUNDLE_DIR -Leaf)\"
 Write-Host "      install.bat"
@@ -492,6 +497,7 @@ Write-Host "      start.bat"
 Write-Host "      start.ps1"
 Write-Host "      setup_credentials.py"
 Write-Host "      icon.ico"
+Write-Host "      VERSION"
 Write-Host "      wheels\              ($wheelCount wheels)"
 Write-Host "      python\              (Python $PY_FULL_VER embeddable + pip)"
 Write-Host "      backend\"

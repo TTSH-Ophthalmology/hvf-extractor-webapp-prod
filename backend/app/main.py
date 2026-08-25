@@ -53,6 +53,17 @@ from app.dependencies import get_current_user
 
 BASE_DIR = Path(__file__).resolve().parent
 
+# Single source of truth for the app version is the VERSION file at the
+# project root (backend/app/ -> backend/ -> root in dev; backend/app/ ->
+# backend/ -> bundle root when bundled, see bundle.ps1's assembly step).
+def _read_app_version() -> str:
+    try:
+        return (BASE_DIR.parent.parent / "VERSION").read_text(encoding="utf-8").strip()
+    except FileNotFoundError:
+        return "0.0.0"
+
+APP_VERSION = _read_app_version()
+
 # Initialise logging before anything else creates a logger.
 setup_logging(settings.log_level, settings.log_dir)
 
@@ -84,7 +95,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="NHGEI HVF Extractor API",
     description="Backend API for NHGEI HVF Extractor — extracts structured data from HVF/VRVF PDF reports.",
-    version="1.2.1",
+    version=APP_VERSION,
     lifespan=lifespan
 )
 
