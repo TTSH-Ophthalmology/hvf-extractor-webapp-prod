@@ -84,7 +84,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="NHGEI HVF Extractor API",
     description="Backend API for NHGEI HVF Extractor — extracts structured data from HVF/VRVF PDF reports.",
-    version="1.2.0",
+    version="1.2.1",
     lifespan=lifespan
 )
 
