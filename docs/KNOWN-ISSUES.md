@@ -2,8 +2,8 @@
 
 Notes from a review of the deployment scripts and adjacent auth code, focused on
 user-error scenarios (re-running install, slow machines, multiple installs).
-Most items here are still open; a couple have since been fixed and are marked
-as such. Ranked roughly by how much it can actually bite someone.
+Most items here have since been fixed and are marked as such; a couple remain
+open. Ranked roughly by how much it can actually bite someone.
 
 ## 1. FIXED: a stray `frontend/.env` could break login on a fresh install
 
@@ -71,29 +71,21 @@ password hash from `.env`, instead of only seeding when the table is empty.
 `install.bat` behaves the way someone would naturally expect, and the
 delete-the-database step goes away entirely.
 
-## 3. `-SkipWheels` / `-SkipModels` don't actually work
+## 3. FIXED: `-SkipWheels` / `-SkipModels` didn't actually work
 
-**Where:** `scripts/bundle.ps1`, "Clean previous bundle" step
+**Where:** `scripts/bundle.ps1` / `bundle.sh`, "Clean previous bundle" step
 
-Both flags exist to reuse an already-downloaded `wheels\` folder or OCR
+Both flags exist to reuse an already-downloaded `wheels/` folder or OCR
 models from a previous run. But the "clean previous bundle" step
-unconditionally deletes the whole bundle directory before either flag's
-"does it already exist" check ever runs:
-
-```powershell
-if (Test-Path $BUNDLE_DIR) {
-    Remove-Item $BUNDLE_DIR -Recurse -Force
-}
-```
-
-So by the time `-SkipWheels`/`-SkipModels` check for existing files, they're
-already gone, every run does a full wheel download and model download
+unconditionally deleted the whole bundle directory before either flag's
+"does it already exist" check ever ran, so by the time they checked, the
+files were already gone. Every run did a full wheel and model download
 regardless of the flags. Confirmed while testing bundling changes this
-session, not something introduced this round, it's just never worked.
+session, not something introduced this round, it just never worked.
 
-**Suggested fix:** preserve `wheels\` and `backend\data\models\` across the
-clean step when the corresponding skip flag is set (move aside, clean,
-move back), instead of wiping them unconditionally.
+**Fix (shipped):** the clean step now moves `wheels/` and
+`backend/data/models/` aside first when the corresponding flag is set, then
+moves them back after the wipe, instead of deleting them unconditionally.
 
 ## 4. FIXED: `start.bat`'s browser auto-open gives up silently after 90 seconds
 
@@ -111,23 +103,19 @@ isn't up by then, it now says so, a message box on Windows (the polling runs
 in a hidden window / background job with no visible console otherwise), a
 terminal message on macOS/Linux.
 
-**Suggested fix:** lengthen the window, and/or print a message after the loop
-gives up ("still starting, once ready open http://127.0.0.1:8000 manually").
-
-## 5. Reinstalling to a second folder silently steals the desktop shortcut
+## 5. FIXED: reinstalling to a second folder silently steals the desktop shortcut
 
 **Where:** `scripts/install.bat` / `install.ps1`, desktop shortcut step
 
 The shortcut is always named `NHGEI HVF Extractor.lnk` on the Desktop. If you
 install one version in one folder and later install another version in a
-different folder, the shortcut just gets repointed to whichever was installed
-last. The older folder still works fine if launched manually, but there's no
-signal that you now have two installs and the shortcut only points to one of
-them.
+different folder, the shortcut just got repointed to whichever was installed
+last with no signal that this happened.
 
-**Suggested fix:** low priority. Could version the shortcut name, or warn if
-a shortcut already exists and points somewhere else, but probably not worth
-the complexity unless it actually causes confusion in practice.
+**Fix (shipped):** install now checks whether a shortcut already exists and
+points somewhere else before overwriting it, and if so, warns with the old
+target path. The older install still works fine if launched directly, this
+is informational, not blocking.
 
 ## 6. No proactive check for risky install locations
 
@@ -172,7 +160,7 @@ just a code change).
 
 ---
 
-#2 now has a workaround (`uninstall.bat`/`.ps1`/`.sh`), but the underlying
+#2 has a workaround (`uninstall.bat`/`.ps1`/`.sh`), but the underlying
 `_seed_admin_user()` fix is still worth doing properly at some point, it's a
-clean, well-understood bug with a clean fix. The rest are minor or
-documentation-level.
+clean, well-understood bug with a clean fix. #6 and #7 remain open, both
+low priority (documentation-level and a product decision, respectively).

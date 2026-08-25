@@ -29,6 +29,7 @@ APP_VERSION="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
 BUNDLE_NAME="hvf-extractor-v$APP_VERSION"
 BUNDLE_DIR="$ROOT_DIR/dist/$BUNDLE_NAME"
 WHEELS_DIR="$BUNDLE_DIR/wheels"
+MODELS_DIR="$BUNDLE_DIR/backend/data/models"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 
@@ -89,11 +90,40 @@ echo "  Platform : $OS $ARCH -> $PLATFORM"
 # -----------------------------------------------------------------------------
 step "Cleaning previous bundle"
 
+# --skip-wheels/--skip-models are meant to reuse what's already in this
+# bundle dir, but this step used to wipe the whole dir unconditionally
+# first, so there was never anything left for either flag to find. Preserve
+# the relevant folder(s) across the wipe when the corresponding flag is set.
+PRESERVE_TEMP="$(mktemp -d)"
+PRESERVED_WHEELS=""
+PRESERVED_MODELS=""
+
+if [ "$SKIP_WHEELS" = true ] && [ -d "$WHEELS_DIR" ]; then
+    PRESERVED_WHEELS="$PRESERVE_TEMP/wheels"
+    mv "$WHEELS_DIR" "$PRESERVED_WHEELS"
+fi
+if [ "$SKIP_MODELS" = true ] && [ -d "$MODELS_DIR" ]; then
+    PRESERVED_MODELS="$PRESERVE_TEMP/models"
+    mv "$MODELS_DIR" "$PRESERVED_MODELS"
+fi
+
 if [ -d "$BUNDLE_DIR" ]; then
     rm -rf "$BUNDLE_DIR"
     echo "  Removed existing $(basename "$BUNDLE_DIR")/"
 fi
 mkdir -p "$BUNDLE_DIR"
+
+if [ -n "$PRESERVED_WHEELS" ]; then
+    mkdir -p "$(dirname "$WHEELS_DIR")"
+    mv "$PRESERVED_WHEELS" "$WHEELS_DIR"
+    echo "  Preserved existing wheels/ for --skip-wheels."
+fi
+if [ -n "$PRESERVED_MODELS" ]; then
+    mkdir -p "$(dirname "$MODELS_DIR")"
+    mv "$PRESERVED_MODELS" "$MODELS_DIR"
+    echo "  Preserved existing backend/data/models/ for --skip-models."
+fi
+rm -rf "$PRESERVE_TEMP"
 
 # -----------------------------------------------------------------------------
 # 4. Build frontend
@@ -140,7 +170,6 @@ fi
 # -----------------------------------------------------------------------------
 # 6. Pre-download PaddleOCR models
 # -----------------------------------------------------------------------------
-MODELS_DIR="$BUNDLE_DIR/backend/data/models"
 
 if [ "$SKIP_MODELS" = true ]; then
     step "Skipping PaddleOCR model download (--skip-models)"

@@ -30,6 +30,7 @@ $BUNDLE_NAME = "hvf-extractor-v$APP_VERSION"
 $BUNDLE_DIR  = "$ROOT_DIR/dist/$BUNDLE_NAME"
 $WHEELS_DIR  = "$BUNDLE_DIR/wheels"
 $PYTHON_DIR  = "$BUNDLE_DIR/python"
+$MODELS_DIR  = "$BUNDLE_DIR/backend/data/models"
 
 function Step($msg) { Write-Host "`n==> $msg" -ForegroundColor Green }
 function Warn($msg) { Write-Host "[warn] $msg"  -ForegroundColor Yellow }
@@ -147,11 +148,43 @@ if ($TargetPythonVersion -ne "") {
 # -----------------------------------------------------------------------------
 Step "Cleaning previous bundle"
 
+# -SkipWheels/-SkipModels are meant to reuse what's already in this bundle
+# dir, but this step used to wipe the whole dir unconditionally first, so
+# there was never anything left for either flag to find. Preserve the
+# relevant folder(s) across the wipe when the corresponding flag is set.
+$preserveTemp = Join-Path ([System.IO.Path]::GetTempPath()) "hvf_bundle_preserve"
+if (Test-Path $preserveTemp) { Remove-Item $preserveTemp -Recurse -Force }
+$preservedWheels = $null
+$preservedModels = $null
+
+if ($SkipWheels -and (Test-Path $WHEELS_DIR)) {
+    New-Item -ItemType Directory -Path $preserveTemp -Force | Out-Null
+    $preservedWheels = "$preserveTemp/wheels"
+    Move-Item $WHEELS_DIR $preservedWheels
+}
+if ($SkipModels -and (Test-Path $MODELS_DIR)) {
+    New-Item -ItemType Directory -Path $preserveTemp -Force | Out-Null
+    $preservedModels = "$preserveTemp/models"
+    Move-Item $MODELS_DIR $preservedModels
+}
+
 if (Test-Path $BUNDLE_DIR) {
     Remove-Item $BUNDLE_DIR -Recurse -Force
     Write-Host "  Removed existing $(Split-Path $BUNDLE_DIR -Leaf)\"
 }
 New-Item -ItemType Directory -Path $BUNDLE_DIR | Out-Null
+
+if ($preservedWheels) {
+    New-Item -ItemType Directory -Path (Split-Path $WHEELS_DIR -Parent) -Force | Out-Null
+    Move-Item $preservedWheels $WHEELS_DIR
+    Write-Host "  Preserved existing wheels\ for -SkipWheels."
+}
+if ($preservedModels) {
+    New-Item -ItemType Directory -Path (Split-Path $MODELS_DIR -Parent) -Force | Out-Null
+    Move-Item $preservedModels $MODELS_DIR
+    Write-Host "  Preserved existing backend\data\models\ for -SkipModels."
+}
+if (Test-Path $preserveTemp) { Remove-Item $preserveTemp -Recurse -Force -ErrorAction SilentlyContinue }
 
 # -----------------------------------------------------------------------------
 # 3. Build frontend
@@ -401,8 +434,6 @@ Write-Host "  Bundled Python ready: python $PY_FULL_VER + pip"
 # -----------------------------------------------------------------------------
 # 6. Pre-download PaddleOCR models
 # -----------------------------------------------------------------------------
-$MODELS_DIR = "$BUNDLE_DIR/backend/data/models"
-
 if ($SkipModels) {
     Step "Skipping PaddleOCR model download (-SkipModels)"
     if (-not (Test-Path "$MODELS_DIR/det") -or -not (Test-Path "$MODELS_DIR/rec")) {
