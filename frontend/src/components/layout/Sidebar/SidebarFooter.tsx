@@ -55,6 +55,8 @@ export const SidebarFooter = ({
           <span className="nav-label">Settings</span>
         </button>
       </nav>
+
+      <div className="app-version">v{__APP_VERSION__}</div>
     </div>
   )
 }

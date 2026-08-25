@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # start.sh - Launch the HVF Extractor on an air-gapped Unix machine
-# Usage: ./start.sh  (run from inside the unzipped dist-bundle/ folder)
+# Usage: ./start.sh  (run from inside the unzipped dist/hvf-extractor-v<version>/ folder)
 #
 # Run install.sh first if you haven't already.
 # =============================================================================
@@ -11,6 +11,7 @@ set -euo pipefail
 BUNDLE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$BUNDLE_DIR/backend"
 VENV_PY="$BACKEND_DIR/.venv/bin/python3"
+APP_URL="http://127.0.0.1:8000"
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; CYAN='\033[0;36m'; NC='\033[0m'
 
@@ -30,9 +31,35 @@ echo -e "${CYAN}================================================================
 echo -e "${CYAN}  NHGEI HVF Extractor${NC}"
 echo -e "${CYAN}=============================================================================${NC}"
 echo ""
-echo -e "  Open your browser at: ${GREEN}http://127.0.0.1:8000${NC}"
+echo -e "  Opening your browser at: ${GREEN}${APP_URL}${NC}"
 echo -e "  Press ${YELLOW}Ctrl+C${NC} to stop."
 echo ""
+
+# Wait for the server to accept connections, then open it in the default
+# browser. Runs in the background so it doesn't block uvicorn below - OCR
+# model loading on startup can take a while before the app is ready.
+if command -v curl >/dev/null 2>&1; then
+    (
+        opened=false
+        for _ in $(seq 1 180); do
+            if curl -sf -o /dev/null "$APP_URL"; then
+                if command -v open >/dev/null 2>&1; then
+                    open "$APP_URL"                 # macOS
+                elif command -v xdg-open >/dev/null 2>&1; then
+                    xdg-open "$APP_URL"              # Linux
+                fi
+                opened=true
+                break
+            fi
+            sleep 1
+        done
+        if [ "$opened" = false ]; then
+            echo ""
+            echo -e "${YELLOW}[warn] The app is taking longer than 3 minutes to start.${NC}"
+            echo -e "${YELLOW}       It may still be loading - open ${APP_URL} manually once ready.${NC}"
+        fi
+    ) &
+fi
 
 # cd to backend/ so pydantic-settings resolves .env from CWD,
 # and all relative data/ paths in settings work correctly.

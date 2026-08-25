@@ -4,8 +4,8 @@
 
 The application extracts structured clinical data from two types of ophthalmic visual field test reports:
 
-- **HVF** (Humphrey Visual Field) — PDF reports with embedded text, parsed without OCR
-- **VRVF** (Virtual Reality Visual Field) — PDF reports with image-based content, parsed using PaddleOCR
+- **HVF** (Humphrey Visual Field): PDF reports with embedded text, parsed without OCR
+- **VRVF** (Virtual Reality Visual Field): PDF reports with image-based content, parsed using PaddleOCR
 
 Both pipelines share the same upload/response interface but diverge entirely in how they parse the PDF.
 
@@ -36,7 +36,7 @@ Both pipelines share the same upload/response interface but diverge entirely in 
 
 ---
 
-## Stage 1 — File Upload
+## Stage 1: File Upload
 
 **Endpoint:** `POST /api/upload`
 
@@ -47,7 +47,7 @@ The client submits a file via multipart/form-data. `PDFService.handle_upload()` 
 
 ---
 
-## Stage 2 — Extraction Trigger
+## Stage 2: Extraction Trigger
 
 **Endpoint:** `POST /api/extract?job_id=...&eye=LE|RE&report_type=hvf|vrvf`
 
@@ -58,21 +58,21 @@ The client submits a file via multipart/form-data. `PDFService.handle_upload()` 
 
 ---
 
-## Pipeline A — HVF (Text-Based)
+## Pipeline A: HVF (Text-Based)
 
 HVF PDFs contain embedded text. No OCR is used; PyMuPDF extracts text blocks directly.
 
-### A1 — PDF Text Block Extraction
+### A1: PDF Text Block Extraction
 
 `pipeline.py` opens the PDF with `pymupdf.open()` and calls `page.get_text_blocks()` on page 0. This returns a list of positional text block tuples. Specific block indexes are hard-coded based on the known HVF PDF layout.
 
-### A2 — Header Extraction
+### A2: Header Extraction
 
 `_extract_header()` reads from **blocks[8], [10], [11], [13]** and passes the raw text lines to `normalise_pdf_header()` in `normalise_pdf.py`.
 
 **Dynamic Programming Alignment:** Because HVF PDFs can have optional fields (e.g. `Fovea` may be absent), the header normaliser uses a DP sequence alignment algorithm to map positional values to named fields:
 - **Match score (fields with a matcher):** +6 if the value's format matches the expected type (date, fraction, percentage, etc.), −8 if it doesn't
-- **Match score (fields without a matcher):** +1 if any value is present, 0 otherwise — applies to free-text fields like `Fixation Monitor` and `Fixation Target`
+- **Match score (fields without a matcher):** +1 if any value is present, 0 otherwise; applies to free-text fields like `Fixation Monitor` and `Fixation Target`
 - **Gap penalty:** −2 per skipped label position
 - **Unmatched value penalty:** −5 per value consumed without being assigned to a label
 - Per-field matcher functions (`_match_date`, `_match_percent`, `_match_strategy`, etc.) define what a valid value looks like for each typed label
@@ -80,7 +80,7 @@ HVF PDFs contain embedded text. No OCR is used; PyMuPDF extracts text blocks dir
 
 Output keys are prefixed with `header_` (e.g. `header_Date`, `header_Fixation Losses`). Fields extracted: `Fixation Monitor`, `Fixation Target`, `Fixation Losses`, `False POS Errors`, `False NEG Errors`, `Test Duration`, `Fovea`, `Stimulus`, `Background`, `Strategy`, `Pupil Diameter`, `Visual Acuity`, `Rx`, `Date`, `Time`, `Age`
 
-### A3 — Map Value Extraction
+### A3: Map Value Extraction
 
 `_extract_map_values()` reads **blocks[15]–[38]** and extracts values matching the regex `[<>]?-?\d+` (supporting numeric, negative, and threshold-flagged values like `<0` or `>30`).
 
@@ -96,7 +96,7 @@ Output keys are prefixed with `header_` (e.g. `header_Date`, `header_Fixation Lo
 
 Point labels use a quadrant+index convention: `S`=Superior, `I`=Inferior, `T`=Temporal, `N`=Nasal (e.g. `ST6` = Superior-Temporal point 6). There are 54 labels covering `ST1–ST13`, `SN1–SN14`, `IT1–IT13`, `IN1–IN14`.
 
-### A4 — GHT/VFI Extraction
+### A4: GHT/VFI Extraction
 
 `_extract_ght_vfi()` reads **blocks[40]–[41]**, skipping any value ending in `:` (label tokens). Maps to:
 - `ght_vfi_GHT`
@@ -106,15 +106,15 @@ Point labels use a quadrant+index convention: `S`=Superior, `I`=Inferior, `T`=Te
 
 ---
 
-## Pipeline B — VRVF (OCR-Based)
+## Pipeline B: VRVF (OCR-Based)
 
 VRVF PDFs contain image-based content. The page is rasterised and individual fields are extracted by cropping and running PaddleOCR on each region.
 
-### B1 — PDF Rasterisation
+### B1: PDF Rasterisation
 
 The PDF page is rendered at **300 DPI** using PyMuPDF's `get_pixmap(dpi=300)`. The resulting pixmap (1-, 3-, or 4-channel) is converted to a BGR numpy array via OpenCV `cv2.cvtColor`.
 
-### B2 — OCR Engine Initialisation
+### B2: OCR Engine Initialisation
 
 At application startup (the `lifespan` function in `main.py`), `ocr.py` initialises PaddleOCR using locally bundled models:
 
@@ -127,9 +127,9 @@ Both model directories must contain `inference.yml`. Two workarounds are applied
 - Environment variables: `FLAGS_use_mkldnn=0`, `FLAGS_enable_pir_api=0`
 - Monkey-patch: `paddle.inference.create_predictor` calls `config.disable_mkldnn()` before creating the predictor
 
-This design supports **air-gapped deployment** — no internet access is required at runtime.
+This design supports **air-gapped deployment**: no internet access is required at runtime.
 
-### B3 — Crop-Based OCR
+### B3: Crop-Based OCR
 
 For each field, a pixel-coordinate bounding box is defined in `vrvf.py` (calibrated for 300 DPI renders). `_ocr_texts()` crops the numpy array to the box and calls `ocr_engine.predict(crop)`.
 
@@ -148,7 +148,7 @@ Sections and their normalisation path:
 
 Map sections use separate `_LE` and `_RE` crop box sets. Text sections use the same coordinates for both eyes.
 
-### B4 — OCR Post-Processing
+### B4: OCR Post-Processing
 
 **Text fields** (`_normalise_ocr_text_value`):
 - Joins multi-line OCR output
@@ -163,7 +163,7 @@ Map sections use separate `_LE` and `_RE` crop box sets. Text sections use the s
 
 ---
 
-## Stage 3 — Cleanup and Response
+## Stage 3: Cleanup and Response
 
 After extraction (both pipelines):
 1. `gc.collect()` is called (required on Windows to release PyMuPDF's C-level file handles before deletion)
@@ -172,7 +172,7 @@ After extraction (both pipelines):
 
 ---
 
-## Stage 4 — Frontend: Review and Download
+## Stage 4: Frontend: Review and Download
 
 The `ResultExtractionPage` renders the `raw_data` map as an editable table. Users can correct any misread values before downloading.
 

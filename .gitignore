@@ -9,7 +9,6 @@ __pycache__/
 venv/
 env/
 *.egg-info/
-dist/
 build/
 .pytest_cache/
 .mypy_cache/
@@ -52,5 +51,4 @@ Thumbs.db
 backend/app/db/database.json
 
 # === Build Output ===
-dist-bundle/
-dist-bundle-*/
+/dist/

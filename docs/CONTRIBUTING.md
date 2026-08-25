@@ -3,19 +3,19 @@
 ## Branching Strategy
 
 ```
-main        — production-ready code only; merges via PR from dev
-dev         — integration branch; all feature/fix branches target this
-feature/*   — new features          (branch from dev)
-fix/*       — bug fixes             (branch from dev)
-chore/*     — tooling, deps, docs   (branch from dev)
+main        - production-ready code only; merges via PR from develop
+develop     - integration branch; all feature/fix branches target this
+feature/*   - new features          (branch from develop)
+fix/*       - bug fixes             (branch from develop)
+chore/*     - tooling, deps, docs   (branch from develop)
 ```
 
 ## Workflow
 
-1. Branch from `dev`: `git checkout -b feature/your-feature dev`
+1. Branch from `develop`: `git checkout -b feature/your-feature develop`
 2. Make changes following the conventions below
 3. Run tests and linting locally before pushing
-4. Open a Pull Request targeting **`dev`**
+4. Open a Pull Request targeting **`develop`**
 5. At least one peer review required before merge
 6. Merges to `main` are done by the project maintainer after QA
 
@@ -60,7 +60,7 @@ pytest
 
 - **Formatter:** Prettier
 - **Linter:** ESLint with TypeScript plugin
-- All React components must be typed — no implicit `any`
+- All React components must be typed, no implicit `any`
 - Custom hooks must start with `use`
 
 ```bash
@@ -96,17 +96,17 @@ npm run test
 
 Follow these steps in order so both layers stay in sync:
 
-1. **Backend model** — add the field to `backend/app/models/extraction.py`
-2. **Backend service** — implement parsing logic in `backend/app/services/extraction_service.py`
-3. **Backend test** — add a test case in `backend/tests/test_extraction_service.py`
-4. **Frontend model** — mirror the new field in `frontend/src/models/extraction.ts`
-5. **Frontend view** — display it in `frontend/src/components/extraction/ExtractionTable.tsx`
+1. **Backend model**: add the field to `backend/app/models/extraction.py`
+2. **Backend service**: implement parsing logic in `backend/app/services/extraction_service.py`
+3. **Backend test**: add a test case in `backend/tests/test_extraction_service.py`
+4. **Frontend model**: mirror the new field in `frontend/src/models/extraction.ts`
+5. **Frontend view**: display it in `frontend/src/components/extraction/ResultExtractionDataPreview/ResultExtractionDataPreview.tsx`
 
 ---
 
 ## Pull Request Checklist
 
-- [ ] Branched from `dev`, not `main`
+- [ ] Branched from `develop`, not `main`
 - [ ] Commit messages follow Conventional Commits format
 - [ ] All tests pass locally (`pytest` / `npm run test`)
 - [ ] Linting passes (`ruff check` / `npm run lint`)
