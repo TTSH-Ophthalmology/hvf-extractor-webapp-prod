@@ -23,6 +23,37 @@ echo   NHGEI HVF Extractor - Installation
 echo =============================================================================
 
 :: -----------------------------------------------------------------------------
+:: 0. Check for risky install locations (best-effort, non-fatal)
+:: -----------------------------------------------------------------------------
+where powershell >nul 2>nul
+if not errorlevel 1 (
+    for /f "usebackq delims=" %%d in (`powershell -NoProfile -Command "(Get-Volume -DriveLetter ('%BUNDLE_DIR:~0,1%') -ErrorAction SilentlyContinue).DriveType"`) do set DRIVE_TYPE=%%d
+
+    if /i "%DRIVE_TYPE%"=="Removable" (
+        echo [warn] This folder is on a removable drive ^(%BUNDLE_DIR:~0,2%^). If it
+        echo        gets unplugged, the app will fail. Consider copying to a local
+        echo        folder like C:\HVF-Extractor first.
+    )
+)
+
+echo %BUNDLE_DIR% | findstr /i /c:"\Downloads\" >nul
+if not errorlevel 1 (
+    echo [warn] Running from a Downloads folder. Consider moving to a local
+    echo        folder like C:\HVF-Extractor first - some antivirus/security
+    echo        tools treat Downloads specially and may interfere.
+)
+
+if defined OneDrive (
+    echo %BUNDLE_DIR% | findstr /i /c:"%OneDrive%" >nul
+    if not errorlevel 1 (
+        echo [warn] Running from a OneDrive-synced folder. OneDrive can lock
+        echo        files while syncing, which may interfere with install or
+        echo        start. Consider moving to a local folder like
+        echo        C:\HVF-Extractor first.
+    )
+)
+
+:: -----------------------------------------------------------------------------
 :: 1. Check bundled Python
 :: -----------------------------------------------------------------------------
 echo.

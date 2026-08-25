@@ -26,6 +26,26 @@ Write-Host "  NHGEI HVF Extractor - Installation" -ForegroundColor Cyan
 Write-Host "=============================================================================" -ForegroundColor Cyan
 
 # -----------------------------------------------------------------------------
+# 0. Check for risky install locations (best-effort, non-fatal)
+# -----------------------------------------------------------------------------
+try {
+    $driveLetter = (Get-Item $BUNDLE_DIR).PSDrive.Name
+    $driveType = (Get-Volume -DriveLetter $driveLetter -ErrorAction SilentlyContinue).DriveType
+    if ($driveType -eq "Removable") {
+        Warn "This folder is on a removable drive ($driveLetter`:). If it gets unplugged, the app will fail. Consider copying to a local folder like C:\HVF-Extractor first."
+    }
+} catch {}
+
+$downloadsPath = [Environment]::GetFolderPath("UserProfile") + "\Downloads"
+if ($BUNDLE_DIR -like "$downloadsPath*") {
+    Warn "Running from a Downloads folder. Consider moving to a local folder like C:\HVF-Extractor first - some antivirus/security tools treat Downloads specially and may interfere."
+}
+
+if ($env:OneDrive -and $BUNDLE_DIR.StartsWith($env:OneDrive)) {
+    Warn "Running from a OneDrive-synced folder. OneDrive can lock files while syncing, which may interfere with install or start. Consider moving to a local folder like C:\HVF-Extractor first."
+}
+
+# -----------------------------------------------------------------------------
 # 1. Check bundled Python
 # -----------------------------------------------------------------------------
 Step "Checking bundled Python"
