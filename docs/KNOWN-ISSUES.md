@@ -2,10 +2,41 @@
 
 Notes from a review of the deployment scripts and adjacent auth code, focused on
 user-error scenarios (re-running install, slow machines, multiple installs).
-Nothing here has been fixed yet. Ranked roughly by how much it can actually
-bite someone.
+Most items here are still open; a couple have since been fixed and are marked
+as such. Ranked roughly by how much it can actually bite someone.
 
-## 1. Re-running `install.bat` doesn't actually reset the admin password
+## 1. FIXED: a stray `frontend/.env` could break login on a fresh install
+
+**Where:** `scripts/bundle.ps1`, frontend build step
+
+The single most time-consuming bug found this round. A local `frontend/.env`
+(e.g. left over from `setup.ps1`/`setup.sh`, which copies `.env.example`'s
+`VITE_API_URL=http://localhost:8000`) could survive into a `bundle.ps1` build
+and get baked into the frontend as an absolute API URL, even though
+`$env:VITE_API_URL = ""` was set beforehand. On Windows, setting an
+environment variable to an empty string can behave like unsetting it
+entirely, and dotenv-style loading only skips a `.env` value when the
+variable is genuinely already set, so the stray file won.
+
+Symptom: the page loads at `http://127.0.0.1:8000` (as `start.bat` opens it),
+but API calls went to the baked-in `http://localhost:8000` instead. Browsers
+treat `127.0.0.1` and `localhost` as completely different sites, so every
+`SameSite` cookie the backend tried to set was silently blocked. Login
+appeared to succeed (`200` on `POST /api/token`), but no session actually
+persisted, every subsequent request came back `401`/`403`, and the app
+bounced back to the login page.
+
+**Fix (shipped):** `bundle.ps1` now moves any existing `frontend/.env` aside
+before building and restores it afterward, regardless of outcome, so there is
+nothing for Vite to pick up.
+
+**Still open:** the deeper root fix would be to hardcode `baseURL: ""` in
+`frontend/src/services/api.ts` and drop `VITE_API_URL` from `.env.example`
+entirely, since this app is never actually deployed with the frontend and
+backend on different origins. That would make this bug class structurally
+impossible rather than just guarded against in the build script.
+
+## 2. Re-running `install.bat` doesn't actually reset the admin password
 
 **Where:** `backend/app/db/db.py`, `_seed_admin_user()`
 
@@ -28,8 +59,7 @@ install output warns about this.
 The current "fix" is a manual step documented in `docs/AIRGAPPED-DEPLOY.md`
 ("Changing credentials": re-run install, then delete
 `backend\data\database.json`), which is really a workaround for the bug, not
-a designed recovery flow. This is what cost the most time in the deployment
-troubleshooting session that produced this list.
+a designed recovery flow.
 
 **Suggested fix:** make `_seed_admin_user()` always upsert the admin user's
 password hash from `.env`, instead of only seeding when the table is empty.
@@ -37,7 +67,31 @@ password hash from `.env`, instead of only seeding when the table is empty.
 `install.bat` behaves the way someone would naturally expect, and the
 delete-the-database step goes away entirely.
 
-## 2. `start.bat`'s browser auto-open gives up silently after 90 seconds
+## 3. `-SkipWheels` / `-SkipModels` don't actually work
+
+**Where:** `scripts/bundle.ps1`, "Clean previous bundle" step
+
+Both flags exist to reuse an already-downloaded `wheels\` folder or OCR
+models from a previous run. But the "clean previous bundle" step
+unconditionally deletes the whole bundle directory before either flag's
+"does it already exist" check ever runs:
+
+```powershell
+if (Test-Path $BUNDLE_DIR) {
+    Remove-Item $BUNDLE_DIR -Recurse -Force
+}
+```
+
+So by the time `-SkipWheels`/`-SkipModels` check for existing files, they're
+already gone, every run does a full wheel download and model download
+regardless of the flags. Confirmed while testing bundling changes this
+session, not something introduced this round, it's just never worked.
+
+**Suggested fix:** preserve `wheels\` and `backend\data\models\` across the
+clean step when the corresponding skip flag is set (move aside, clean,
+move back), instead of wiping them unconditionally.
+
+## 4. `start.bat`'s browser auto-open gives up silently after 90 seconds
 
 **Where:** `scripts/start.bat`, `scripts/start.ps1`, `scripts/start.sh`
 
@@ -51,7 +105,7 @@ start when it might just be slow.
 **Suggested fix:** lengthen the window, and/or print a message after the loop
 gives up ("still starting, once ready open http://127.0.0.1:8000 manually").
 
-## 3. Reinstalling to a second folder silently steals the desktop shortcut
+## 5. Reinstalling to a second folder silently steals the desktop shortcut
 
 **Where:** `scripts/install.bat` / `install.ps1`, desktop shortcut step
 
@@ -66,7 +120,7 @@ them.
 a shortcut already exists and points somewhere else, but probably not worth
 the complexity unless it actually causes confusion in practice.
 
-## 4. No proactive check for risky install locations
+## 6. No proactive check for risky install locations
 
 **Where:** `scripts/install.bat` / `install.ps1`
 
@@ -81,7 +135,7 @@ but this starts to solve a Windows-permissions problem in batch script, with
 diminishing returns. Leaning toward leaving this as reactive documentation
 rather than trying to detect it.
 
-## 5. Refresh-token rotation has a small race window (not deployment-related)
+## 7. Refresh-token rotation has a small race window (not deployment-related)
 
 **Where:** `backend/app/main.py`, `POST /api/refresh`
 
@@ -109,6 +163,6 @@ just a code change).
 
 ---
 
-Of these, #1 is the one worth actually fixing. It's a clean, well-understood
-bug with a clean fix, and it's the thing that caused the most confusion
-during deployment testing. The rest are minor or documentation-level.
+Of the open items, #2 is the one worth actually fixing next. It's a clean,
+well-understood bug with a clean fix, and it's the thing that caused the most
+confusion after #1 was resolved. The rest are minor or documentation-level.
