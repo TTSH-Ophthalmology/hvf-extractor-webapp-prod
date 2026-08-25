@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.7] - 2026-08-25
+
+### Added
+
+- `install.bat` / `install.ps1` now warn upfront (non-fatal) if the bundle folder is on a removable drive, inside `Downloads`, or inside a OneDrive-synced folder, before anything else runs, instead of only suggesting this reactively after a failure.
+
 ## [1.2.6] - 2026-08-25
 
 ### Fixed
