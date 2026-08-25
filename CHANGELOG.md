@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.8] - 2026-08-25
+
+### Added
+
+- Every bundle now includes a plain-language `README.txt` at its root for whoever runs it on the target machine (not assumed to be technical): just what to double-click/run, in order, for first-time setup and for starting over with a fresh copy.
+
+### Fixed
+
+- Re-running `install.bat`/`install.ps1`/`install.sh` now actually resets the admin password. `_seed_admin_user()` previously only seeded the admin user once ever, so a re-install's fresh credentials were silently ignored if an admin user already existed from an earlier install (e.g. one that happened on a staging machine before the bundle was copied elsewhere). `.env` is now the source of truth on every start, matching what `setup_credentials.py` actually writes. This was the underlying bug behind the `uninstall` scripts added in 1.2.4, that workaround is no longer strictly necessary for this specific case (though still useful for a full state reset).
+
 ## [1.2.7] - 2026-08-25
 
 ### Added
