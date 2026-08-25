@@ -270,11 +270,38 @@ chmod +x "$BUNDLE_DIR/install.sh" "$BUNDLE_DIR/start.sh" "$BUNDLE_DIR/uninstall.
 # -> root), so this keeps that resolving correctly once bundled too.
 cp "$ROOT_DIR/VERSION"                     "$BUNDLE_DIR/VERSION"
 
+# Plain-language instructions for whoever runs this on the target machine -
+# not assumed to be technical, so this is deliberately just "run this, then
+# run that," nothing else.
+cat > "$BUNDLE_DIR/README.txt" << EOF
+NHGEI HVF Extractor - v$APP_VERSION
+=============================
+
+FIRST TIME SETUP
+
+1. Run:  ./install.sh
+   Create a username and password when asked. Remember these, you need
+   them to log in.
+
+2. Run:  ./start.sh
+   Your browser opens automatically. If not, go to http://127.0.0.1:8000
+
+After that, just run ./start.sh each time you want to use it.
+
+
+STARTING OVER WITH A FRESH COPY
+(for example, if this folder was copied from another computer)
+
+1. Run ./uninstall.sh, type YES, press Enter.
+2. Run ./install.sh, then ./start.sh.
+EOF
+
 echo "  Bundle layout:"
 echo "    $(basename "$BUNDLE_DIR")/"
 echo "      install.sh"
 echo "      start.sh"
 echo "      uninstall.sh"
+echo "      README.txt"
 echo "      setup_credentials.py"
 echo "      VERSION"
 echo "      wheels/              ($WHEEL_COUNT wheels)"

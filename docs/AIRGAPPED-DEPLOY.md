@@ -168,6 +168,7 @@ dist\hvf-extractor-v<version>\
   start.sh                 ← Linux/macOS launcher
   uninstall.sh             ← Linux/macOS uninstaller
   VERSION                  ← app version, read by the backend at startup
+  README.txt               ← plain-language instructions for the target machine
   wheels\                  ← Python wheel files (platform-specific)
   python\                  ← Bundled Python runtime (Windows only)
   backend\

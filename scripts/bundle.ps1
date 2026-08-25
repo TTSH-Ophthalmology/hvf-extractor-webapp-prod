@@ -556,6 +556,32 @@ Copy-Item "$ROOT_DIR/scripts/assets/icon.ico"      "$BUNDLE_DIR/icon.ico"
 # -> root), so this keeps that resolving correctly once bundled too.
 Copy-Item "$ROOT_DIR/VERSION"                      "$BUNDLE_DIR/VERSION"
 
+# Plain-language instructions for whoever runs this on the target machine -
+# not assumed to be technical, so this is deliberately just "click this,
+# then click that," nothing else.
+@"
+NHGEI HVF Extractor - v$APP_VERSION
+=============================
+
+FIRST TIME SETUP
+
+1. Double-click install.bat
+   Create a username and password when asked. Remember these, you need
+   them to log in.
+
+2. Double-click start.bat
+   Your browser opens automatically. If not, go to http://127.0.0.1:8000
+
+After that, just double-click start.bat each time you want to use it.
+
+
+STARTING OVER WITH A FRESH COPY
+(for example, if this folder was copied from another computer)
+
+1. Double-click uninstall.bat, type YES, press Enter.
+2. Double-click install.bat, then start.bat.
+"@ | Set-Content -Path "$BUNDLE_DIR/README.txt" -Encoding UTF8
+
 Write-Host "  Bundle layout:"
 Write-Host "    $(Split-Path $BUNDLE_DIR -Leaf)\"
 Write-Host "      install.bat"
@@ -567,6 +593,7 @@ Write-Host "      uninstall.ps1"
 Write-Host "      setup_credentials.py"
 Write-Host "      icon.ico"
 Write-Host "      VERSION"
+Write-Host "      README.txt"
 Write-Host "      wheels\              ($wheelCount wheels)"
 Write-Host "      python\              (Python $PY_FULL_VER embeddable + pip)"
 Write-Host "      backend\"
