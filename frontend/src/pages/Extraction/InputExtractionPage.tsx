@@ -229,11 +229,9 @@ export const InputExtractionPage = () => {
 
           if (recoveredReportType === undefined) {
             recoveredReportType = job.reportType
-          }
-
-          if (job.reportType !== recoveredReportType) {
-            // Mixed report types across separate interrupted sessions —
-            // don't collapse them under one reportType label. Leave this
+          } else if (job.reportType !== recoveredReportType) {
+            // Mixed report types across separate interrupted sessions.
+            // Don't collapse them under one reportType label; leave this
             // job pending so a later reload recovers it on its own.
             markExtractionPending(job)
             continue

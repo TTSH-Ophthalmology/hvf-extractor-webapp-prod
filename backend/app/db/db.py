@@ -207,7 +207,7 @@ class TinyDbStore:
     def revoke_refresh_token(self, token_id: str) -> None:
         """Soft-revoke a token as part of rotation. Still active for
         REFRESH_TOKEN_GRACE_PERIOD_SECONDS, so a client that never received
-        the rotated cookie can retry. Not for explicit logout — use
+        the rotated cookie can retry. Not for explicit logout, use
         delete_refresh_token for that, which takes effect immediately."""
         def operation() -> None:
             Token = Query()
@@ -224,7 +224,7 @@ class TinyDbStore:
     def delete_refresh_token(self, token_id: str) -> None:
         """Hard-delete a token, e.g. on explicit logout. Unlike
         revoke_refresh_token, this takes effect immediately with no grace
-        period — is_refresh_token_active finds no record at all."""
+        period: is_refresh_token_active finds no record at all."""
         def operation() -> None:
             Token = Query()
             self.refresh_tokens.remove(Token.token_id == token_id)

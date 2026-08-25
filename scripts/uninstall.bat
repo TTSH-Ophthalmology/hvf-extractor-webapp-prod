@@ -64,7 +64,8 @@ if exist "%BACKEND_DIR%\data\database.json" (
 )
 
 if exist "%BACKEND_DIR%\data\uploads" (
-    del /f /q /s "%BACKEND_DIR%\data\uploads\*" >nul 2>nul
+    rd /s /q "%BACKEND_DIR%\data\uploads" >nul 2>nul
+    mkdir "%BACKEND_DIR%\data\uploads" >nul 2>nul
     echo   Cleared: %BACKEND_DIR%\data\uploads\
 )
 
