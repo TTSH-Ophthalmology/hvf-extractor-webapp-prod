@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-08-25
+
+### Added
+
+- `uninstall.bat` / `uninstall.ps1` / `uninstall.sh` reset an installed bundle back to a fresh state (admin credentials, database, uploads, logs, desktop shortcut), without needing to re-copy or re-bundle anything. This is the official recovery path when a bundle installed once (e.g. on a staging machine) gets copied elsewhere, since re-running `install` alone does not reset the admin password.
+
+### Changed
+
+- Bundle output now lands under `dist/hvf-extractor-v<version>/` instead of `dist-bundle-<version>/` at the project root.
+
 ## [1.2.3] - 2026-08-25
 
 ### Fixed
