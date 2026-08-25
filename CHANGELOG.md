@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-25
+
+### Added
+
+- Completed extraction results are now persisted to disk (`uploads/results/{job_id}.json`) and recoverable via `GET /api/extract/{job_id}`. Previously a result only ever existed as the response to the original `POST /api/extract` call; if that response never reached the browser (dropped connection, forced re-login mid-request), the extraction had to be re-run from scratch with no way to get the original result back. Kept until the next server restart, matching the existing upload-cleanup lifecycle.
+- The frontend now tracks in-flight extraction jobs in `localStorage` and checks for recoverable results on load. If a submission's response was lost, the next visit shows a "Previous Results Recovered" banner and restores the result automatically instead of silently losing it.
+
+### Fixed
+
+- Refresh-token rotation (`POST /api/refresh`) no longer has a race window where a network blip between revoking the old token and the client receiving the new one could leave a legitimate session stuck logged out. The old token is now revoked only after the new one is confirmed saved, and a 10-second grace period lets a client that retries after a dropped response still complete rotation.
+
 ## [1.2.8] - 2026-08-25
 
 ### Added
