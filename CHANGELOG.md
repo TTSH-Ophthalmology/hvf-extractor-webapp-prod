@@ -5,6 +5,15 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-08-25
+
+### Fixed
+
+- Logging out (`POST /api/refresh/revoke`) now invalidates the refresh token immediately. The 10-second grace period added in 1.3.0 to smooth over dropped rotation responses was being applied uniformly to every revocation, including explicit logout, so a captured refresh-token cookie could still be replayed for up to 10 seconds after a user logged out. Logout now hard-deletes the token record instead of soft-revoking it, so it's no longer eligible for the grace period; rotation still gets the grace period as intended.
+- `uninstall.bat` / `uninstall.ps1` now actually clear everything under `backend\data\uploads\`, including the `results\` subfolder introduced in 1.3.0 for recoverable extraction results. They previously only deleted files directly in `uploads\` (not recursively), so persisted HVF/VRVF result data could silently survive an uninstall that reported it as cleared. `uninstall.sh` was already recursive and unaffected.
+- Recovering interrupted extraction jobs from `localStorage` no longer mislabels results under the wrong report type. If jobs from two separate interrupted sessions of different report types (HVF and VRVF) were both pending, recovery collapsed them under whichever type was processed last. Each recovery pass now only recovers jobs matching a single report type at a time, leaving the rest pending for a later pass.
+- Corrected the 1.3.0 changelog entry, which claimed the refresh-token race fix reordered revoke-then-save; the actual and only mechanism shipped was the grace period.
+
 ## [1.3.0] - 2026-08-25
 
 ### Added
@@ -14,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Refresh-token rotation (`POST /api/refresh`) no longer has a race window where a network blip between revoking the old token and the client receiving the new one could leave a legitimate session stuck logged out. The old token is now revoked only after the new one is confirmed saved, and a 10-second grace period lets a client that retries after a dropped response still complete rotation.
+- Refresh-token rotation (`POST /api/refresh`) no longer has a race window where a network blip between revoking the old token and the client receiving the new one could leave a legitimate session stuck logged out. The old token now has a 10-second grace period after being revoked, so a client that retries after a dropped response can still complete rotation.
 
 ## [1.2.8] - 2026-08-25
 
