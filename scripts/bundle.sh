@@ -7,7 +7,7 @@
 #   --skip-models   Reuse PaddleOCR models already present in this version's bundle dir.
 #
 # Runs on the DEVELOPER machine (requires internet, Node.js, Python).
-# Produces: dist-bundle-<version>/ at the project root - tar/zip and transfer to target.
+# Produces: dist/hvf-extractor-v<version>/ at the project root - tar/zip and transfer to target.
 # The version comes from the VERSION file at the project root.
 # =============================================================================
 
@@ -26,7 +26,8 @@ done
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_VERSION="$(tr -d '[:space:]' < "$ROOT_DIR/VERSION")"
-BUNDLE_DIR="$ROOT_DIR/dist-bundle-$APP_VERSION"
+BUNDLE_NAME="hvf-extractor-v$APP_VERSION"
+BUNDLE_DIR="$ROOT_DIR/dist/$BUNDLE_NAME"
 WHEELS_DIR="$BUNDLE_DIR/wheels"
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
@@ -264,9 +265,8 @@ echo -e "${GREEN}===============================================================
 echo -e "${GREEN}  Bundle ready at: $BUNDLE_DIR${NC}"
 echo -e "${GREEN}=============================================================================${NC}"
 echo ""
-BUNDLE_NAME="$(basename "$BUNDLE_DIR")"
 echo "  Next steps:"
-echo "    1. Archive and transfer:  tar -czf hvf-bundle-$APP_VERSION.tar.gz $BUNDLE_NAME/"
+echo "    1. Archive and transfer:  tar -czf hvf-bundle-$APP_VERSION.tar.gz -C dist $BUNDLE_NAME/"
 echo "    2. On target machine:     tar -xzf hvf-bundle-$APP_VERSION.tar.gz && cd $BUNDLE_NAME"
 echo "    3. Install:               ./install.sh"
 echo "    4. Start:                 ./start.sh"

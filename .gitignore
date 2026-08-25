@@ -52,5 +52,4 @@ Thumbs.db
 backend/app/db/database.json
 
 # === Build Output ===
-dist-bundle/
-dist-bundle-*/
+/dist/

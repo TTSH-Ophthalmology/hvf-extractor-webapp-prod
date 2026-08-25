@@ -1,6 +1,6 @@
 # =============================================================================
 # start.ps1 - Launch the HVF Extractor on an air-gapped Windows machine
-# Usage: .\start.ps1  (run from inside the unzipped dist-bundle-<version>\ folder)
+# Usage: .\start.ps1  (run from inside the unzipped dist\hvf-extractor-v<version>\ folder)
 #
 # Run install.ps1 first if you haven't already.
 # =============================================================================

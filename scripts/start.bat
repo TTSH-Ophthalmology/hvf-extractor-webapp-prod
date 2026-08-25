@@ -1,7 +1,7 @@
 @echo off
 :: =============================================================================
 :: start.bat - Launch the HVF Extractor on an air-gapped Windows machine
-:: Usage: start.bat  (run from inside the dist-bundle-<version>\ folder)
+:: Usage: start.bat  (run from inside the dist\hvf-extractor-v<version>\ folder)
 ::
 :: Run install.bat first if you haven't already.
 :: =============================================================================

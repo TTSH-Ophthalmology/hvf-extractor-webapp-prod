@@ -9,7 +9,7 @@
 #                            Use this when dev and target have different Python versions.
 #
 # Runs on the DEVELOPER machine (requires internet, Node.js, Python).
-# Produces: dist-bundle-<version>\ at the project root - zip and transfer to target.
+# Produces: dist\hvf-extractor-v<version>\ at the project root - zip and transfer to target.
 # The version comes from the VERSION file at the project root.
 #
 # If you get an execution policy error, run once as admin:
@@ -26,7 +26,8 @@ $ErrorActionPreference = "Stop"
 
 $ROOT_DIR    = (Resolve-Path "$PSScriptRoot/..").Path
 $APP_VERSION = (Get-Content "$ROOT_DIR/VERSION" -Raw).Trim()
-$BUNDLE_DIR  = "$ROOT_DIR/dist-bundle-$APP_VERSION"
+$BUNDLE_NAME = "hvf-extractor-v$APP_VERSION"
+$BUNDLE_DIR  = "$ROOT_DIR/dist/$BUNDLE_NAME"
 $WHEELS_DIR  = "$BUNDLE_DIR/wheels"
 $PYTHON_DIR  = "$BUNDLE_DIR/python"
 

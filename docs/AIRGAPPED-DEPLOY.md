@@ -34,7 +34,7 @@ From the project root:
 .\scripts\bundle.ps1
 ```
 
-This produces `dist-bundle-<version>\` at the project root, where `<version>` is read from the [VERSION](../VERSION) file (e.g. `dist-bundle-1.2.0\`). Copy the entire folder to the target machine (USB drive, network share, or zip it first).
+This produces `dist\hvf-extractor-v<version>\` at the project root, where `<version>` is read from the [VERSION](../VERSION) file (e.g. `dist\hvf-extractor-v1.2.3\`). Copy the entire folder to the target machine (USB drive, network share, or zip it first).
 
 **Optional flags:**
 
@@ -53,14 +53,14 @@ Example: target machine has Python 3.12.9 but dev machine has a different versio
 
 **To zip before transfer:**
 ```powershell
-Compress-Archive -Path dist-bundle-1.2.0 -DestinationPath hvf-bundle-1.2.0.zip
+Compress-Archive -Path dist\hvf-extractor-v1.2.3 -DestinationPath hvf-extractor-v1.2.3.zip
 ```
 
 ---
 
 ### Step 2: Install (target machine)
 
-Open a Command Prompt inside the unzipped `dist-bundle-<version>\` folder and run:
+Open a Command Prompt inside the unzipped `hvf-extractor-v<version>\` folder and run:
 
 ```cmd
 install.bat
@@ -119,7 +119,7 @@ The script auto-detects your platform and Python version. Supported targets:
 
 **To archive before transfer:**
 ```bash
-tar -czf hvf-bundle-1.2.0.tar.gz dist-bundle-1.2.0/
+tar -czf hvf-extractor-v1.2.3.tar.gz -C dist hvf-extractor-v1.2.3/
 ```
 
 **Optional flags:** `--skip-wheels`, `--skip-models`
@@ -156,7 +156,7 @@ Your browser opens automatically at `http://127.0.0.1:8000` once the app is read
 ## Bundle layout
 
 ```
-dist-bundle-<version>\
+dist\hvf-extractor-v<version>\
   install.bat              ← Windows installer (Command Prompt)
   install.ps1              ← Windows installer (PowerShell)
   start.bat                ← Windows launcher (Command Prompt)
@@ -217,4 +217,4 @@ The bundle includes pre-downloaded PaddleOCR models (`data\models\det\` and `dat
 
 **Re-bundling after code changes**
 
-Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist-bundle-<version>\` first. If you also bumped `VERSION`, the previous version's bundle dir is left untouched on disk, so remove it manually if you don't need it. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed (only works when re-running against the same, not-yet-deleted version's bundle dir).
+Re-run the bundle script on the developer machine after any code change. It always does a clean build, deleting the previous `dist\hvf-extractor-v<version>\` first. If you also bumped `VERSION`, the previous version's bundle dir is left untouched on disk under `dist\`, so remove it manually if you don't need it. Use `-SkipModels` / `--skip-models` to avoid re-downloading models if they haven't changed (only works when re-running against the same, not-yet-deleted version's bundle dir, see [docs/KNOWN-ISSUES.md](./KNOWN-ISSUES.md) for a caveat on this).

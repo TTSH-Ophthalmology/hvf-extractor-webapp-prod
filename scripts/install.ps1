@@ -1,6 +1,6 @@
 # =============================================================================
 # install.ps1 - Set up the HVF Extractor on an air-gapped Windows machine
-# Usage: .\install.ps1  (run from inside the unzipped dist-bundle-<version>\ folder)
+# Usage: .\install.ps1  (run from inside the unzipped dist\hvf-extractor-v<version>\ folder)
 #
 # No Python installation required - a Python runtime is bundled in python\
 #

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # install.sh - Set up the HVF Extractor on an air-gapped Unix machine
-# Usage: ./install.sh  (run from inside the unzipped dist-bundle-<version>/ folder)
+# Usage: ./install.sh  (run from inside the unzipped dist/hvf-extractor-v<version>/ folder)
 #
 # Requirements: Python 3.11+ installed and on PATH. No internet needed.
 # =============================================================================

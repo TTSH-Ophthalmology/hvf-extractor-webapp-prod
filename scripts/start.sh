@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # start.sh - Launch the HVF Extractor on an air-gapped Unix machine
-# Usage: ./start.sh  (run from inside the unzipped dist-bundle-<version>/ folder)
+# Usage: ./start.sh  (run from inside the unzipped dist/hvf-extractor-v<version>/ folder)
 #
 # Run install.sh first if you haven't already.
 # =============================================================================
