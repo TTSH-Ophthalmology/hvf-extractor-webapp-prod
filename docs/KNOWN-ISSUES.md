@@ -3,41 +3,9 @@
 Notes from a review of the deployment scripts and adjacent auth code, focused on
 user-error scenarios (re-running install, slow machines, multiple installs).
 Only items that still need a fix are kept here; see `CHANGELOG.md` for what's
-already shipped. Ranked roughly by how much it can actually bite someone.
+already shipped.
 
-## 1. Re-running `install.bat` doesn't actually reset the admin password
-
-**Where:** `backend/app/db/db.py`, `_seed_admin_user()`
-
-The install flow writes a fresh password hash and JWT secret into `.env` every
-time `setup_credentials.py` runs, but the admin user only gets seeded into
-the database once:
-
-```python
-def _seed_admin_user(self) -> None:
-    if len(self.users) > 0:
-        return
-```
-
-If someone re-runs `install.bat` on a folder that's already been started
-before (fresh credentials, "just to be safe," re-installing after a copy,
-etc.), the new credentials in `.env` are silently ignored. The old password
-from the first run is still what's actually checked against. Nothing in the
-install output warns about this.
-
-**Mitigation shipped:** `scripts/uninstall.bat` / `uninstall.ps1` /
-`uninstall.sh` give an official way to reset (delete `.env`, the database,
-uploads, and logs, then re-run install). This is a workaround, not a fix,
-the underlying bug is still there if someone re-installs without
-uninstalling first.
-
-**Suggested fix:** make `_seed_admin_user()` always upsert the admin user's
-password hash from `.env`, instead of only seeding when the table is empty.
-`.env` becomes the actual source of truth on every start, re-running
-`install.bat` behaves the way someone would naturally expect, and the
-uninstall-first workaround stops being necessary for this specific case.
-
-## 2. Refresh-token rotation has a small race window (not deployment-related)
+## 1. Refresh-token rotation has a small race window (not deployment-related)
 
 **Where:** `backend/app/main.py`, `POST /api/refresh`
 
