@@ -5,6 +5,17 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.3] - 2026-08-25
+
+### Fixed
+
+- Login appeared to succeed but never actually persisted a session: a stray `frontend/.env` (e.g. left over from `setup.ps1`/`setup.sh`) could survive into a `bundle.ps1` build and get baked in as an absolute `VITE_API_URL=http://localhost:8000`, while the app is actually opened at `http://127.0.0.1:8000`. Browsers treat `127.0.0.1` and `localhost` as different sites, so every `SameSite` auth cookie was silently blocked. `bundle.ps1` now moves any `frontend/.env` aside for the duration of the build and restores it afterward, regardless of outcome.
+- `bundle.ps1` no longer duplicates a ~1GB+ Python environment: it reuses `backend/.venv` (the same one `setup.ps1`/`setup.sh` create for local dev) if it already has what the bundler needs, only creating and populating it on a machine that's never run setup before.
+
+### Changed
+
+- `VERSION` is now the single source of truth for the app version everywhere. `backend/app/main.py` reads it at startup and the frontend reads it at build time, instead of both being manually kept in sync by hand on every release.
+
 ## [1.2.1] - 2026-08-25
 
 ### Added
@@ -18,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Native command output (npm, pip, paddleocr) no longer crashes `bundle.ps1` with a RemoteException on Windows PowerShell 5.1
 - `npm ci` / `npm run build` failures during bundling are no longer silently hidden
 - `bundle.ps1` now checks that `paddleocr` is installed on the dev machine upfront, instead of failing deep into the OCR model download step
-- `install.bat` / `install.ps1` no longer hard-fail if a data directory can't be created (e.g. permissions) — warn and continue instead
+- `install.bat` / `install.ps1` no longer hard-fail if a data directory can't be created (e.g. permissions), they warn and continue instead
 - Clearer error messages when `pip install` or credential setup fails with "Access is denied" (antivirus or security policy), suggesting moving the bundle to a local folder
 - `@vitejs/plugin-react` bumped for `vite@8` compatibility (a fresh `npm ci` was failing outright)
 
