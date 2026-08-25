@@ -225,10 +225,21 @@ export const InputExtractionPage = () => {
       for (const job of pending) {
         try {
           const result = await getExtraction(job.jobId)
-          if (result.status === 'complete') {
-            recovered.push({ eye: job.eye, originalFilename: job.filename, result })
+          if (result.status !== 'complete') continue
+
+          if (recoveredReportType === undefined) {
             recoveredReportType = job.reportType
           }
+
+          if (job.reportType !== recoveredReportType) {
+            // Mixed report types across separate interrupted sessions —
+            // don't collapse them under one reportType label. Leave this
+            // job pending so a later reload recovers it on its own.
+            markExtractionPending(job)
+            continue
+          }
+
+          recovered.push({ eye: job.eye, originalFilename: job.filename, result })
         } catch {
           // Nothing recoverable for this job (never completed, or already claimed).
         }

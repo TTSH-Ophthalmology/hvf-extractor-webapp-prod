@@ -315,7 +315,7 @@ def revoke_refresh_token(
             payload = verify_token(refresh_token, expect="refresh")
             token_id = payload.get("jti")
             if token_id:
-                store.revoke_refresh_token(token_id)
+                store.delete_refresh_token(token_id)
         except ValueError:
             logger.info(
                 "Refresh revoke requested with invalid token: ip=%s",

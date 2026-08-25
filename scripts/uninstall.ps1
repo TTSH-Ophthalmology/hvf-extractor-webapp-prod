@@ -66,7 +66,7 @@ if (Test-Path $dbFile) {
 
 $uploadsDir = "$BACKEND_DIR\data\uploads"
 if (Test-Path $uploadsDir) {
-    Get-ChildItem $uploadsDir -File -ErrorAction SilentlyContinue | Remove-Item -Force
+    Get-ChildItem $uploadsDir -File -Recurse -ErrorAction SilentlyContinue | Remove-Item -Force
     Write-Host "  Cleared: $uploadsDir\"
 }
 
