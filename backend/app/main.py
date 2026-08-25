@@ -85,10 +85,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Clean up uploads folder on shutdown.
+    # Clean up uploads folder (and persisted extraction results) on shutdown.
     upload_dir = Path(settings.upload_dir)
     if upload_dir.is_dir():
-        for file in upload_dir.iterdir():
+        for file in upload_dir.rglob("*"):
             if file.is_file():
                 file.unlink(missing_ok=True)
 

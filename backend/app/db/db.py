@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 from json import JSONDecodeError
 from pathlib import Path
@@ -10,6 +10,8 @@ from threading import RLock
 from tinydb import Query, TinyDB
 
 from app.config import settings
+
+REFRESH_TOKEN_GRACE_PERIOD_SECONDS = 10
 
 
 def _utc_now() -> datetime:
@@ -185,8 +187,18 @@ class TinyDbStore:
             token = self.refresh_tokens.get(
                 (Token.token_id == token_id) & (Token.username == username)
             )
-            if not token or token.get("revoked"):
+            if not token:
                 return False
+
+            if token.get("revoked"):
+                revoked_at = token.get("revoked_at")
+                if not revoked_at:
+                    return False
+                grace_expires = _parse_timestamp(revoked_at) + timedelta(
+                    seconds=REFRESH_TOKEN_GRACE_PERIOD_SECONDS
+                )
+                if _utc_now() > grace_expires:
+                    return False
 
             return _parse_timestamp(token["expires_at"]) > _utc_now()
 
