@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.5] - 2026-08-25
+
+### Fixed
+
+- `start.bat` / `start.ps1` / `start.sh`'s browser auto-open no longer fails silently. The wait window is longer (90s to 3 minutes, since OCR/model loading can be slow on constrained machines), and if the app still isn't up by then, it now tells you (a message box on Windows, since the polling runs in a hidden window/background job with no visible console; a terminal message on macOS/Linux) instead of just doing nothing.
+
 ## [1.2.4] - 2026-08-25
 
 ### Added
