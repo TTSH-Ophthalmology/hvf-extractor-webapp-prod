@@ -94,10 +94,13 @@ class TinyDbStore:
                 return operation()
 
     def _seed_admin_user(self) -> None:
+        # Always upsert (not just when no users exist yet): .env is the only
+        # place the admin password is ever set (there is no change-password
+        # feature), so it must be the source of truth on every start.
+        # Otherwise a re-run of install.bat/setup_credentials.py writes a new
+        # password hash to .env that silently never takes effect, because an
+        # admin user from an earlier install already exists.
         with self._lock:
-            if len(self.users) > 0:
-                return
-
             if not settings.admin_username or not settings.admin_password_hash:
                 return
 
