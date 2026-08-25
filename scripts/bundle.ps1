@@ -55,15 +55,19 @@ if (-not (Get-Command npm    -ErrorAction SilentlyContinue)) { Fail "npm not fou
 $isWindowsHost = ($env:OS -eq "Windows_NT")
 
 # -----------------------------------------------------------------------------
-# 1b. Set up an isolated venv for the bundler's own dependencies
+# 1b. Set up the backend venv (reused from local dev if it already exists)
 # -----------------------------------------------------------------------------
 # The bundler needs paddleocr/paddlepaddle/paddlex locally (step 6 runs it
 # directly on the dev machine to trigger the OCR model download - there is no
 # other way to obtain the model files) and packaging (step 4, to filter
-# requirements.txt on non-Windows hosts). Rather than requiring those on
-# whatever Python is already on PATH, create/reuse a dedicated venv just for
-# the bundler so it neither depends on, nor pollutes, the system Python.
-$BUNDLE_VENV_DIR = "$ROOT_DIR/.bundle-venv"
+# requirements.txt on non-Windows hosts). All four are already pinned in
+# backend/requirements.txt, so reuse backend/.venv (the same venv scripts/
+# setup.ps1 / setup.sh create for local dev) if it exists - anyone who's
+# already set up locally already has what's needed, no separate install. If
+# it doesn't exist (a machine used only for bundling, never for dev), create
+# it here and install just the packages the bundler itself needs, rather than
+# the full requirements.txt.
+$BUNDLE_VENV_DIR = "$ROOT_DIR/backend/.venv"
 if ($isWindowsHost) {
     $BUNDLE_PYTHON = "$BUNDLE_VENV_DIR/Scripts/python.exe"
 } else {
@@ -71,9 +75,9 @@ if ($isWindowsHost) {
 }
 
 if (-not (Test-Path $BUNDLE_PYTHON)) {
-    Step "Creating bundler virtual environment ($(Split-Path $BUNDLE_VENV_DIR -Leaf))"
+    Step "Creating backend virtual environment (backend/.venv)"
     python -m venv $BUNDLE_VENV_DIR
-    if ($LASTEXITCODE -ne 0) { Fail "Failed to create the bundler venv at $BUNDLE_VENV_DIR." }
+    if ($LASTEXITCODE -ne 0) { Fail "Failed to create the venv at $BUNDLE_VENV_DIR." }
 }
 
 Step "Checking bundler dependencies (paddleocr, paddlepaddle, paddlex)"
