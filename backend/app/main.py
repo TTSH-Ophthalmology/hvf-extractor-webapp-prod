@@ -85,10 +85,10 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Clean up uploads folder on shutdown.
+    # Clean up uploads folder (and persisted extraction results) on shutdown.
     upload_dir = Path(settings.upload_dir)
     if upload_dir.is_dir():
-        for file in upload_dir.iterdir():
+        for file in upload_dir.rglob("*"):
             if file.is_file():
                 file.unlink(missing_ok=True)
 
@@ -315,7 +315,7 @@ def revoke_refresh_token(
             payload = verify_token(refresh_token, expect="refresh")
             token_id = payload.get("jti")
             if token_id:
-                store.revoke_refresh_token(token_id)
+                store.delete_refresh_token(token_id)
         except ValueError:
             logger.info(
                 "Refresh revoke requested with invalid token: ip=%s",

@@ -31,6 +31,12 @@ from app.services.pipeline import (
 logger = logging.getLogger(__name__)
 
 
+def _results_dir() -> Path:
+    path = Path(settings.upload_dir) / "results"
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 class ExtractionService:
     async def extract(
         self,
@@ -130,7 +136,7 @@ class ExtractionService:
             except OSError:
                 logger.warning("Failed to delete uploaded file after extraction: %s", file_path)
 
-        return ExtractionResult(
+        extraction_result = ExtractionResult(
             job_id=job_id,
             filename=file_path.name,
             eye=eye.upper(),
@@ -138,16 +144,29 @@ class ExtractionService:
             raw_data=raw_data,
         )
 
+        result_path = _results_dir() / f"{job_id}.json"
+        result_path.write_text(extraction_result.model_dump_json())
+
+        return extraction_result
+
     async def get_result(self, job_id: str) -> ExtractionResult:
         """
         Retrieve a persisted extraction result by job_id.
 
-        Note: Extraction is currently synchronous — results are returned
-        directly from extract() and not persisted. This endpoint exists for
-        future use when async job queuing is added.
+        Results are written to disk when extract() completes, so a client
+        that missed the synchronous response (e.g. got logged out mid-request)
+        can recover it here. Kept only until the server restarts.
         """
-        raise HTTPException(
-            status_code=404,
-            detail=f"No persisted result for job_id '{job_id}'. "
-                   "Results are returned synchronously by POST /api/extract.",
-        )
+        try:
+            UUID(job_id)
+        except (ValueError, AttributeError):
+            raise HTTPException(status_code=422, detail="Invalid job_id.")
+
+        result_path = _results_dir() / f"{job_id}.json"
+        if not result_path.is_file():
+            raise HTTPException(
+                status_code=404,
+                detail=f"No persisted result for job_id '{job_id}'.",
+            )
+
+        return ExtractionResult.model_validate_json(result_path.read_text())

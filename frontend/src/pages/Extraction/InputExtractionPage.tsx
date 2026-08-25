@@ -6,7 +6,7 @@
  * (extraction lifecycle) hooks — one instance per eye.
  */
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { isAxiosError } from 'axios'
 import { RiSearchEyeLine } from 'react-icons/ri'
@@ -19,7 +19,12 @@ import { FileDropzone } from '../../components/ui/Upload/FileDropzone/FileDropzo
 import { FilePreview } from '../../components/ui/Upload/FilePreview/FilePreview'
 import { useExtractionWorkflow } from '../../context/ExtractionWorkflowContext'
 import { uploadFile } from '../../services/pdfService'
-import { triggerExtraction } from '../../services/extractionService'
+import { triggerExtraction, getExtraction } from '../../services/extractionService'
+import {
+  clearPendingExtraction,
+  markExtractionPending,
+  takePendingExtractions,
+} from '../../services/pendingExtractions'
 import type { ExtractionResultEntry, SkippedExtractionFile } from '../../context/ExtractionWorkflowContext'
 import './InputExtractionPage.css'
 
@@ -103,24 +108,30 @@ const processSelectedReport = async (
 ) => {
   try {
     const upload = await uploadFile(file, signal)
-    const result = await triggerExtraction(upload.job_id, eye, reportType, signal)
 
-    if (result.status !== 'complete') {
-      return {
-        skippedFile: createSkippedFile(
-          file,
-          result.error_message || 'No completed extraction result was returned.',
-          index
-        ),
+    markExtractionPending({ jobId: upload.job_id, eye, filename: file.name, reportType })
+    try {
+      const result = await triggerExtraction(upload.job_id, eye, reportType, signal)
+
+      if (result.status !== 'complete') {
+        return {
+          skippedFile: createSkippedFile(
+            file,
+            result.error_message || 'No completed extraction result was returned.',
+            index
+          ),
+        }
       }
-    }
 
-    return {
-      resultEntry: {
-        eye,
-        originalFilename: file.name,
-        result,
-      } satisfies ExtractionResultEntry,
+      return {
+        resultEntry: {
+          eye,
+          originalFilename: file.name,
+          result,
+        } satisfies ExtractionResultEntry,
+      }
+    } finally {
+      clearPendingExtraction(upload.job_id)
     }
   } catch (err) {
     if (isRequestCanceled(err)) {
@@ -194,6 +205,59 @@ export const InputExtractionPage = () => {
   const hasSelectedFile = leftSelectedFiles.length > 0 || rightSelectedFiles.length > 0
 
   const canExtract = hasSelectedFile && !isProcessing
+
+  const hasCheckedPendingRef = useRef(false)
+
+  useEffect(() => {
+    // Guard against React StrictMode's double-invoke: takePendingExtractions()
+    // is destructive (clears storage on read), so this must run at most once
+    // per real mount, not once per effect invocation.
+    if (hasCheckedPendingRef.current) return
+    hasCheckedPendingRef.current = true
+
+    const pending = takePendingExtractions()
+    if (pending.length === 0) return
+
+    const recoverPendingExtractions = async () => {
+      const recovered: ExtractionResultEntry[] = []
+      let recoveredReportType: ReportType | undefined
+
+      for (const job of pending) {
+        try {
+          const result = await getExtraction(job.jobId)
+          if (result.status !== 'complete') continue
+
+          if (recoveredReportType === undefined) {
+            recoveredReportType = job.reportType
+          } else if (job.reportType !== recoveredReportType) {
+            // Mixed report types across separate interrupted sessions.
+            // Don't collapse them under one reportType label; leave this
+            // job pending so a later reload recovers it on its own.
+            markExtractionPending(job)
+            continue
+          }
+
+          recovered.push({ eye: job.eye, originalFilename: job.filename, result })
+        } catch {
+          // Nothing recoverable for this job (never completed, or already claimed).
+        }
+      }
+
+      if (recovered.length === 0) return
+
+      setResults(recovered, recoveredReportType, recovered.length)
+      setOverlayState({
+        variant: 'success',
+        title: 'Previous Results Recovered',
+        message: `Recovered ${recovered.length} result${recovered.length === 1 ? '' : 's'} from an interrupted session.`,
+        progress: 100,
+      })
+      await delay(DEBUG_OVERLAY_SUCCESS_DELAY_MS)
+      navigate('/result')
+    }
+
+    recoverPendingExtractions()
+  }, [navigate, setResults])
 
   const handleLeftFilesSelected = useCallback((files: File[]) => {
     setLeftSelectedFiles((currentFiles) => [...currentFiles, ...files])

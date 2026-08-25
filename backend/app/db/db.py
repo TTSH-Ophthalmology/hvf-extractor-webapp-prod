@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import json
 from json import JSONDecodeError
 from pathlib import Path
@@ -10,6 +10,8 @@ from threading import RLock
 from tinydb import Query, TinyDB
 
 from app.config import settings
+
+REFRESH_TOKEN_GRACE_PERIOD_SECONDS = 10
 
 
 def _utc_now() -> datetime:
@@ -185,14 +187,28 @@ class TinyDbStore:
             token = self.refresh_tokens.get(
                 (Token.token_id == token_id) & (Token.username == username)
             )
-            if not token or token.get("revoked"):
+            if not token:
                 return False
+
+            if token.get("revoked"):
+                revoked_at = token.get("revoked_at")
+                if not revoked_at:
+                    return False
+                grace_expires = _parse_timestamp(revoked_at) + timedelta(
+                    seconds=REFRESH_TOKEN_GRACE_PERIOD_SECONDS
+                )
+                if _utc_now() > grace_expires:
+                    return False
 
             return _parse_timestamp(token["expires_at"]) > _utc_now()
 
         return self._read_or_write(operation)
 
     def revoke_refresh_token(self, token_id: str) -> None:
+        """Soft-revoke a token as part of rotation. Still active for
+        REFRESH_TOKEN_GRACE_PERIOD_SECONDS, so a client that never received
+        the rotated cookie can retry. Not for explicit logout, use
+        delete_refresh_token for that, which takes effect immediately."""
         def operation() -> None:
             Token = Query()
             self.refresh_tokens.update(
@@ -202,6 +218,16 @@ class TinyDbStore:
                 },
                 Token.token_id == token_id,
             )
+
+        self._read_or_write(operation)
+
+    def delete_refresh_token(self, token_id: str) -> None:
+        """Hard-delete a token, e.g. on explicit logout. Unlike
+        revoke_refresh_token, this takes effect immediately with no grace
+        period: is_refresh_token_active finds no record at all."""
+        def operation() -> None:
+            Token = Query()
+            self.refresh_tokens.remove(Token.token_id == token_id)
 
         self._read_or_write(operation)
 
